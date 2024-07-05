@@ -5,10 +5,10 @@ class RsiApiClient {
   static final RsiApiClient _instance = RsiApiClient._internal();
   late final Dio _dio;
 
-  String rsiDevice = "";
-  String rsiToken = "";
+  String rsiDevice = "xyki5iqw0wyj6tnoyqpgpfuqn7";
+  String rsiToken = "19e21962f042165295b670cc84fb8f4f";
   String xsrfToken = "";
-  String rsiCookieContent = "";
+  String rsiCookieContent = "{stamp:%27OxTvKGMly/MLoYR3VVQb40QHQbh68uSc2ORKIfKGhLQyPGB71fbjEA==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:true%2Cmethod:%27explicit%27%2Cver:1%2Cutc:1698762520261%2Cregion:%27gb%27}; _ga=GA1.2.789579038.1698763289; wsc_view_count=1; wsc_hide=true;";
 
   String baseUrl = "https://robertsspaceindustries.com/";
 
@@ -21,19 +21,20 @@ class RsiApiClient {
     _dio = Dio();
   }
 
-  void setRSIDevice(String device) {
+  void setRSIDevice({required String device}) {
     rsiDevice = device;
   }
 
-  void setRSIToken(String token) {
+  void setRSIToken({required String token}) {
     rsiToken = token;
   }
 
   Future<void> refreshCsrfToken() async {
-    final response = await _dio.get(baseUrl);
+    final response = await basicGet(endpoint: "");
     final csrfToken = extractCsrfToken(response.data);
     if (csrfToken == null) {
-      throw Exception("Failed to extract CSRF token");
+      // Error log
+      return;
     }
     xsrfToken = csrfToken;
   }
@@ -49,7 +50,7 @@ class RsiApiClient {
   };
 
 
-  Future<Response> get(String endpoint) async {
+  Future<Response> basicGet({required String endpoint}) async {
     final response = await _dio.get("$baseUrl$endpoint", options: Options(headers: basicHeaders));
     return response;
   }
