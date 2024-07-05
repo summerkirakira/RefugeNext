@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'src/datasource/data_model.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
+import 'src/funcs/initial.dart';
 
 void main() {
   // ChangeNotifierProvider(
@@ -10,6 +11,7 @@ void main() {
   //   child: RefugeApp(),
   // );
   runApp(RefugeApp());
+  startup();
 }
 
 class RefugeApp extends StatelessWidget {

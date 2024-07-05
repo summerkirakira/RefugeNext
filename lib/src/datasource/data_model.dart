@@ -18,5 +18,4 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
-
 }
