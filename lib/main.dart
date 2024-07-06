@@ -4,14 +4,17 @@ import 'src/datasource/data_model.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
 import 'src/funcs/initial.dart';
+import 'src/widgets/hangar/hangar_page.dart';
 
-void main() {
+void main() async {
   // ChangeNotifierProvider(
   //   create: (context) => MainDataModel(),
   //   child: RefugeApp(),
   // );
+  WidgetsFlutterBinding.ensureInitialized();
+  await mustStartup();
   runApp(RefugeApp());
-  startup();
+  await startup();
 }
 
 class RefugeApp extends StatelessWidget {
@@ -85,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _getSelectedPage(int _selectedIndex) {
     switch (_selectedIndex) {
       case 0:
-        return Text('Home Page');
+        return HangarPage();
       case 1:
         return Text('Favorites Page');
       case 2:

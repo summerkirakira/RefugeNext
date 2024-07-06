@@ -1,15 +1,30 @@
 import '../network/api_service.dart';
 import '../repo/hangar.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:fast_cached_network_image/fast_cached_network_image.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 
 
-Future<void> startup() async {
+Future<void> mustStartup() async {
 
   await initializeDateFormatting('en_US', null);
   await initializeDateFormatting('zh_CN', null);
+  String storageLocation = (await getApplicationDocumentsDirectory()).path;
+  await FastCachedImageConfig.init(subDir: storageLocation, clearCacheAfter: const Duration(days: 15));
 
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent, // 设置状态栏为透明
+    statusBarIconBrightness: Brightness.dark, // 设置状态栏图标颜色为深色
+  ));
+
+
+}
+
+Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
   final hangarRepo = HangarRepo();
-  // final items = await hangarRepo.refreshHangarItems();
+  final items = await hangarRepo.refreshHangarItems();
 }

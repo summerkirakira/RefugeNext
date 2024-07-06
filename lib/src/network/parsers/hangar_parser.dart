@@ -104,6 +104,42 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
         }).toList();
       }
 
+      String insuranceString = "";
+
+      int insuranceTime = 0;
+
+
+      for (var alsoContainsItem in alsoContainsItemString.split("#")) {
+        try {
+          int eachInsuranceTime = 0;
+          if (alsoContainsItem.contains("Insurance")) {
+            // print("HangerItemProperty: $it");
+            String formattedInsurance = alsoContainsItem.replaceAll("-", " ").trim();
+            if (formattedInsurance.contains("Lifetime")) {
+              insuranceString = "LTI";
+              break;
+            } else {
+              eachInsuranceTime = int.parse(formattedInsurance.split(" ")[0]);
+            }
+            if (formattedInsurance.split(" ")[1] == "Year") {
+              eachInsuranceTime *= 12;
+            }
+          }
+          if (eachInsuranceTime > insuranceTime) {
+            insuranceTime = eachInsuranceTime;
+          }
+        } catch (e) {
+          print("Error parsing alsoContainsItem: $e");
+        }
+      }
+      if (insuranceTime > 0 && insuranceString.isEmpty) {
+        if (insuranceTime % 12 == 0)
+          insuranceString = "${insuranceTime ~/ 12}Y";
+        insuranceString = "$insuranceTime M";
+      }
+
+
+
       HangarItem hangarItem = HangarItem(
         id: pledgeId,
         name: pledgeTitle,
@@ -115,7 +151,7 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
         date: pledgeDate,
         contains: alsoContainsItemString,
         price: pledgeValue,
-        insurance: "12M",
+        insurance: insuranceString,
         alsoContains: alsoContainsItemString,
         items: items,
         isUpgrade: isUpgrade,
