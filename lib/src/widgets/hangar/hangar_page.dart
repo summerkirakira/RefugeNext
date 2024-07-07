@@ -7,6 +7,10 @@ import '../../repo/hangar.dart';
 import 'hangar_item_widget.dart';
 import 'hangar_top_bar.dart';
 
+import 'hangar_item_detail_widget.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'ship_reclaim_modal.dart';
+
 
 class HangarPage extends StatefulWidget {
 
@@ -24,6 +28,19 @@ class _HangarPageState extends State<HangarPage> {
 
 
   void onTap(HangarItem hangarItem) {
+
+
+    WoltModalSheet.show<void>(
+      context: context,
+      pageListBuilder: (modalSheetContext) {
+        return [
+          getHangarItemDetailSheet(modalSheetContext, hangarItem),
+          getReclaimPage(modalSheetContext, hangarItem)
+        ];
+      }
+    );
+
+
     if (kDebugMode) {
       print('HangarItem tapped: ${hangarItem.name}');
     }

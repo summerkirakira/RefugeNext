@@ -14,6 +14,8 @@ Future<void> mustStartup() async {
   String storageLocation = (await getApplicationDocumentsDirectory()).path;
   await FastCachedImageConfig.init(subDir: storageLocation, clearCacheAfter: const Duration(days: 15));
 
+
+  // if is light theme
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: Colors.transparent, // 设置状态栏为透明
     statusBarIconBrightness: Brightness.dark, // 设置状态栏图标颜色为深色
@@ -26,5 +28,5 @@ Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
   final hangarRepo = HangarRepo();
-  final items = await hangarRepo.refreshHangarItems();
+  // final items = await hangarRepo.refreshHangarItems();
 }

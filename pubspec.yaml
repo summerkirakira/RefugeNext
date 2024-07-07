@@ -39,7 +39,6 @@ dependencies:
   provider: ^6.1.2
   dio: ^5.5.0+1
   freezed_annotation: ^2.4.2
-  shared_preferences: ^2.2.3
   json_cache: ^1.0.0
   sentry_flutter: ^8.3.0
   json_serializable: ^6.8.0
@@ -51,6 +50,11 @@ dependencies:
   fast_cached_network_image: ^1.2.9
   loading_animation_widget: ^1.2.1
   flutter_advanced_avatar: ^1.5.0
+  wolt_modal_sheet: ^0.7.0
+  syncfusion_flutter_sliders: ^26.1.40
+  local_auth: ^2.2.0
+  shared_preferences: ^2.2.3
+  flutter_keyboard_visibility: ^6.0.0
 
 dev_dependencies:
   flutter_test:

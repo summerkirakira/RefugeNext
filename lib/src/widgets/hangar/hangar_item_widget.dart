@@ -244,53 +244,56 @@ class HangarItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 108,
-      child: Card(
-        elevation: 0.6,
-        color: Theme.of(context).cardColor,
-        shadowColor: Colors.transparent,
-        child: Row(
-          children: [
-            Container(
-                width: 100,
-                height: 100,
-                child: HangarItemImageWidget(hangarItem: hangarItem)
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 8,
-                  right: 8,
-                  top: 2,
-                  bottom: 0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(hangarItem.chineseName!),
-                    Spacer(),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        PriceWidget(
-                          price: hangarItem.price,
-                          currentPrice: hangarItem.currentPrice,
-                        ),
-                        Spacer(),
-                        Column(
-                          children: [
-                            TagWidget(hangarItem: hangarItem),
-                            Text(hangarItem.date),
+    return GestureDetector(
+      onTap: () => onTap(hangarItem),
+      child: Container(
+        height: 108,
+        child: Card(
+          elevation: 0.6,
+          color: Theme.of(context).cardColor,
+          shadowColor: Colors.transparent,
+          child: Row(
+            children: [
+              Container(
+                  width: 100,
+                  height: 100,
+                  child: HangarItemImageWidget(hangarItem: hangarItem)
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 8,
+                    right: 8,
+                    top: 2,
+                    bottom: 0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(hangarItem.chineseName!),
+                      Spacer(),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          PriceWidget(
+                            price: hangarItem.price,
+                            currentPrice: hangarItem.currentPrice,
+                          ),
+                          Spacer(),
+                          Column(
+                            children: [
+                              TagWidget(hangarItem: hangarItem),
+                              Text(hangarItem.date),
                             ],
-                        ),
-                      ],
-                    ),
-                  ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
