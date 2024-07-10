@@ -1,7 +1,7 @@
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
 import 'package:intl/intl.dart';
-import '../../datasource/hangar.dart';
+import '../../datasource/models/hangar.dart';
 
 class ParserError implements Exception {
   final String message;

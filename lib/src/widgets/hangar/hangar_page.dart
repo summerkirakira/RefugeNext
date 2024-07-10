@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../datasource/hangar.dart';
+import '../../datasource/models/hangar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../repo/hangar.dart';

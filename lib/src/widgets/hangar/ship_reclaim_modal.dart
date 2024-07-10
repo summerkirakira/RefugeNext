@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../../datasource/hangar.dart';
+import '../../datasource/models/hangar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
