@@ -121,6 +121,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.9.2"
+  built_value_generator:
+    dependency: transitive
+    description:
+      name: built_value_generator
+      sha256: bb06c5e9dbdbd35ed6de21520e2e5112582c964fa584e2a4bb59887fc7a169b0
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.9.2"
   cached_network_image:
     dependency: "direct main"
     description:
@@ -289,6 +297,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.9"
+  ferry_exec:
+    dependency: transitive
+    description:
+      name: ferry_exec
+      sha256: "40eaf60a06ba0df21e54bc9ce22a97f89b10449b929ea77d5b5ab28c3781ee65"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.1"
+  ferry_generator:
+    dependency: "direct dev"
+    description:
+      name: ferry_generator
+      sha256: dd4eed6c60d86275d1013407ce4ac70c094b282d5c9e10ec93276d65370a8ae2
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.0"
   ffi:
     dependency: transitive
     description:
@@ -456,6 +480,46 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  gql:
+    dependency: transitive
+    description:
+      name: gql
+      sha256: "994e0c530b5ca9fce716945031b90c7925eb00bd37624c43ad4cb51883f383b3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0+1"
+  gql_code_builder:
+    dependency: transitive
+    description:
+      name: gql_code_builder
+      sha256: "857c9483c054e13b8c45c349b475a73a0b5ada1e7f9d60802b6c0efca894122e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.0"
+  gql_exec:
+    dependency: transitive
+    description:
+      name: gql_exec
+      sha256: "957db95ba37028001f76c1904e18b848f57cfef878e572ce77c6d898fafecf8f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0+1"
+  gql_link:
+    dependency: transitive
+    description:
+      name: gql_link
+      sha256: "4aa288a1e67c899b0d746a2209e949fd0dc87e56d9b759a5cdc46a7069722cf3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0+1"
+  gql_tristate_value:
+    dependency: transitive
+    description:
+      name: gql_tristate_value
+      sha256: ae045e7e272fbfd030084315140c683c9b032a9861a37165f68c2ecd8a759664
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   graphs:
     dependency: transitive
     description:
@@ -888,14 +952,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.27.7"
-  screenshot:
-    dependency: "direct main"
-    description:
-      name: screenshot
-      sha256: "63817697a7835e6ce82add4228e15d233b74d42975c143ad8cfe07009fab866b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   sentry:
     dependency: transitive
     description:

@@ -193,17 +193,29 @@ class CustomScreenshot extends StatefulWidget {
 
 class CustomScreenshotState extends State<CustomScreenshot> with TickerProviderStateMixin {
   late ScreenshotController _controller;
+  bool isOffstageFromDelayedCheck = true;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller;
+    checkVisibilityInitially();
+  }
+
+  void checkVisibilityInitially() {
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
+
+      setState(() {
+        isOffstageFromDelayedCheck = context.findAncestorWidgetOfExactType<Offstage>()?.offstage ?? false;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isOffstage =
-        context.findAncestorWidgetOfExactType<Offstage>()?.offstage == true;
+    final isOffstageFromBuildCheck = context.findAncestorWidgetOfExactType<Offstage>()?.offstage ?? true;
+    final isOffstage = isOffstageFromDelayedCheck && isOffstageFromBuildCheck;
     return RepaintBoundary(
       key: isOffstage ? null : _controller.containerKey,
       child: widget.child,
@@ -221,7 +233,6 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
     key: isOffstage ? null : const ValueKey("value_123"),
     controller: controller,
     child: Container(
-      key: isOffstage ? null : const ValueKey('hangar_item_detail_page'),
       color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.all(15),
       child: Column(
@@ -306,24 +317,24 @@ WoltModalSheetPage getHangarItemDetailSheet(BuildContext modalSheetContext, Hang
   ScreenshotController screenshotController = ScreenshotController();
 
   final detailPage = WoltModalSheetPage(
-    navBarHeight: 60,
-    topBarTitle: const Text('Hangar Item Detail', style: TextStyle(
+    navBarHeight: 10,
+    topBarTitle: const Text('机库详情', style: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.bold
     )),
-    isTopBarLayerAlwaysVisible: true,
-    trailingNavBarWidget: Container(
-      height: 38,
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.2), // 设置背景颜色
-        shape: BoxShape.circle, // 设置形状为圆形
-      ),
-      child: IconButton(
-        padding: const EdgeInsets.all(5),
-        icon: const Icon(Icons.close, size: 22),
-        onPressed: Navigator.of(modalSheetContext).pop,
-      ),
-    ),
+    // isTopBarLayerAlwaysVisible: true,
+    // trailingNavBarWidget: Container(
+    //   height: 38,
+    //   decoration: BoxDecoration(
+    //     color: Colors.grey.withOpacity(0.2), // 设置背景颜色
+    //     shape: BoxShape.circle, // 设置形状为圆形
+    //   ),
+    //   child: IconButton(
+    //     padding: const EdgeInsets.all(5),
+    //     icon: const Icon(Icons.close, size: 22),
+    //     onPressed: Navigator.of(modalSheetContext).pop,
+    //   ),
+    // ),
 
     child: getMainPage(screenshotController, modalSheetContext, hangarItem),
     stickyActionBar: getActionIconList(

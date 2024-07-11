@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'utils.dart';
+import 'dart:convert';
 
 class RsiApiClient {
   static final RsiApiClient _instance = RsiApiClient._internal();
@@ -42,11 +43,11 @@ class RsiApiClient {
 
   Map<String, String> get basicHeaders => {
     "Cookie": rsiCookie,
-    "x-rsi-token": xsrfToken,
+    "x-rsi-token": rsiToken,
     "x-rsi-device": rsiDevice,
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     "Referer": "https://robertsspaceindustries.com/",
-    "X-Csrf-Token": xsrfToken,
+    "x-csrf-token": xsrfToken,
   };
 
 
@@ -55,5 +56,9 @@ class RsiApiClient {
     return response;
   }
 
+  Future<Response> graphql({required Map<String, dynamic> data}) async {
+    final response = await _dio.post("${baseUrl}graphql", data: data, options: Options(headers: basicHeaders));
+    return response;
+  }
 
 }

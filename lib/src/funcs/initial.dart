@@ -5,6 +5,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:refuge_next/src/network/graphql/catalog.dart' show CatalogReq;
+
+
 
 
 Future<void> mustStartup() async {
@@ -28,5 +31,7 @@ Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
   final hangarRepo = HangarRepo();
-  final items = await hangarRepo.refreshHangarItems();
+  // final items = await hangarRepo.refreshHangarItems();
+
+
 }
