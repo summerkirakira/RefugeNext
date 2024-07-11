@@ -58,6 +58,7 @@ dependencies:
   share_plus: ^9.0.0
   image: ^4.2.0
   qr_flutter: ^4.1.0
+  flutter_multi_select_items: ^0.4.3
 
 
 dev_dependencies:

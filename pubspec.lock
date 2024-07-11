@@ -430,6 +430,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
+  flutter_multi_select_items:
+    dependency: "direct main"
+    description:
+      name: flutter_multi_select_items
+      sha256: f8182eddcc3a9a19a56b401da2e4408eb4b6a9d2a99123d70f14bbf81868d8df
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:

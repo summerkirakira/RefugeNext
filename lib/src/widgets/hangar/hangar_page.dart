@@ -10,6 +10,7 @@ import 'hangar_top_bar.dart';
 import 'hangar_item_detail_widget.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'ship_reclaim_modal.dart';
+import '../../datasource/data_model.dart';
 
 
 class HangarPage extends StatefulWidget {
@@ -22,9 +23,6 @@ class HangarPage extends StatefulWidget {
 }
 
 class _HangarPageState extends State<HangarPage> {
-
-
-  List<HangarItem> hangarItems = [];
 
 
   void onTap(HangarItem hangarItem) {
@@ -49,12 +47,7 @@ class _HangarPageState extends State<HangarPage> {
   @override
   void initState() {
     super.initState();
-
-    final hangarRepo = HangarRepo();
-    hangarRepo.readHangarItems().then((value) {
-      setState(() => hangarItems = value);
-    });
-
+    Provider.of<MainDataModel>(context, listen: false).readHangarItems();
   }
 
   @override
@@ -65,17 +58,22 @@ class _HangarPageState extends State<HangarPage> {
       children: [
         HangarTopBar(),
         Expanded(
-          child: ListView.builder(
-            itemCount: hangarItems.length,
-            padding: const EdgeInsets.all(0),
-            itemBuilder: (context, index) {
-              final hangarItem = hangarItems[index];
-              return HangarItemWidget(
-                hangarItem: hangarItem,
-                onTap: onTap,
-              );
-            },
-          ),
+          child: Provider.of<MainDataModel>(context).hangarItems.isEmpty
+              ? const Expanded(child: Text("空空如也~", style: TextStyle(fontSize: 30), textAlign: TextAlign.center))
+              : RefreshIndicator(
+              onRefresh: () async {
+
+              },
+              child: ListView.builder(
+                  padding: const EdgeInsets.all(0),
+                  itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
+                  itemBuilder: (context, index) {
+                    return HangarItemWidget(
+                      hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
+                      onTap: onTap,
+                    );
+                  }
+              )),
         ),
       ],
     );
