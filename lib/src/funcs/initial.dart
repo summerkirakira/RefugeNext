@@ -28,5 +28,5 @@ Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
   final hangarRepo = HangarRepo();
-  // final items = await hangarRepo.refreshHangarItems();
+  final items = await hangarRepo.refreshHangarItems();
 }

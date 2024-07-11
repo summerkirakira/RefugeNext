@@ -4,7 +4,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:screenshot/screenshot.dart';
+import '../../widgets/general/screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image/image.dart' as img;
 import '../../funcs/images.dart';
@@ -175,6 +175,129 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
   );
 }
 
+class CustomScreenshot extends StatefulWidget {
+  final Widget? child;
+  final ScreenshotController controller;
+
+  const CustomScreenshot({
+    Key? key,
+    required this.child,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  State<CustomScreenshot> createState() {
+    return new CustomScreenshotState();
+  }
+}
+
+class CustomScreenshotState extends State<CustomScreenshot> with TickerProviderStateMixin {
+  late ScreenshotController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isOffstage =
+        context.findAncestorWidgetOfExactType<Offstage>()?.offstage == true;
+    return RepaintBoundary(
+      key: isOffstage ? null : _controller.containerKey,
+      child: widget.child,
+    );
+  }
+}
+
+
+
+Widget getMainPage(ScreenshotController controller, BuildContext context, HangarItem hangarItem) {
+  final isOffstage =
+      context.findAncestorWidgetOfExactType<Offstage>()?.offstage == true;
+
+  return CustomScreenshot(
+    key: isOffstage ? null : const ValueKey("value_123"),
+    controller: controller,
+    child: Container(
+      key: isOffstage ? null : const ValueKey('hangar_item_detail_page'),
+      color: Theme.of(context).colorScheme.surface,
+      padding: const EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                height: 120,
+                width: 120,
+                child: CachedNetworkImage(
+                    imageUrl: hangarItem.image,
+                    placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 60),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    imageBuilder: (context, imageProvider) => Container(
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.cover,
+                          ),
+                          borderRadius: const BorderRadius.all(Radius.circular(10))
+                      ),
+                    )
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Container(
+                    height: 120,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(hangarItem.chineseName!, style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold
+                        )),
+                        const SizedBox(height: 5),
+                        Text(hangarItem.name, style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey
+                        )),
+                      ],
+                    ),
+                  )
+              ),
+            ],
+          ),
+          const Divider(),
+          getPriceInfoWidget(context, hangarItem),
+          const Divider(),
+          if (hangarItem.items.isNotEmpty)
+            for (final subItem in hangarItem.items)
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 10
+                ),
+                child: SubHangarItemWidget(context, subItem),
+              ),
+          const Divider(),
+          if (hangarItem.alsoContains.isNotEmpty)
+            for(final alsoContain in hangarItem.alsoContains.split("#"))
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 5
+                ),
+                child: Text(alsoContain.trim(), style: const TextStyle(
+                  fontSize: 15,
+                )),
+              ),
+          const SizedBox(height: 100),
+        ],
+      ),
+    ),
+  );
+}
+
 
 
 
@@ -202,84 +325,7 @@ WoltModalSheetPage getHangarItemDetailSheet(BuildContext modalSheetContext, Hang
       ),
     ),
 
-    child: Screenshot(
-      controller: screenshotController,
-      child: Container(
-        color: Theme.of(modalSheetContext).colorScheme.surface,
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  height: 120,
-                  width: 120,
-                  child: CachedNetworkImage(
-                      imageUrl: hangarItem.image,
-                      placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 60),
-                      errorWidget: (context, url, error) => Icon(Icons.error),
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                            ),
-                            borderRadius: const BorderRadius.all(Radius.circular(10))
-                        ),
-                      )
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                    child: Container(
-                      height: 120,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(hangarItem.chineseName!, style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold
-                          )),
-                          const SizedBox(height: 5),
-                          Text(hangarItem.name, style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey
-                          )),
-                        ],
-                      ),
-                    )
-                ),
-              ],
-            ),
-            const Divider(),
-            getPriceInfoWidget(modalSheetContext, hangarItem),
-            const Divider(),
-            if (hangarItem.items.isNotEmpty)
-              for (final subItem in hangarItem.items)
-                Padding(
-                  padding: const EdgeInsets.only(
-                      top: 10
-                  ),
-                  child: SubHangarItemWidget(modalSheetContext, subItem),
-                ),
-            const Divider(),
-            if (hangarItem.alsoContains.isNotEmpty)
-              for(final alsoContain in hangarItem.alsoContains.split("#"))
-                Padding(
-                  padding: const EdgeInsets.only(
-                      top: 5
-                  ),
-                  child: Text(alsoContain.trim(), style: const TextStyle(
-                    fontSize: 15,
-                  )),
-                ),
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
-
-    ),
+    child: getMainPage(screenshotController, modalSheetContext, hangarItem),
     stickyActionBar: getActionIconList(
       context: modalSheetContext,
       hangarItem: hangarItem,

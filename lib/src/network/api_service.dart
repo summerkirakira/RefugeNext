@@ -5,8 +5,8 @@ class RsiApiClient {
   static final RsiApiClient _instance = RsiApiClient._internal();
   late final Dio _dio;
 
-  String rsiDevice = "xyki5iqw0wyj6tnoyqpgpfuqn7";
-  String rsiToken = "19e21962f042165295b670cc84fb8f4f";
+  String rsiDevice = "3ylwbizel16sends84whttkfz0";
+  String rsiToken = "e200faef13262bde97ec29e9f361eb3e";
   String xsrfToken = "";
   String rsiCookieContent = "{stamp:%27OxTvKGMly/MLoYR3VVQb40QHQbh68uSc2ORKIfKGhLQyPGB71fbjEA==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:true%2Cmethod:%27explicit%27%2Cver:1%2Cutc:1698762520261%2Cregion:%27gb%27}; _ga=GA1.2.789579038.1698763289; wsc_view_count=1; wsc_hide=true;";
 
