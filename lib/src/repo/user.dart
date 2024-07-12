@@ -2,6 +2,8 @@ import '../datasource/models/user.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class UserRepo {
   Future<String> get _localPath async {
@@ -34,6 +36,10 @@ class UserRepo {
     removeUser(handle: user.handle);
     List<User> users = await readUsers();
     users.add(user);
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('vip.kirakira.user.handle', user.handle);
+
     await writeUsers(users);
   }
 
@@ -42,6 +48,16 @@ class UserRepo {
     users.removeWhere((element) => element.handle == handle);
     await writeUsers(users);
   }
+
+  Future<User?> getCurrentUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? handle = prefs.getString('vip.kirakira.user.handle');
+    if (handle == null) {
+      return null;
+    }
+    return getUser(handle: handle);
+  }
+
 
   Future<User?> getUser({required String handle}) async {
     List<User> users = await readUsers();

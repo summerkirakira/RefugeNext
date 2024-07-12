@@ -59,7 +59,7 @@ class _HangarPageState extends State<HangarPage> {
         HangarTopBar(),
         Expanded(
           child: Provider.of<MainDataModel>(context).hangarItems.isEmpty
-              ? const Expanded(child: Text("空空如也~", style: TextStyle(fontSize: 30), textAlign: TextAlign.center))
+              ? const Center(child: Text("空空如也~", style: TextStyle(fontSize: 30), textAlign: TextAlign.center))
               : RefreshIndicator(
               onRefresh: () async {
 

@@ -5,6 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'hangar_search_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_login_bottomsheet.dart';
+import 'package:provider/provider.dart';
+import '../../datasource/data_model.dart';
 
 class HangarTopBar extends StatefulWidget {
   const HangarTopBar({Key? key}) : super(key: key);
@@ -18,36 +20,39 @@ class _HangarTopBarState extends State<HangarTopBar> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Container(
-          padding: const EdgeInsets.all(8.0),
-          height: 60,
-          child: Row(
-            children: [
-              const AdvancedAvatar(
-                name: 'Hangar',
-                size: 40,
-                image: CachedNetworkImageProvider("https://robertsspaceindustries.com/media/biprvy081u9lbr/heap_infobox/600px.png"),
-                margin: EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                )
-              ),
-              const Text('我的机库', style: TextStyle(fontSize: 24)),
-              Spacer(),
-              IconButton(onPressed: () {
-                WoltModalSheet.show<void>(
-                    context: context,
-                    pageListBuilder: (modalSheetContext) {
-                      return [
-                        // getSearchBottomSheet(context)
-                        getLoginBottomSheet(modalSheetContext),
-                        getEmailInputBottomSheet(modalSheetContext)
-                      ];
-                    }
-                );
-              }, icon: const Icon(Icons.search)),
-            ],
-          ),
-        )
-      );
-    }
+      padding: const EdgeInsets.all(8.0),
+      height: 60,
+      child: Provider.of<MainDataModel>(context).currentUser == null
+          ? Text("Login")
+          : Row(
+              children: [
+                AdvancedAvatar(
+                    name: 'Hangar',
+                    size: 40,
+                    image: CachedNetworkImageProvider(
+                        Provider.of<MainDataModel>(context).currentUser!.profileImage),
+                    margin: EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                    )),
+                const Text('我的机库', style: TextStyle(fontSize: 24)),
+                Spacer(),
+                IconButton(
+                    onPressed: () {
+                      WoltModalSheet.show<void>(
+                          context: context,
+                          pageListBuilder: (modalSheetContext) {
+                            return [
+                              // getSearchBottomSheet(context)
+                              getLoginBottomSheet(modalSheetContext, context),
+                              // getCaptchaInputBottomSheet(modalSheetContext),
+                              // getEmailInputBottomSheet(modalSheetContext)
+                            ];
+                          });
+                    },
+                    icon: const Icon(Icons.search)),
+              ],
+            ),
+    ));
   }
+}

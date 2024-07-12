@@ -4,6 +4,8 @@ import './models/user.dart';
 import '../repo/hangar.dart';
 import '../repo/user.dart';
 import '../funcs/hangar_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../network/api_service.dart';
 
 
 enum HangarItemType {
@@ -39,6 +41,26 @@ class MainDataModel extends ChangeNotifier {
   User? get currentUser => _currentUser;
 
   final hangarRepo = HangarRepo();
+  final userRepo = UserRepo();
+
+  MainDataModel() {
+    initUser();
+  }
+
+
+  Future<void> initUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? handle = prefs.getString('vip.kirakira.user.handle');
+    if (handle == null) {
+      return;
+    }
+    final user = await userRepo.getUser(handle: handle);
+    if (user == null) {
+      return;
+    }
+    _currentUser = user;
+    notifyListeners();
+  }
 
 
 

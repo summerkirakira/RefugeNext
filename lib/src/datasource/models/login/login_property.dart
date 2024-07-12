@@ -62,6 +62,7 @@ class Details with _$Details {
   factory Details.fromJson(Map<String, dynamic> json) => _$DetailsFromJson(json);
 }
 
+
 @freezed
 class LauncherLoginProperty with _$LauncherLoginProperty {
   const factory LauncherLoginProperty({

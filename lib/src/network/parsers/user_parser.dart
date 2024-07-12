@@ -50,7 +50,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     return null;
   }
 
-  String? totalSpentString = billingDoc.querySelector('#billing > div.content.inner-content.clearfix > div:nth-child(12)')?.text
+  String? totalSpentString = billingDoc.querySelectorAll('.spent-line').last.children[0].text
       .replaceAll('\$', '')
       .replaceAll(' ', '')
       .replaceAll('USD', '')
@@ -60,7 +60,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
 
   Document userInfoDoc = html_parser.parse(userInfoPage);
   String? userImage = userInfoDoc.querySelector('.left-col')?.querySelector('.thumb img')?.attributes['src'];
-  String? enlisted = userInfoDoc.querySelector('.left-col')?.children.last.querySelector('.entry strong')?.text;
+  String? enlisted = userInfoDoc.querySelectorAll('.left-col').last.querySelector('.entry strong')?.text;
   String? orgName = userInfoDoc.querySelector('.right-col')?.querySelector('.entry a')?.text;
   String? orgLogoUrl = userInfoDoc.querySelector('.right-col')?.querySelector('.thumb img')?.attributes['src'];
   String? orgRank = userInfoDoc.querySelector('.right-col')?.querySelectorAll('.entry')[2].querySelector('strong')?.text;
@@ -92,7 +92,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     orgLogoUrl = 'https://robertsspaceindustries.com$orgLogoUrl';
   }
 
-  DateFormat dateFormatter = DateFormat('MMM dd, yyyy, "en_US"');
+  DateFormat dateFormatter = DateFormat('MMM dd, yyyy', "en_US");
   DateTime registerTime = dateFormatter.parse(enlisted);
   dateFormatter = DateFormat('yyyy年MM月dd日', "zh_CN");
   String registerTimeString = dateFormatter.format(registerTime);

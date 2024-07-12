@@ -59,6 +59,7 @@ dependencies:
   image: ^4.2.0
   qr_flutter: ^4.1.0
   flutter_multi_select_items: ^0.4.3
+  fluttertoast: ^8.2.6
 
 
 dev_dependencies:
