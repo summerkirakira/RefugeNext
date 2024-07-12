@@ -51,8 +51,8 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
           label: 'Business',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.verified_user),
-          label: 'School',
+          icon: Icon(Icons.account_circle_outlined),
+          label: '我的',
         ),
       ],
       currentIndex: context.watch<MainDataModel>().selectedPage,

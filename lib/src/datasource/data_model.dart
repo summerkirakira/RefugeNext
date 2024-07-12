@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import './models/hangar.dart';
+import './models/user.dart';
 import '../repo/hangar.dart';
+import '../repo/user.dart';
 import '../funcs/hangar_utils.dart';
 
 
@@ -28,9 +30,13 @@ class MainDataModel extends ChangeNotifier {
 
   List<HangarItem> get hangarItems => _hangarItems;
 
+  User? _currentUser;
+
   String _searchKey = '';
 
   String get searchKey => _searchKey;
+
+  User? get currentUser => _currentUser;
 
   final hangarRepo = HangarRepo();
 
@@ -54,7 +60,8 @@ class MainDataModel extends ChangeNotifier {
 
   void readHangarItems() {
     hangarRepo.readHangarItems().then((value) {
-      _hangarItems = filterHangarItemsByType(this, value);
+      final filteredItems = filterHangarItemsByType(this, value);
+      _hangarItems = stackHangarItems(filteredItems);
       notifyListeners();
     });
   }
@@ -66,5 +73,12 @@ class MainDataModel extends ChangeNotifier {
   void updateSearchKey(String newKey) {
     _searchKey = newKey;
   }
+
+  void updateCurrentUser(User newUser) {
+    _currentUser = newUser;
+    notifyListeners();
+  }
+
+
 
 }

@@ -3,9 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 
-
-class HangarRepo {
-
+class UserRepo {
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
     return directory.path;
@@ -32,13 +30,14 @@ class HangarRepo {
     return file.writeAsString(jsonEncode(items));
   }
 
-  void addUser(User user) async {
+  Future<void> addUser(User user) async {
+    removeUser(handle: user.handle);
     List<User> users = await readUsers();
     users.add(user);
     await writeUsers(users);
   }
 
-  void removeUser({required String handle}) async {
+  Future<void> removeUser({required String handle}) async {
     List<User> users = await readUsers();
     users.removeWhere((element) => element.handle == handle);
     await writeUsers(users);
@@ -46,7 +45,12 @@ class HangarRepo {
 
   Future<User?> getUser({required String handle}) async {
     List<User> users = await readUsers();
-    return users.firstWhere((element) => element.handle == handle);
-  }
 
+    for (var user in users) {
+      if (user.handle == handle) {
+        return user;
+      }
+    }
+    return null;
+  }
 }

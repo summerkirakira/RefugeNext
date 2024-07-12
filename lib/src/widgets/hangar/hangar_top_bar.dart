@@ -4,6 +4,7 @@ import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'hangar_search_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import '../user_info/user_login_bottomsheet.dart';
 
 class HangarTopBar extends StatefulWidget {
   const HangarTopBar({Key? key}) : super(key: key);
@@ -30,14 +31,16 @@ class _HangarTopBarState extends State<HangarTopBar> {
                   shape: BoxShape.circle,
                 )
               ),
-              Text('Hangar', style: TextStyle(fontSize: 24)),
+              const Text('我的机库', style: TextStyle(fontSize: 24)),
               Spacer(),
               IconButton(onPressed: () {
                 WoltModalSheet.show<void>(
                     context: context,
                     pageListBuilder: (modalSheetContext) {
                       return [
-                        getSearchBottomSheet(context)
+                        // getSearchBottomSheet(context)
+                        getLoginBottomSheet(modalSheetContext),
+                        getEmailInputBottomSheet(modalSheetContext)
                       ];
                     }
                 );

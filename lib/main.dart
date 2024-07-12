@@ -5,6 +5,7 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
 import 'src/funcs/initial.dart';
 import 'src/widgets/hangar/hangar_page.dart';
+import 'src/widgets/user_info/user_page.dart';
 
 void main() async {
   // ChangeNotifierProvider(
@@ -92,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         return Text('Favorites Page');
       case 2:
-        return Text('Settings Page');
+        return UserInfoPage();
       default:
         return Text('Home Page');
     }

@@ -1,5 +1,6 @@
 import '../network/api_service.dart';
 import '../repo/hangar.dart';
+import '../repo/user.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:fast_cached_network_image/fast_cached_network_image.dart';
@@ -33,5 +34,8 @@ Future<void> startup() async {
   final hangarRepo = HangarRepo();
   // final items = await hangarRepo.refreshHangarItems();
 
+  final userRepo = UserRepo();
+  final user = await userRepo.getUser(handle: "Cirnobaka");
+  final a = 1;
 
 }
