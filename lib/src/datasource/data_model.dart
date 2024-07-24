@@ -45,6 +45,7 @@ class MainDataModel extends ChangeNotifier {
 
   MainDataModel() {
     initUser();
+    readHangarItems();
   }
 
 
@@ -64,6 +65,7 @@ class MainDataModel extends ChangeNotifier {
 
 
 
+
   void updateData(String newData) {
     _data = newData;
     notifyListeners();
@@ -71,7 +73,7 @@ class MainDataModel extends ChangeNotifier {
 
   void updateSelectedPage(int newPage) {
     _selectedPage = newPage;
-    readHangarItems();
+    // readHangarItems();
   }
 
   void updateSelectedHangarItemType(List<HangarItemType> newTypes) {
@@ -88,8 +90,11 @@ class MainDataModel extends ChangeNotifier {
     });
   }
 
-  void updateHangarItems() {
-
+  Future<void> updateHangarItems() async {
+    final items = await hangarRepo.refreshHangarItems();
+    final filteredItems = filterHangarItemsByType(this, items);
+    _hangarItems = stackHangarItems(filteredItems);
+    notifyListeners();
   }
 
   void updateSearchKey(String newKey) {
@@ -100,7 +105,5 @@ class MainDataModel extends ChangeNotifier {
     _currentUser = newUser;
     notifyListeners();
   }
-
-
 
 }

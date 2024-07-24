@@ -24,7 +24,7 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
 
   final loginResponse = await rsiClient.login(email: email, password: password, captcha: captcha);
 
-  if (loginResponse.data == null) {
+  if (loginResponse.data == null && loginResponse.code != "ErrNoGamePackage") {
     return LoginStatus(
         success: false,
         msg: loginResponse.msg,
@@ -32,17 +32,17 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
         needCaptcha: false);
   }
 
-  if (loginResponse.data!.device_id != null) {
+  if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.device_id != null) {
     rsiClient.setRSIDevice(device: loginResponse.data!.device_id!);
   }
 
-  if (loginResponse.data!.session_id.isNotEmpty) {
+  if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.session_id.isNotEmpty) {
     rsiClient.setRSIToken(token: loginResponse.data!.session_id);
   }
 
-  if (loginResponse.success == 1) {
+  if (loginResponse.success == 1 || loginResponse.code == "ErrNoGamePackage") {
     final user = await parseNewUser(email, password,
-        loginResponse.data!.device_id, loginResponse.data!.session_id);
+        rsiClient.rsiDevice, rsiClient.rsiToken);
     if (user == null) {
       return LoginStatus(
           success: false,
@@ -86,21 +86,21 @@ Future<LoginStatus> loginSecondStep(
 
   final loginResponse = await rsiClient.loginWithCode(code: code);
 
-  if (loginResponse.data == null) {
+  if (loginResponse.data == null && loginResponse.code != "ErrNoGamePackage") {
     return LoginStatus(success: false, msg: loginResponse.msg, needCode: false, needCaptcha: false);
   }
 
-  if (loginResponse.data!.device_id != null) {
+  if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.device_id != null) {
     rsiClient.setRSIDevice(device: loginResponse.data!.device_id!);
   }
 
-  if (loginResponse.data!.session_id.isNotEmpty) {
+  if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.session_id.isNotEmpty) {
     rsiClient.setRSIToken(token: loginResponse.data!.session_id);
   }
 
-  if (loginResponse.success == 1) {
+  if (loginResponse.success == 1 || loginResponse.code == "ErrNoGamePackage") {
     final user = await parseNewUser(email, password,
-        loginResponse.data!.device_id, loginResponse.data!.session_id);
+        rsiClient.rsiDevice, rsiClient.rsiToken);
     if (user == null) {
       return LoginStatus(success: false, msg: "Failed to parse user data", needCode: false, needCaptcha: false);
     }

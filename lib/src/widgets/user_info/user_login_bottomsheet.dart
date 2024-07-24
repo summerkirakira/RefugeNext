@@ -10,13 +10,12 @@ import '../../funcs/toast.dart';
 import '../../datasource/data_model.dart';
 import '../../repo/user.dart';
 
-
-
 String cachedEmail = '';
 String cachedPassword = '';
 Uint8List? cachedCaptcha;
 
-WoltModalSheetPage getLoginBottomSheet(BuildContext context, BuildContext itemContext) {
+WoltModalSheetPage getLoginBottomSheet(
+    BuildContext context, BuildContext itemContext) {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -77,7 +76,6 @@ WoltModalSheetPage getLoginBottomSheet(BuildContext context, BuildContext itemCo
             backgroundColor: Theme.of(context).primaryColor,
           ),
           onPressed: () {
-
             if (emailController.text.isEmpty) {
               return;
             }
@@ -85,35 +83,35 @@ WoltModalSheetPage getLoginBottomSheet(BuildContext context, BuildContext itemCo
               return;
             }
 
-            loginFirstStep(email: emailController.text, password: passwordController.text).then(
-              (status) {
-                cachedEmail = emailController.text;
-                cachedPassword = passwordController.text;
-                if (status.success) {
-
-                  UserRepo().getCurrentUser().then(
-                    (user) {
-                      if (user != null) {
-                        Provider.of<MainDataModel>(itemContext, listen: false).updateCurrentUser(user);
-                      }
-                      Navigator.of(context).pop();
-                    }
-                  );
-
-                } else {
-                  if (status.needCode) {
-                    WoltModalSheet.of(context).addPage(getEmailInputBottomSheet(context, itemContext));
-                    WoltModalSheet.of(context).showNext();
-                  } else if (status.needCaptcha) {
-                    getCaptchaImage().then((captcha) {
-                      cachedCaptcha = captcha;
-                      WoltModalSheet.of(context).addPage(getCaptchaInputBottomSheet(context, itemContext));
-                      WoltModalSheet.of(context).showNext();
-                    });
+            loginFirstStep(
+                    email: emailController.text,
+                    password: passwordController.text)
+                .then((status) {
+              cachedEmail = emailController.text;
+              cachedPassword = passwordController.text;
+              if (status.success) {
+                UserRepo().getCurrentUser().then((user) {
+                  if (user != null) {
+                    Provider.of<MainDataModel>(itemContext, listen: false)
+                        .updateCurrentUser(user);
                   }
+                  Navigator.of(context).pop();
+                });
+              } else {
+                if (status.needCode) {
+                  WoltModalSheet.of(context)
+                      .addPage(getEmailInputBottomSheet(context, itemContext));
+                  WoltModalSheet.of(context).showNext();
+                } else if (status.needCaptcha) {
+                  getCaptchaImage().then((captcha) {
+                    cachedCaptcha = captcha;
+                    WoltModalSheet.of(context).addPage(
+                        getCaptchaInputBottomSheet(context, itemContext));
+                    WoltModalSheet.of(context).showNext();
+                  });
                 }
               }
-            );
+            });
 
             // WoltModalSheet.of(context).showNext();
           },
@@ -127,7 +125,8 @@ WoltModalSheetPage getLoginBottomSheet(BuildContext context, BuildContext itemCo
   );
 }
 
-WoltModalSheetPage getCaptchaInputBottomSheet(BuildContext context, BuildContext itemContext) {
+WoltModalSheetPage getCaptchaInputBottomSheet(
+    BuildContext context, BuildContext itemContext) {
   final captchaController = TextEditingController();
 
   return WoltModalSheetPage(
@@ -160,11 +159,10 @@ WoltModalSheetPage getCaptchaInputBottomSheet(BuildContext context, BuildContext
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Container(
             height: 150,
             alignment: Alignment.center,
-              child: Image.memory(cachedCaptcha ?? Uint8List(0)),
+            child: Image.memory(cachedCaptcha ?? Uint8List(0)),
           ),
           TextField(
             controller: captchaController,
@@ -191,23 +189,33 @@ WoltModalSheetPage getCaptchaInputBottomSheet(BuildContext context, BuildContext
             }
 
             try {
-              loginFirstStep(email: cachedEmail, password: cachedPassword, captcha: captchaController.text).then(
-                      (status) {
-                    if (status.success) {
-                      Navigator.of(context).pop();
-                    } else {
-                      if (status.needCode) {
-                        WoltModalSheet.of(context).addPage(getEmailInputBottomSheet(context, itemContext));
-                        WoltModalSheet.of(context).showNext();
-                      }
+              loginFirstStep(
+                      email: cachedEmail,
+                      password: cachedPassword,
+                      captcha: captchaController.text)
+                  .then((status) {
+                if (status.success) {
+                  final userRepo = UserRepo();
+
+                  userRepo.getCurrentUser().then((user) {
+                    if (user != null) {
+                      Provider.of<MainDataModel>(itemContext, listen: false)
+                          .updateCurrentUser(user);
                     }
+                    Navigator.of(context).pop();
+                  });
+                } else {
+                  if (status.needCode) {
+                    WoltModalSheet.of(context).addPage(
+                        getEmailInputBottomSheet(context, itemContext));
+                    WoltModalSheet.of(context).showNext();
                   }
-              );
+                }
+              });
             } catch (e) {
               showToast(message: e.toString());
-            };
-
-
+            }
+            ;
           },
           child: const Text('下一步',
               style: TextStyle(
@@ -219,7 +227,8 @@ WoltModalSheetPage getCaptchaInputBottomSheet(BuildContext context, BuildContext
   );
 }
 
-WoltModalSheetPage getEmailInputBottomSheet(BuildContext context, BuildContext itemContext) {
+WoltModalSheetPage getEmailInputBottomSheet(
+    BuildContext context, BuildContext itemContext) {
   final codeController = TextEditingController();
 
   return WoltModalSheetPage(
@@ -276,23 +285,21 @@ WoltModalSheetPage getEmailInputBottomSheet(BuildContext context, BuildContext i
               return;
             }
 
-            loginSecondStep(cachedEmail, cachedPassword, codeController.text).then(
-              (status) {
-                if (status.success) {
-                  UserRepo().getCurrentUser().then(
-                          (user) {
-                        if (user != null) {
-                          Provider.of<MainDataModel>(itemContext, listen: false).updateCurrentUser(user);
-                        }
-                        Navigator.of(context).pop();
-                      }
-                  );
-                } else {
-                  showToast(message: status.msg);
+            loginSecondStep(cachedEmail, cachedPassword, codeController.text)
+                .then((status) {
+              if (status.success) {
+                UserRepo().getCurrentUser().then((user) {
+                  if (user != null) {
+                    Provider.of<MainDataModel>(itemContext, listen: false)
+                        .updateCurrentUser(user);
+                  }
                   Navigator.of(context).pop();
-                }
+                });
+              } else {
+                showToast(message: status.msg);
+                Navigator.of(context).pop();
               }
-            );
+            });
           },
           child: const Text('下一步',
               style: TextStyle(

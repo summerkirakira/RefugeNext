@@ -58,14 +58,13 @@ class _HangarPageState extends State<HangarPage> {
       children: [
         HangarTopBar(),
         Expanded(
-          child: Provider.of<MainDataModel>(context).hangarItems.isEmpty
-              ? const Center(child: Text("空空如也~", style: TextStyle(fontSize: 30), textAlign: TextAlign.center))
-              : RefreshIndicator(
+          child: RefreshIndicator(
               onRefresh: () async {
-
+                await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
               },
               child: ListView.builder(
                   padding: const EdgeInsets.all(0),
+                  physics: BouncingScrollPhysics(),
                   itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
                   itemBuilder: (context, index) {
                     return HangarItemWidget(

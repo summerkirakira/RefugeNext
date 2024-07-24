@@ -40,11 +40,10 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
     return BottomNavigationBar(
       items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: AnimatedIcon(
-            icon: AnimatedIcons.menu_home,
-            progress: _controllers[0],
-          ),
-          label: '机库',
+          icon: Icon(
+              Provider.of<MainDataModel>(context).selectedPage == 0 ?
+          Icons.home_rounded : Icons.home_outlined),
+          label: 'Business',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.business),

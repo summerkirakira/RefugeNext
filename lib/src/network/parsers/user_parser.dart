@@ -63,10 +63,10 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
   String? enlisted = userInfoDoc.querySelectorAll('.left-col').last.querySelector('.entry strong')?.text;
   String? orgName = userInfoDoc.querySelector('.right-col')?.querySelector('.entry a')?.text;
   String? orgLogoUrl = userInfoDoc.querySelector('.right-col')?.querySelector('.thumb img')?.attributes['src'];
-  String? orgRank = userInfoDoc.querySelector('.right-col')?.querySelectorAll('.entry')[2].querySelector('strong')?.text;
-  String? orgIdString = userInfoDoc.querySelector('.right-col')?.querySelector('.thumb a')?.attributes['href']?.split('/')[1];
+  String? orgRank = orgLogoUrl == null? null : userInfoDoc.querySelector('.right-col')?.querySelectorAll('.entry')[2].querySelector('strong')?.text;
+  String? orgIdString = orgLogoUrl == null? null : userInfoDoc.querySelector('.right-col')?.querySelector('.thumb a')?.attributes['href']?.split('/')[1];
   int orgLevel = 0;
-  var rankList = userInfoDoc.querySelector('.ranking')?.querySelectorAll('span');
+  var rankList = orgLogoUrl == null? null : userInfoDoc.querySelector('.ranking')?.querySelectorAll('span');
 
   if (rankList != null) {
     for (var item in rankList) {
