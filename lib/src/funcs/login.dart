@@ -29,7 +29,8 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
         success: false,
         msg: loginResponse.msg,
         needCode: false,
-        needCaptcha: false);
+        needCaptcha: false
+    );
   }
 
   if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.device_id != null) {

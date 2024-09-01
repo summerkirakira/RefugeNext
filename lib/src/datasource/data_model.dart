@@ -74,6 +74,7 @@ class MainDataModel extends ChangeNotifier {
   void updateSelectedPage(int newPage) {
     _selectedPage = newPage;
     // readHangarItems();
+    notifyListeners();
   }
 
   void updateSelectedHangarItemType(List<HangarItemType> newTypes) {
@@ -103,6 +104,8 @@ class MainDataModel extends ChangeNotifier {
 
   void updateCurrentUser(User newUser) {
     _currentUser = newUser;
+    final rsiApiClient = RsiApiClient();
+    rsiApiClient.setRSIToken(token: newUser.rsiToken);
     notifyListeners();
   }
 

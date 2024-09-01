@@ -13,7 +13,7 @@ class UserRepo {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/hangar_items.json');
+    return File('$path/users.json');
   }
 
   Future<List<User>> readUsers() async {
@@ -35,12 +35,18 @@ class UserRepo {
   Future<void> addUser(User user) async {
     removeUser(handle: user.handle);
     List<User> users = await readUsers();
-    users.add(user);
+    List<User> newUsers = [];
+    for (var u in users) {
+      if (u.handle != user.handle) {
+        newUsers.add(u);
+      }
+    }
+    newUsers.add(user);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('vip.kirakira.user.handle', user.handle);
 
-    await writeUsers(users);
+    await writeUsers(newUsers);
   }
 
   Future<void> removeUser({required String handle}) async {

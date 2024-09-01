@@ -23,7 +23,20 @@ class _HangarTopBarState extends State<HangarTopBar> {
       padding: const EdgeInsets.all(8.0),
       height: 60,
       child: Provider.of<MainDataModel>(context).currentUser == null
-          ? Text("Login")
+          ? IconButton(
+          onPressed: () {
+            WoltModalSheet.show<void>(
+                context: context,
+                pageListBuilder: (modalSheetContext) {
+                  return [
+                    // getSearchBottomSheet(context)
+                    getLoginBottomSheet(modalSheetContext, context),
+                    // getCaptchaInputBottomSheet(modalSheetContext),
+                    // getEmailInputBottomSheet(modalSheetContext)
+                  ];
+                });
+          },
+          icon: const Icon(Icons.search))
           : Row(
               children: [
                 AdvancedAvatar(
@@ -36,7 +49,7 @@ class _HangarTopBarState extends State<HangarTopBar> {
                       shape: BoxShape.circle,
                     )),
                 const Text('我的机库', style: TextStyle(fontSize: 24)),
-                Spacer(),
+                const Spacer(),
                 IconButton(
                     onPressed: () {
                       WoltModalSheet.show<void>(

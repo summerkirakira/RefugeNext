@@ -44,6 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // Determine if the screen is wide enough to show the NavigationRail
     bool isWideScreen = MediaQuery.of(context).size.width >= 600;
 
+    final selectedPage = context.watch<MainDataModel>().selectedPage;
+
     return Scaffold(
       body: Row(
         children: [
@@ -77,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           Expanded(
             child: Center(
-              child: _getSelectedPage(context.watch<MainDataModel>().selectedPage),
+              child: _getSelectedPage(selectedPage),
             ),
           ),
         ],

@@ -63,16 +63,16 @@ class _HangarPageState extends State<HangarPage> {
                 await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
               },
               child: ListView.builder(
-                  padding: const EdgeInsets.all(0),
-                  physics: BouncingScrollPhysics(),
-                  itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
-                  itemBuilder: (context, index) {
-                    return HangarItemWidget(
-                      hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
-                      onTap: onTap,
-                    );
-                  }
-              )),
+                      padding: const EdgeInsets.all(0),
+                      physics: AlwaysScrollableScrollPhysics(),
+                      itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
+                      itemBuilder: (context, index) {
+                        return HangarItemWidget(
+                          hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
+                          onTap: onTap,
+                        );
+                      }
+                  )),
         ),
       ],
     );

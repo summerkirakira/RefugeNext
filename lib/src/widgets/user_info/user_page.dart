@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../datasource/data_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import '../user_info/user_switch_bottomsheet.dart';
 
 class TopBar extends StatefulWidget {
   const TopBar({Key? key}) : super(key: key);
@@ -31,21 +33,69 @@ class _TopBarState extends State<TopBar> {
                             fontSize: 24, fontWeight: FontWeight.bold)),
                     Text(Provider.of<MainDataModel>(context).currentUser!.name,
                         style: TextStyle(fontSize: 18)),
+
+                    GestureDetector(
+                      onTap: () {
+
+                        Provider.of<MainDataModel>(context, listen: false).userRepo.readUsers().then((users) {
+                          WoltModalSheet.show<void>(
+                            context: context,
+                            pageListBuilder: (modalSheetContext) {
+                              return [
+                                getUserSwitchBottomSheet(modalSheetContext, context, users),
+                              ];
+                            });
+                        });
+                      },
+                      child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 15, color: Colors.grey.withOpacity(0.7),),
+                            Text(
+                                "切换账号",
+                                style: TextStyle(fontSize: 15, color: Colors.grey.withOpacity(0.7))),
+                          ]
+                      ),
+                    )
+
                   ],
                 ),
                 Spacer(),
-                AdvancedAvatar(
-                    name: 'Hangar',
-                    size: 80,
-                    image: CachedNetworkImageProvider(
-                        Provider.of<MainDataModel>(context)
-                            .currentUser!
-                            .profileImage),
-                    margin: EdgeInsets.only(),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(10),
-                    )),
+                Stack(
+                  children: [
+                    AdvancedAvatar(
+                        name: 'Hangar',
+                        size: 80,
+                        image: CachedNetworkImageProvider(
+                            Provider.of<MainDataModel>(context)
+                                .currentUser!
+                                .profileImage),
+                        margin: EdgeInsets.only(),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.circular(10),
+                        )),
+                    // Positioned(
+                    //   left: 0,
+                    //   bottom: 0,
+                    //   child: Container(
+                    //     // padding: EdgeInsets.all(5),
+                    //     width: 30,
+                    //     height: 30,
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.grey.withOpacity(0.5),
+                    //       borderRadius: BorderRadius.circular(5),
+                    //     ),
+                    //     child: IconButton(
+                    //       onPressed: () {
+                    //       },
+                    //       icon: Icon(Icons.edit, size: 15,),
+                    //       color: Colors.white,
+                    //     ),
+                    //   ),
+                    // )
+                  ]
+                )
+
               ],
             ),
           )
@@ -349,6 +399,8 @@ class _UserInfoPageState extends State<UserInfoPage>
                   TopBar(),
                   UserSimpleInfo(),
                   UserDetailInfo(),
+                  Divider(),
+
                 ],
               );
       },

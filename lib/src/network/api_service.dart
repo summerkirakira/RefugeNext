@@ -30,10 +30,10 @@ class RsiApiClient {
 
     (_dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
         (client) {
-      client.findProxy = (uri) {
-        // 设置代理地址和端口
-        return "PROXY 192.168.133.154:8866";
-      };
+      // client.findProxy = (uri) {
+      //   // 设置代理地址和端口
+      //   return "PROXY 192.168.133.154:8866";
+      // };
       // 忽略证书错误（如果使用 HTTPS 代理）
       client.badCertificateCallback =
           (X509Certificate cert, String host, int port) => true;
