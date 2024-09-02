@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../datasource/models/hangar.dart' show HangarItem, HangarSubItem;
 // import 'package:provider/provider.dart';
 import '../datasource/data_model.dart' show MainDataModel, HangarItemType;
+import '../repo/translation.dart' show TranslationRepo;
 
 List<HangarItem> filterHangarItemsByType(
     MainDataModel dataModel, List<HangarItem> hangarItems) {
@@ -55,4 +58,55 @@ List<HangarItem> stackHangarItems(List<HangarItem> hangarItems) {
     }
   }
   return newHangarItems.values.toList();
+}
+
+
+Future<String> trainslateHangarItemName(TranslationRepo repo, String name) async {
+  final nameList = name.split("#");
+
+  final totalNameList = [];
+  for (var name in nameList) {
+    totalNameList.addAll(name.split(" - "));
+  }
+
+  List<String> translatedNameList = [];
+
+  for (var name in totalNameList) {
+    translatedNameList.add(await repo.getTranslation(name));
+  }
+
+  return translatedNameList.join(" - ");
+
+}
+
+
+Future<List<HangarItem>> translateHangarItem(List<HangarItem> hangarItems) async {
+
+  final repo = TranslationRepo();
+
+  final List<HangarItem> newHangarItems = [];
+
+  for(var hangarItem in hangarItems) {
+    final List<HangarSubItem> translatedSubItems = [];
+
+
+    final List<String> chineseAlsoContains = [];
+
+    for (var text in hangarItem.alsoContains.split('#')) {
+      chineseAlsoContains.add(await trainslateHangarItemName(repo, text));
+    }
+
+    for (var item in hangarItem.items) {
+      translatedSubItems.add(item.copyWith(title: await trainslateHangarItemName(repo, item.title)));
+    }
+
+    final newHangarItem = hangarItem.copyWith(
+      chineseName: await trainslateHangarItemName(repo, hangarItem.name),
+      chineseAlsoContains: chineseAlsoContains.join('#'),
+      items: translatedSubItems,
+    );
+
+    newHangarItems.add(newHangarItem);
+  };
+  return newHangarItems;
 }

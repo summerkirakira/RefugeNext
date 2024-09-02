@@ -45,7 +45,6 @@ class UserRepo {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('vip.kirakira.user.handle', user.handle);
-
     await writeUsers(newUsers);
   }
 

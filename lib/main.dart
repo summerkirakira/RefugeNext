@@ -59,7 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               labelType: NavigationRailLabelType.selected,
               groupAlignment: 0.0,
-              destinations: [
+              destinations: const [
                 NavigationRailDestination(
                   icon: Icon(Icons.home),
                   selectedIcon: Icon(Icons.home_filled),

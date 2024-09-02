@@ -1,4 +1,5 @@
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 
 import '../network/api_service.dart';
 import '../repo/hangar.dart';
@@ -12,6 +13,8 @@ import 'package:refuge_next/src/network/graphql/catalog.dart' show CatalogReq;
 import '../network/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../repo/user.dart';
+import '../repo/translation.dart';
+import '../network/cirno/cirno_api.dart';
 
 
 
@@ -58,6 +61,21 @@ Future<void> userInit() async {
     rsiApiClient.setRSIDevice(device: device);
   }
   rsiApiClient.setRSIToken(token: user.rsiToken);
+
+  final cirnoClient = CirnoApiClient();
+
+  // final translation = await cirnoClient.getTranslationMap("https://image.biaoju.site/starcitizen/translation/test_translation.json");
+
+  final translationRepo = TranslationRepo();
+  // await translationRepo.writeTranslation(translation, 0);
+
+  await translationRepo.readTranslation();
+  //
+  // final a = await translationRepo.getTranslation('Paints');
+
+  // if (translation != null) {
+  //
+  // }
 
 }
 

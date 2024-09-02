@@ -94,7 +94,9 @@ class MainDataModel extends ChangeNotifier {
   Future<void> updateHangarItems() async {
     final items = await hangarRepo.refreshHangarItems();
     final filteredItems = filterHangarItemsByType(this, items);
-    _hangarItems = stackHangarItems(filteredItems);
+    final stackedItems = stackHangarItems(filteredItems);
+    final translatedItems = await translateHangarItem(stackedItems);
+    _hangarItems = translatedItems;
     notifyListeners();
   }
 

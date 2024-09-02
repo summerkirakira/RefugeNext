@@ -56,8 +56,8 @@ class _HangarTopBarState extends State<HangarTopBar> {
                           context: context,
                           pageListBuilder: (modalSheetContext) {
                             return [
-                              // getSearchBottomSheet(context)
-                              getLoginBottomSheet(modalSheetContext, context),
+                              getSearchBottomSheet(context)
+                              // getLoginBottomSheet(modalSheetContext, context),
                               // getCaptchaInputBottomSheet(modalSheetContext),
                               // getEmailInputBottomSheet(modalSheetContext)
                             ];

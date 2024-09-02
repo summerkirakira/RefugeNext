@@ -292,13 +292,13 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
                 child: SubHangarItemWidget(context, subItem),
               ),
           const Divider(),
-          if (hangarItem.alsoContains.isNotEmpty)
-            for(final alsoContain in hangarItem.alsoContains.split("#"))
+          if (hangarItem.chineseAlsoContains!.isNotEmpty)
+            for(final alsoContain in hangarItem.chineseAlsoContains!.split("#"))
               Padding(
                 padding: const EdgeInsets.only(
                     top: 5
                 ),
-                child: Text(alsoContain.trim(), style: const TextStyle(
+                child: Text('${alsoContain.trim()}', style: const TextStyle(
                   fontSize: 15,
                 )),
               ),

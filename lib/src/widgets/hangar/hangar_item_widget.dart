@@ -270,7 +270,7 @@ class HangarItemWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(hangarItem.chineseName!),
+                      Text(hangarItem.chineseName!, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       Spacer(),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,

@@ -14,10 +14,6 @@ import '../../datasource/data_model.dart';
 
 
 class HangarPage extends StatefulWidget {
-
-
-
-
   @override
   _HangarPageState createState() => _HangarPageState();
 }
@@ -26,8 +22,6 @@ class _HangarPageState extends State<HangarPage> {
 
 
   void onTap(HangarItem hangarItem) {
-
-
     WoltModalSheet.show<void>(
       context: context,
       pageListBuilder: (modalSheetContext) {

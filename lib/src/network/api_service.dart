@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'utils.dart';
-import 'dart:convert';
 import '../datasource/models/login/login_property.dart';
 import 'dart:io';
 
