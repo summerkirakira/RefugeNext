@@ -99,7 +99,12 @@ Future<List<HangarItem>> translateHangarItem(List<HangarItem> hangarItems) async
     }
 
     for (var item in hangarItem.items) {
-      translatedSubItems.add(item.copyWith(title: await trainslateHangarItemName(repo, item.title)));
+      translatedSubItems.add(
+          item.copyWith(
+              chineseTitle: await trainslateHangarItemName(repo, item.title),
+              chineseSubtitle: await trainslateHangarItemName(repo, item.subtitle)
+          )
+      );
     }
 
 
@@ -110,7 +115,10 @@ Future<List<HangarItem>> translateHangarItem(List<HangarItem> hangarItems) async
       final fromShipName = await trainslateHangarItemName(repo, hangarItem.fromShip!.name);
       final toShipName = await trainslateHangarItemName(repo, hangarItem.toShip!.name);
 
-      chineseTitle = "升级包 - 从 ${fromShipName} 到 ${toShipName}";
+      hangarItem.fromShip!.chineseName = fromShipName;
+      hangarItem.toShip!.chineseName = toShipName;
+
+      chineseTitle = "升级包 - 从 $fromShipName 到 $toShipName";
     } else {
       chineseTitle = await trainslateHangarItemName(repo, hangarItem.name);
     }
@@ -120,6 +128,8 @@ Future<List<HangarItem>> translateHangarItem(List<HangarItem> hangarItems) async
       chineseName: chineseTitle,
       chineseAlsoContains: chineseAlsoContains.join('#'),
       items: translatedSubItems,
+      fromShip: hangarItem.fromShip,
+      toShip: hangarItem.toShip,
     );
 
     newHangarItems.add(newHangarItem);

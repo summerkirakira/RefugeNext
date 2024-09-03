@@ -6,6 +6,8 @@ import '../repo/user.dart';
 import '../funcs/hangar_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/api_service.dart';
+import '../funcs/search.dart' show processSearch;
+import './models/searchProperty.dart';
 
 
 enum HangarItemType {
@@ -28,15 +30,19 @@ class MainDataModel extends ChangeNotifier {
 
   List<HangarItemType> get selectedHangarItemType => _selectedHangarItemType;
 
+  SearchProperty? _searchProperty = null;
+
+  bool get isSearched => _searchProperty != null;
+
+  SearchProperty? get searchProperty => _searchProperty;
+
   List<HangarItem> _hangarItems = [];
 
-  List<HangarItem> get hangarItems => _hangarItems;
+  List<HangarItem> get hangarItems => processSearch(_hangarItems, searchProperty);
+
+  List<HangarItem> get rawHangarItems => _hangarItems;
 
   User? _currentUser;
-
-  String _searchKey = '';
-
-  String get searchKey => _searchKey;
 
   User? get currentUser => _currentUser;
 
@@ -64,7 +70,10 @@ class MainDataModel extends ChangeNotifier {
   }
 
 
-
+  void clearSearch() {
+    _searchProperty = null;
+    notifyListeners();
+  }
 
   void updateData(String newData) {
     _data = newData;
@@ -101,14 +110,18 @@ class MainDataModel extends ChangeNotifier {
     final items = await hangarRepo.refreshHangarItems();
     final filteredItems = filterHangarItemsByType(this, items);
     final stackedItems = stackHangarItems(filteredItems);
-    final translatedItems = await translateHangarItem(stackedItems);
+    final calculatedItems = await calculateShipPrice(stackedItems);
+    final translatedItems = await translateHangarItem(calculatedItems);
     _hangarItems = translatedItems;
     notifyListeners();
   }
 
-  void updateSearchKey(String newKey) {
-    _searchKey = newKey;
+  void updateSearchProperty(SearchProperty? newProperty) {
+    _searchProperty = newProperty;
+    notifyListeners();
   }
+
+
 
   void updateCurrentUser(User newUser) {
     _currentUser = newUser;

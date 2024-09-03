@@ -14,6 +14,10 @@ import '../../datasource/data_model.dart';
 
 
 class HangarPage extends StatefulWidget {
+
+
+
+
   @override
   _HangarPageState createState() => _HangarPageState();
 }
@@ -22,6 +26,8 @@ class _HangarPageState extends State<HangarPage> {
 
 
   void onTap(HangarItem hangarItem) {
+
+
     WoltModalSheet.show<void>(
       context: context,
       pageListBuilder: (modalSheetContext) {
@@ -56,17 +62,64 @@ class _HangarPageState extends State<HangarPage> {
               onRefresh: () async {
                 await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
               },
-              child: ListView.builder(
-                      padding: const EdgeInsets.all(0),
-                      physics: AlwaysScrollableScrollPhysics(),
-                      itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
-                      itemBuilder: (context, index) {
-                        return HangarItemWidget(
-                          hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
-                          onTap: onTap,
-                        );
-                      }
-                  )),
+              child: Column(
+                children: [
+                  if (Provider.of<MainDataModel>(context).isSearched)
+                    SizedBox(
+                      height: 25,
+                      width: double.infinity,
+                      child: Container(
+                        width: double.infinity,
+                        color: Colors.red,
+                        child: Stack(
+                            children: [
+                              Center(
+                                child: Text(
+                                  '机库筛选中',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                  right: 5,
+                                  top: 3,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Provider.of<MainDataModel>(context, listen: false).clearSearch();
+                                    },
+                                    child: Text('取消',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  )
+                              ),
+                            ]
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child:ListView.builder(
+                        padding: const EdgeInsets.all(0),
+                        physics: AlwaysScrollableScrollPhysics(),
+                        itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
+                        itemBuilder: (context, index) {
+                          return HangarItemWidget(
+                            hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
+                            onTap: onTap,
+                          );
+                        }
+                    ),
+                  ),
+                ],
+              )
+          ),
         ),
       ],
     );

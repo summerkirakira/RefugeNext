@@ -47,12 +47,12 @@ Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.title, style: const TextStyle(
+                Text(item.chineseTitle!, style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold
                 )),
                 const SizedBox(height: 5),
-                Text(item.subtitle, style: const TextStyle(
+                Text(item.chineseSubtitle!, style: const TextStyle(
                     fontSize: 14,
                     color: Colors.grey
                 )),

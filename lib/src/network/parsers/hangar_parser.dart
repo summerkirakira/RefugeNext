@@ -103,8 +103,8 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
             kind: kind,
             subtitle: subtitle,
             insertTime: 777,
-            chineseSubtitle: "Test123",
-            chineseTitle: "Test2332x",
+            chineseSubtitle: subtitle,
+            chineseTitle: title,
             price: 0,
             fromShipPrice: 0,
             toShipPrice: 0,
@@ -143,7 +143,7 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
       if (insuranceTime > 0 && insuranceString.isEmpty) {
         if (insuranceTime % 12 == 0)
           insuranceString = "${insuranceTime ~/ 12}Y";
-        insuranceString = "$insuranceTime M";
+        insuranceString = "${insuranceTime}M";
       }
 
 
