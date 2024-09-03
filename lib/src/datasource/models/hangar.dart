@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:refuge_next/src/datasource/models/upgradeInfo.dart';
+import '../../network/cirno/property/property.dart';
 
 part 'hangar.freezed.dart';
 part 'hangar.g.dart';
@@ -58,6 +60,9 @@ class HangarItem with _$HangarItem {
     required bool canReclaim,
     required bool canUpgrade,
     required int page,
+    UpgradeInfo? upgradeInfo,
+    ShipAlias? fromShip,
+    ShipAlias? toShip,
   }) = _HangarItem;
 
   factory HangarItem.fromJson(Map<String, dynamic> json) => _$HangarItemFromJson(json);

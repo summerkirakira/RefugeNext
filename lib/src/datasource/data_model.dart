@@ -86,8 +86,14 @@ class MainDataModel extends ChangeNotifier {
   void readHangarItems() {
     hangarRepo.readHangarItems().then((value) {
       final filteredItems = filterHangarItemsByType(this, value);
-      _hangarItems = stackHangarItems(filteredItems);
-      notifyListeners();
+      final stackedItems = stackHangarItems(filteredItems);
+      calculateShipPrice(stackedItems).then((shipValue) {
+        translateHangarItem(shipValue).then((value) {
+          _hangarItems = value;
+          notifyListeners();
+        });
+      });
+
     });
   }
 

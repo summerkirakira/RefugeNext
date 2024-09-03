@@ -2,6 +2,8 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
 import 'package:intl/intl.dart';
 import '../../datasource/models/hangar.dart';
+import '../../datasource/models/upgradeInfo.dart';
+import 'dart:convert';
 
 class ParserError implements Exception {
   final String message;
@@ -68,7 +70,13 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
       bool canGift = pledge.querySelector(".shadow-button.js-gift") != null;
       bool canExchange = pledge.querySelector(".shadow-button.js-reclaim") != null;
       bool canUpgrade = pledge.querySelector(".shadow-button.js-apply-upgrade") != null;
-      bool isUpgrade = pledge.querySelector(".js-upgrade-data") != null;
+
+      final upgradeInfo = pledge.querySelector(".js-upgrade-data");
+
+      String? upgradeInfoString = upgradeInfo?.attributes['value'];
+
+      bool isUpgrade = upgradeInfo != null;
+
 
       String alsoContainsItemString = pledge.querySelectorAll(".title").map((element) {
         return element.text;
@@ -140,6 +148,8 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
 
 
 
+
+
       HangarItem hangarItem = HangarItem(
         id: pledgeId,
         name: pledgeTitle,
@@ -164,6 +174,7 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
         currentPrice: pledgeValue,
         rawData: [],
         idList: [],
+        upgradeInfo: upgradeInfoString != null ? UpgradeInfo.fromJson(jsonDecode(upgradeInfoString)) : null,
       );
 
       hangarItem.idList.add(pledgeId);

@@ -10,6 +10,14 @@ import 'package:image/image.dart' as img;
 import '../../funcs/images.dart';
 
 
+String priceString(int price) {
+  if (price % 100 == 0) {
+    return (price ~/ 100).toString();
+  } else {
+    return (price / 100).toStringAsFixed(2);
+  }
+}
+
 
 Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
   return Row(
@@ -74,12 +82,12 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
         Column(
           children: [
             Text('可融价值', style: const TextStyle(
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: FontWeight.bold
             )),
             const SizedBox(height: 5),
-            Text("\$$price", style: const TextStyle(
-              fontSize: 14,
+            Text("\$${priceString(price)}", style: const TextStyle(
+              fontSize: 16,
               color: Colors.grey
             ))
           ],
@@ -88,12 +96,12 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
         Column(
           children: [
             Text('当前价值', style: const TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold
             )),
             const SizedBox(height: 5),
-            Text("\$$currentPrice", style: const TextStyle(
-                fontSize: 14,
+            Text("\$${priceString(currentPrice)}", style: const TextStyle(
+                fontSize: 16,
                 color: Colors.grey
             ))
           ],

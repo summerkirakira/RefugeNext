@@ -16,6 +16,8 @@ import '../repo/user.dart';
 import '../repo/translation.dart';
 import '../network/cirno/cirno_api.dart';
 
+import '../repo/ship_alias.dart';
+
 
 
 
@@ -77,6 +79,12 @@ Future<void> userInit() async {
   //
   // }
 
+  final shipAliases = await cirnoClient.getShipAliases("https://image.biaoju.site/starcitizen/formatted_ship_alias.1.1.6.json");
+
+  final shipAliasRepo = ShipAliasRepo();
+  await shipAliasRepo.writeShipAliases(shipAliases, 0);
+  // final a = await shipAliasRepo.getShipAlias('Carrack');
+  // print(a);
 }
 
 

@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import '../datasource/models/hangar.dart' show HangarItem, HangarSubItem;
 // import 'package:provider/provider.dart';
 import '../datasource/data_model.dart' show MainDataModel, HangarItemType;
+import '../network/cirno/property/property.dart';
 import '../repo/translation.dart' show TranslationRepo;
+import '../repo/ship_alias.dart' show ShipAliasRepo;
 
 List<HangarItem> filterHangarItemsByType(
     MainDataModel dataModel, List<HangarItem> hangarItems) {
@@ -100,13 +102,89 @@ Future<List<HangarItem>> translateHangarItem(List<HangarItem> hangarItems) async
       translatedSubItems.add(item.copyWith(title: await trainslateHangarItemName(repo, item.title)));
     }
 
+
+    String chineseTitle = "";
+
+    if (hangarItem.fromShip != null && hangarItem.toShip != null) {
+
+      final fromShipName = await trainslateHangarItemName(repo, hangarItem.fromShip!.name);
+      final toShipName = await trainslateHangarItemName(repo, hangarItem.toShip!.name);
+
+      chineseTitle = "升级包 - 从 ${fromShipName} 到 ${toShipName}";
+    } else {
+      chineseTitle = await trainslateHangarItemName(repo, hangarItem.name);
+    }
+
+
     final newHangarItem = hangarItem.copyWith(
-      chineseName: await trainslateHangarItemName(repo, hangarItem.name),
+      chineseName: chineseTitle,
       chineseAlsoContains: chineseAlsoContains.join('#'),
       items: translatedSubItems,
     );
 
     newHangarItems.add(newHangarItem);
   };
+  return newHangarItems;
+}
+
+
+List<String> splitShipName(String title) {
+  String shipName = title.replaceAll("Upgrade - ", " ");
+  List<String> shipNameList = shipName.split(" to ");
+  return shipNameList.map((e) => e.trim()).toList();
+}
+
+
+Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async {
+  final shipAliasRepo = ShipAliasRepo();
+  final List<HangarItem> newHangarItems = [];
+
+
+
+  for (var hangarItem in hangarItems) {
+    ShipAlias? fromShip;
+    ShipAlias? toShip;
+    int price = 0;
+
+    if (hangarItem.isUpgrade && hangarItem.upgradeInfo!.matchItems!.isNotEmpty && hangarItem.upgradeInfo!.targetItems!.isNotEmpty) {
+      final shipNameList = [hangarItem.upgradeInfo!.matchItems!.first.name, hangarItem.upgradeInfo!.targetItems!.first.name];
+      if (shipNameList.length == 2) {
+        fromShip = await shipAliasRepo.getShipAlias(shipNameList[0]!);
+        toShip = await shipAliasRepo.getShipAlias(shipNameList[1]!);
+        if (fromShip != null && toShip != null) {
+          price += toShip.getHighestSku() - fromShip.getHighestSku();
+        }
+      }
+    }
+
+
+    final List<HangarSubItem> newSubItems = [];
+
+    for (var subItem in hangarItem.items) {
+      if (subItem.kind == 'Ship') {
+        final shipAlias = await shipAliasRepo.getShipAlias(subItem.title);
+        if (shipAlias != null) {
+          newSubItems.add(subItem.copyWith(price: shipAlias.getHighestSku()));
+          price += shipAlias.getHighestSku();
+          continue;
+        }
+      }
+      newSubItems.add(subItem.copyWith());
+    }
+
+    if (price == 0) {
+      price = hangarItem.price;
+    }
+
+    final newHangarItem = hangarItem.copyWith(
+      currentPrice: price,
+      items: newSubItems,
+      fromShip: fromShip,
+      toShip: toShip,
+    );
+
+    newHangarItems.add(newHangarItem);
+  }
+
   return newHangarItems;
 }

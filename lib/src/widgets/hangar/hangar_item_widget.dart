@@ -8,6 +8,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 
+String priceString(int price) {
+  if (price % 100 == 0) {
+    return (price ~/ 100).toString();
+  } else {
+    return (price / 100).toStringAsFixed(2);
+  }
+}
+
 
 class PriceWidget extends StatelessWidget {
   final int price;
@@ -24,7 +32,7 @@ class PriceWidget extends StatelessWidget {
       children: [
         Text('\$', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
         Text(
-          price.toString(),
+          priceString(price),
           style: TextStyle(
               fontSize: 20
           ),
@@ -35,11 +43,11 @@ class PriceWidget extends StatelessWidget {
 
 
   Widget? currentPriceWidget(BuildContext context) {
-    if (price > 0) {
+    if (price > 0 || currentPrice > 0) {
       return Row(
         children: [
           Text(
-            '\$${currentPrice.toString()}',
+            '\$${priceString(currentPrice)}',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).hintColor,
@@ -47,7 +55,7 @@ class PriceWidget extends StatelessWidget {
             ),
           ),
           Text(
-            ' (${((currentPrice - price) / price * 100).toStringAsFixed(2)}%)',
+            ' (${((price - currentPrice) / currentPrice * 100).toStringAsFixed(2)}%)',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).hintColor,

@@ -59,7 +59,8 @@ class TranslationRepo {
   }
 
   Future<String> getTranslation(String key) async {
-    return _translation[key] ?? key;
+    final finalKey = key.replaceAll("\n", "").trim();
+    return _translation[finalKey] ?? finalKey;
   }
 
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class TranslationProperty {
   final int id;
   final int productId;
@@ -44,5 +46,88 @@ class TranslationProperty {
       'from_ship': fromShip,
       'to_ship': toShip,
     };
+  }
+}
+
+class ShipAlias {
+  final int id;
+  final String name;
+  String? chineseName;
+  final List<String> alias;
+  final List<Sku> skus;
+
+  ShipAlias({
+    required this.id,
+    required this.name,
+    this.chineseName,
+    required this.alias,
+    required this.skus,
+  });
+
+  int getHighestSku() {
+    if (skus.isEmpty) return 0;
+    int highestPrice = skus[0].price;
+    for (var sku in skus) {
+      if (sku.price > highestPrice) {
+        highestPrice = sku.price;
+      }
+    }
+    return highestPrice;
+  }
+
+  // JSON 序列化方法
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'chineseName': chineseName,
+    'alias': alias,
+    'skus': skus.map((sku) => sku.toJson()).toList(),
+  };
+
+  // JSON 反序列化方法
+  factory ShipAlias.fromJson(Map<String, dynamic> json) {
+    return ShipAlias(
+      id: json['id'],
+      name: json['name'],
+      chineseName: json['chineseName'],
+      alias: List<String>.from(json['alias']),
+      skus: (json['skus'] as List).map((skuJson) => Sku.fromJson(skuJson)).toList(),
+    );
+  }
+
+  // 用于打印对象的方法
+  @override
+  String toString() {
+    return jsonEncode(this.toJson());
+  }
+}
+
+class Sku {
+  final String title;
+  final int price;
+
+  Sku({
+    required this.title,
+    required this.price,
+  });
+
+  // JSON 序列化方法
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'price': price,
+  };
+
+  // JSON 反序列化方法
+  factory Sku.fromJson(Map<String, dynamic> json) {
+    return Sku(
+      title: json['title'],
+      price: json['price'],
+    );
+  }
+
+  // 用于打印对象的方法
+  @override
+  String toString() {
+    return jsonEncode(this.toJson());
   }
 }

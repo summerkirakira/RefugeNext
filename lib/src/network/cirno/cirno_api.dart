@@ -39,5 +39,12 @@ class CirnoApiClient {
     return Map<String, String>.from(data.map((key, value) => MapEntry(key, value.toString())));
   }
 
+  Future<List<ShipAlias>> getShipAliases(String url) async {
+    final response = await _dio.get(url);
+    final data = response.data;
+
+    return List<ShipAlias>.from(data.map((e) => ShipAlias.fromJson(e)));
+  }
+
 
 }

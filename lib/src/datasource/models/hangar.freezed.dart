@@ -555,6 +555,12 @@ mixin _$HangarItem {
   set canUpgrade(bool value) => throw _privateConstructorUsedError;
   int get page => throw _privateConstructorUsedError;
   set page(int value) => throw _privateConstructorUsedError;
+  UpgradeInfo? get upgradeInfo => throw _privateConstructorUsedError;
+  set upgradeInfo(UpgradeInfo? value) => throw _privateConstructorUsedError;
+  ShipAlias? get fromShip => throw _privateConstructorUsedError;
+  set fromShip(ShipAlias? value) => throw _privateConstructorUsedError;
+  ShipAlias? get toShip => throw _privateConstructorUsedError;
+  set toShip(ShipAlias? value) => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -591,7 +597,10 @@ abstract class $HangarItemCopyWith<$Res> {
       bool canGit,
       bool canReclaim,
       bool canUpgrade,
-      int page});
+      int page,
+      UpgradeInfo? upgradeInfo,
+      ShipAlias? fromShip,
+      ShipAlias? toShip});
 }
 
 /// @nodoc
@@ -630,6 +639,9 @@ class _$HangarItemCopyWithImpl<$Res, $Val extends HangarItem>
     Object? canReclaim = null,
     Object? canUpgrade = null,
     Object? page = null,
+    Object? upgradeInfo = freezed,
+    Object? fromShip = freezed,
+    Object? toShip = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -724,6 +736,18 @@ class _$HangarItemCopyWithImpl<$Res, $Val extends HangarItem>
           ? _value.page
           : page // ignore: cast_nullable_to_non_nullable
               as int,
+      upgradeInfo: freezed == upgradeInfo
+          ? _value.upgradeInfo
+          : upgradeInfo // ignore: cast_nullable_to_non_nullable
+              as UpgradeInfo?,
+      fromShip: freezed == fromShip
+          ? _value.fromShip
+          : fromShip // ignore: cast_nullable_to_non_nullable
+              as ShipAlias?,
+      toShip: freezed == toShip
+          ? _value.toShip
+          : toShip // ignore: cast_nullable_to_non_nullable
+              as ShipAlias?,
     ) as $Val);
   }
 }
@@ -759,7 +783,10 @@ abstract class _$$HangarItemImplCopyWith<$Res>
       bool canGit,
       bool canReclaim,
       bool canUpgrade,
-      int page});
+      int page,
+      UpgradeInfo? upgradeInfo,
+      ShipAlias? fromShip,
+      ShipAlias? toShip});
 }
 
 /// @nodoc
@@ -796,6 +823,9 @@ class __$$HangarItemImplCopyWithImpl<$Res>
     Object? canReclaim = null,
     Object? canUpgrade = null,
     Object? page = null,
+    Object? upgradeInfo = freezed,
+    Object? fromShip = freezed,
+    Object? toShip = freezed,
   }) {
     return _then(_$HangarItemImpl(
       id: null == id
@@ -890,6 +920,18 @@ class __$$HangarItemImplCopyWithImpl<$Res>
           ? _value.page
           : page // ignore: cast_nullable_to_non_nullable
               as int,
+      upgradeInfo: freezed == upgradeInfo
+          ? _value.upgradeInfo
+          : upgradeInfo // ignore: cast_nullable_to_non_nullable
+              as UpgradeInfo?,
+      fromShip: freezed == fromShip
+          ? _value.fromShip
+          : fromShip // ignore: cast_nullable_to_non_nullable
+              as ShipAlias?,
+      toShip: freezed == toShip
+          ? _value.toShip
+          : toShip // ignore: cast_nullable_to_non_nullable
+              as ShipAlias?,
     ));
   }
 }
@@ -920,7 +962,10 @@ class _$HangarItemImpl implements _HangarItem {
       required this.canGit,
       required this.canReclaim,
       required this.canUpgrade,
-      required this.page});
+      required this.page,
+      this.upgradeInfo,
+      this.fromShip,
+      this.toShip});
 
   factory _$HangarItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$HangarItemImplFromJson(json);
@@ -971,10 +1016,16 @@ class _$HangarItemImpl implements _HangarItem {
   bool canUpgrade;
   @override
   int page;
+  @override
+  UpgradeInfo? upgradeInfo;
+  @override
+  ShipAlias? fromShip;
+  @override
+  ShipAlias? toShip;
 
   @override
   String toString() {
-    return 'HangarItem(id: $id, idList: $idList, name: $name, chineseName: $chineseName, image: $image, number: $number, status: $status, tags: $tags, date: $date, contains: $contains, price: $price, insurance: $insurance, alsoContains: $alsoContains, items: $items, isUpgrade: $isUpgrade, chineseAlsoContains: $chineseAlsoContains, rawData: $rawData, ownedBy: $ownedBy, currentPrice: $currentPrice, canGit: $canGit, canReclaim: $canReclaim, canUpgrade: $canUpgrade, page: $page)';
+    return 'HangarItem(id: $id, idList: $idList, name: $name, chineseName: $chineseName, image: $image, number: $number, status: $status, tags: $tags, date: $date, contains: $contains, price: $price, insurance: $insurance, alsoContains: $alsoContains, items: $items, isUpgrade: $isUpgrade, chineseAlsoContains: $chineseAlsoContains, rawData: $rawData, ownedBy: $ownedBy, currentPrice: $currentPrice, canGit: $canGit, canReclaim: $canReclaim, canUpgrade: $canUpgrade, page: $page, upgradeInfo: $upgradeInfo, fromShip: $fromShip, toShip: $toShip)';
   }
 
   @JsonKey(ignore: true)
@@ -1015,7 +1066,10 @@ abstract class _HangarItem implements HangarItem {
       required bool canGit,
       required bool canReclaim,
       required bool canUpgrade,
-      required int page}) = _$HangarItemImpl;
+      required int page,
+      UpgradeInfo? upgradeInfo,
+      ShipAlias? fromShip,
+      ShipAlias? toShip}) = _$HangarItemImpl;
 
   factory _HangarItem.fromJson(Map<String, dynamic> json) =
       _$HangarItemImpl.fromJson;
@@ -1089,6 +1143,15 @@ abstract class _HangarItem implements HangarItem {
   @override
   int get page;
   set page(int value);
+  @override
+  UpgradeInfo? get upgradeInfo;
+  set upgradeInfo(UpgradeInfo? value);
+  @override
+  ShipAlias? get fromShip;
+  set fromShip(ShipAlias? value);
+  @override
+  ShipAlias? get toShip;
+  set toShip(ShipAlias? value);
   @override
   @JsonKey(ignore: true)
   _$$HangarItemImplCopyWith<_$HangarItemImpl> get copyWith =>

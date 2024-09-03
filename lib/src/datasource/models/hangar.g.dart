@@ -77,6 +77,15 @@ _$HangarItemImpl _$$HangarItemImplFromJson(Map<String, dynamic> json) =>
       canReclaim: json['canReclaim'] as bool,
       canUpgrade: json['canUpgrade'] as bool,
       page: (json['page'] as num).toInt(),
+      upgradeInfo: json['upgradeInfo'] == null
+          ? null
+          : UpgradeInfo.fromJson(json['upgradeInfo'] as Map<String, dynamic>),
+      fromShip: json['fromShip'] == null
+          ? null
+          : ShipAlias.fromJson(json['fromShip'] as Map<String, dynamic>),
+      toShip: json['toShip'] == null
+          ? null
+          : ShipAlias.fromJson(json['toShip'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$HangarItemImplToJson(_$HangarItemImpl instance) =>
@@ -104,4 +113,7 @@ Map<String, dynamic> _$$HangarItemImplToJson(_$HangarItemImpl instance) =>
       'canReclaim': instance.canReclaim,
       'canUpgrade': instance.canUpgrade,
       'page': instance.page,
+      'upgradeInfo': instance.upgradeInfo,
+      'fromShip': instance.fromShip,
+      'toShip': instance.toShip,
     };
