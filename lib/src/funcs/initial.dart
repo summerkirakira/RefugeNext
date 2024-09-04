@@ -73,7 +73,7 @@ Future<void> userInit() async {
   final translationRepo = TranslationRepo();
   // await translationRepo.writeTranslation(translation, 0);
 
-  await translationRepo.readTranslation();
+  final a = await translationRepo.readTranslation();
   //
   // final a = await translationRepo.getTranslation('Paints');
 
@@ -89,8 +89,8 @@ Future<void> userInit() async {
   // print(a);
 
 
-  final buybackRepo = BuybackRepo();
-  await buybackRepo.readBuybackItems();
+  // final buybackRepo = BuybackRepo();
+  // await buybackRepo.readBuybackItems();
   // final items = await buybackRepo.refreshBuybackItems();
   // print(items);
 
@@ -102,5 +102,6 @@ Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
   final hangarRepo = HangarRepo();
+
 
 }

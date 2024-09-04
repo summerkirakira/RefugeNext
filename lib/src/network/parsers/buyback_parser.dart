@@ -20,7 +20,10 @@ List<BuybackItem> parseBuybackItem(String page) {
   final buybackItems = <BuybackItem>[];
 
   for (var pledge in doc.querySelectorAll('article.pledge')) {
-    final image = pledge.querySelector('img')?.attributes['src'] ?? '';
+    String image = pledge.querySelector('img')?.attributes['src'] ?? '';
+    if (image.startsWith('/')) {
+      image = 'https://robertsspaceindustries.com$image';
+    }
     final title = pledge.querySelector('.information h1')?.text ?? '';
     final timeString = pledge.querySelectorAll('dl dd')[0].text;
     final time = convertDateToLong(timeString);

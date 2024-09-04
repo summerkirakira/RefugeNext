@@ -60,6 +60,7 @@ class MainDataModel extends ChangeNotifier {
   MainDataModel() {
     initUser();
     readHangarItems();
+    readBuybackItems();
   }
 
 

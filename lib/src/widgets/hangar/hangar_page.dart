@@ -12,6 +12,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'ship_reclaim_modal.dart';
 import '../../datasource/data_model.dart';
 import '../hangar_buyback/hangar_buyback_page.dart';
+import '../buyback/buyback_page.dart';
 
 
 class HangarPage extends StatefulWidget {
@@ -118,12 +119,7 @@ class _HangarPageState extends State<HangarPage> {
                 )
             ),
           ),
-          Container(
-            color: Colors.blue,
-            child: Center(
-              child: Text('回购页面'),
-            ),
-          ),
+          BuybackPage(),
         ], titles: ["机库", "回购"]),
       ],
     );
