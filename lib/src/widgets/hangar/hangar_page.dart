@@ -11,13 +11,10 @@ import 'hangar_item_detail_widget.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'ship_reclaim_modal.dart';
 import '../../datasource/data_model.dart';
+import '../hangar_buyback/hangar_buyback_page.dart';
 
 
 class HangarPage extends StatefulWidget {
-
-
-
-
   @override
   _HangarPageState createState() => _HangarPageState();
 }
@@ -53,74 +50,81 @@ class _HangarPageState extends State<HangarPage> {
   @override
   Widget build(BuildContext context) {
 
-
     return  Column(
       children: [
         HangarTopBar(),
-        Expanded(
-          child: RefreshIndicator(
-              onRefresh: () async {
-                await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
-              },
-              child: Column(
-                children: [
-                  if (Provider.of<MainDataModel>(context).isSearched)
-                    SizedBox(
-                      height: 25,
-                      width: double.infinity,
-                      child: Container(
+        HangarBuybackPage(children: [
+          Container(
+            child: RefreshIndicator(
+                onRefresh: () async {
+                  await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
+                },
+                child: Column(
+                  children: [
+                    if (Provider.of<MainDataModel>(context).isSearched)
+                      SizedBox(
+                        height: 25,
                         width: double.infinity,
-                        color: Colors.red,
-                        child: Stack(
-                            children: [
-                              Center(
-                                child: Text(
-                                  '机库筛选中',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                        child: Container(
+                          width: double.infinity,
+                          color: Colors.red,
+                          child: Stack(
+                              children: [
+                                Center(
+                                  child: Text(
+                                    '机库筛选中',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                  right: 5,
-                                  top: 3,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Provider.of<MainDataModel>(context, listen: false).clearSearch();
-                                    },
-                                    child: Text('取消',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        decoration: TextDecoration.underline,
+                                Positioned(
+                                    right: 5,
+                                    top: 3,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Provider.of<MainDataModel>(context, listen: false).clearSearch();
+                                      },
+                                      child: Text('取消',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          decoration: TextDecoration.underline,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                              ),
-                            ]
+                                    )
+                                ),
+                              ]
+                          ),
                         ),
                       ),
+                    Expanded(
+                      child:ListView.builder(
+                          padding: const EdgeInsets.all(0),
+                          physics: AlwaysScrollableScrollPhysics(),
+                          itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
+                          itemBuilder: (context, index) {
+                            return HangarItemWidget(
+                              hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
+                              onTap: onTap,
+                            );
+                          }
+                      ),
                     ),
-                  Expanded(
-                    child:ListView.builder(
-                        padding: const EdgeInsets.all(0),
-                        physics: AlwaysScrollableScrollPhysics(),
-                        itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
-                        itemBuilder: (context, index) {
-                          return HangarItemWidget(
-                            hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
-                            onTap: onTap,
-                          );
-                        }
-                    ),
-                  ),
-                ],
-              )
+                  ],
+                )
+            ),
           ),
-        ),
+          Container(
+            color: Colors.blue,
+            child: Center(
+              child: Text('回购页面'),
+            ),
+          ),
+        ], titles: ["机库", "回购"]),
       ],
     );
   }

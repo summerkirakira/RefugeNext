@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:refuge_next/src/datasource/models/buyback.dart';
 import './models/hangar.dart';
 import './models/user.dart';
 import '../repo/hangar.dart';
 import '../repo/user.dart';
 import '../funcs/hangar_utils.dart';
+import '../funcs/buyback_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/api_service.dart';
 import '../funcs/search.dart' show processSearch;
 import './models/searchProperty.dart';
+import '../repo/buyback.dart';
 
 
 enum HangarItemType {
@@ -42,12 +45,17 @@ class MainDataModel extends ChangeNotifier {
 
   List<HangarItem> get rawHangarItems => _hangarItems;
 
+  List<BuybackItem> _buybackItems = [];
+
+  List<BuybackItem> get buybackItems => _buybackItems;
+
   User? _currentUser;
 
   User? get currentUser => _currentUser;
 
   final hangarRepo = HangarRepo();
   final userRepo = UserRepo();
+  final buybackRepo = BuybackRepo();
 
   MainDataModel() {
     initUser();
@@ -106,6 +114,24 @@ class MainDataModel extends ChangeNotifier {
     });
   }
 
+  void readBuybackItems() {
+    buybackRepo.readBuybackItems().then((value) {
+      final stackedItems = stackBuybackItems(value);
+      _buybackItems = stackedItems;
+
+    });
+  }
+
+  Future<void> updateBuybackItems() async {
+    final items = await buybackRepo.refreshBuybackItems();
+    final stackedItems = stackBuybackItems(items);
+    _buybackItems = stackedItems;
+
+    await buybackRepo.writeBuybackItems(items);
+
+    notifyListeners();
+  }
+
   Future<void> updateHangarItems() async {
     final items = await hangarRepo.refreshHangarItems();
     final filteredItems = filterHangarItemsByType(this, items);
@@ -113,6 +139,9 @@ class MainDataModel extends ChangeNotifier {
     final calculatedItems = await calculateShipPrice(stackedItems);
     final translatedItems = await translateHangarItem(calculatedItems);
     _hangarItems = translatedItems;
+
+    await hangarRepo.writeHangarItems(items);
+
     notifyListeners();
   }
 
@@ -123,7 +152,11 @@ class MainDataModel extends ChangeNotifier {
 
 
 
-  void updateCurrentUser(User newUser) {
+  Future<void> updateCurrentUser(User newUser) async {
+
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('vip.kirakira.user.handle', newUser.handle);
+
     _currentUser = newUser;
     final rsiApiClient = RsiApiClient();
     rsiApiClient.setRSIToken(token: newUser.rsiToken);

@@ -20,30 +20,33 @@ class _HangarTopBarState extends State<HangarTopBar> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Container(
-      padding: const EdgeInsets.all(8.0),
+          // color: Colors.black,
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),
       height: 60,
       child: Provider.of<MainDataModel>(context).currentUser == null
           ? IconButton(
-          onPressed: () {
-            WoltModalSheet.show<void>(
-                context: context,
-                pageListBuilder: (modalSheetContext) {
-                  return [
-                    // getSearchBottomSheet(context)
-                    getLoginBottomSheet(modalSheetContext, context),
-                    // getCaptchaInputBottomSheet(modalSheetContext),
-                    // getEmailInputBottomSheet(modalSheetContext)
-                  ];
-                });
-          },
-          icon: const Icon(Icons.search))
+              onPressed: () {
+                WoltModalSheet.show<void>(
+                    context: context,
+                    pageListBuilder: (modalSheetContext) {
+                      return [
+                        // getSearchBottomSheet(context)
+                        getLoginBottomSheet(modalSheetContext, context),
+                        // getCaptchaInputBottomSheet(modalSheetContext),
+                        // getEmailInputBottomSheet(modalSheetContext)
+                      ];
+                    });
+              },
+              icon: const Icon(Icons.search))
           : Row(
               children: [
                 AdvancedAvatar(
                     name: 'Hangar',
                     size: 40,
                     image: CachedNetworkImageProvider(
-                        Provider.of<MainDataModel>(context).currentUser!.profileImage),
+                        Provider.of<MainDataModel>(context)
+                            .currentUser!
+                            .profileImage),
                     margin: EdgeInsets.only(right: 10),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,

@@ -10,6 +10,13 @@ import './translation.dart';
 
 class HangarRepo {
 
+
+  static final HangarRepo _instance = HangarRepo._internal();
+
+  HangarRepo._internal();
+
+  factory HangarRepo() => _instance;
+
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
     return directory.path;

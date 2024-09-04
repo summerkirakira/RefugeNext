@@ -43,11 +43,11 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 0 ?
           Icons.home_rounded : Icons.home_outlined),
-          label: 'Business',
+          label: '机库',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.business),
-          label: 'Business',
+          label: '回购',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.account_circle_outlined),

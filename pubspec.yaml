@@ -60,6 +60,7 @@ dependencies:
   qr_flutter: ^4.1.0
   flutter_multi_select_items: ^0.4.3
   fluttertoast: ^8.2.6
+  flutter_custom_tab_bar: ^1.2.1
 
 
 dev_dependencies:

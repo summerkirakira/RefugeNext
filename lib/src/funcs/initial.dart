@@ -18,6 +18,8 @@ import '../network/cirno/cirno_api.dart';
 
 import '../repo/ship_alias.dart';
 
+import '../repo/buyback.dart';
+
 
 
 
@@ -85,6 +87,14 @@ Future<void> userInit() async {
   await shipAliasRepo.writeShipAliases(shipAliases, 0);
   // final a = await shipAliasRepo.getShipAlias('Carrack');
   // print(a);
+
+
+  final buybackRepo = BuybackRepo();
+  await buybackRepo.readBuybackItems();
+  // final items = await buybackRepo.refreshBuybackItems();
+  // print(items);
+
+
 }
 
 
