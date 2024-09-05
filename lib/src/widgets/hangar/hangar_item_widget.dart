@@ -242,7 +242,7 @@ class HangarItemImageWidget extends StatelessWidget {
 
 class HangarItemWidget extends StatelessWidget {
   final HangarItem hangarItem;
-  final Function(HangarItem) onTap;
+  final Function(HangarItem, BuildContext) onTap;
 
   const HangarItemWidget({
     super.key,
@@ -253,7 +253,7 @@ class HangarItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => onTap(hangarItem),
+      onTap: () => onTap(hangarItem, context),
       child: Container(
         height: 108,
         child: Card(

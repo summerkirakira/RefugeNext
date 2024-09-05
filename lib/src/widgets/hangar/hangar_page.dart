@@ -13,6 +13,8 @@ import 'ship_reclaim_modal.dart';
 import '../../datasource/data_model.dart';
 import '../hangar_buyback/hangar_buyback_page.dart';
 import '../buyback/buyback_page.dart';
+import './ship_gift_modal.dart';
+import './ship_recall_modal.dart';
 
 
 class HangarPage extends StatefulWidget {
@@ -23,7 +25,7 @@ class HangarPage extends StatefulWidget {
 class _HangarPageState extends State<HangarPage> {
 
 
-  void onTap(HangarItem hangarItem) {
+  void onTap(HangarItem hangarItem, BuildContext context){
 
 
     WoltModalSheet.show<void>(
@@ -31,7 +33,9 @@ class _HangarPageState extends State<HangarPage> {
       pageListBuilder: (modalSheetContext) {
         return [
           getHangarItemDetailSheet(modalSheetContext, hangarItem),
-          getReclaimPage(modalSheetContext, hangarItem)
+          getReclaimPage(modalSheetContext, context,  hangarItem),
+          getGiftPage(modalSheetContext, context,  hangarItem),
+          getRecallPage(modalSheetContext, context, hangarItem)
         ];
       }
     );

@@ -2,14 +2,15 @@ import 'package:flutter/cupertino.dart';
 import '../../datasource/models/hangar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:syncfusion_flutter_sliders/sliders.dart';
 import '../../funcs/validation.dart';
+import '../../funcs/toast.dart';
+import '../../network/api_service.dart';
+import 'package:provider/provider.dart';
+import '../../datasource/data_model.dart';
 
 
 
-WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, HangarItem hangarItem) {
+WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, BuildContext mainContext, HangarItem hangarItem) {
 
   String inputString = "";
 
@@ -38,7 +39,7 @@ WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, HangarItem han
         child: IconButton(
           padding: const EdgeInsets.all(5),
           icon: const Icon(Icons.arrow_back, size: 22),
-          onPressed: WoltModalSheet.of(modalSheetContext).showPrevious,
+          onPressed: () => WoltModalSheet.of(modalSheetContext).showAtIndex(0),
         ),
       ),
       trailingNavBarWidget: Container(
@@ -67,15 +68,40 @@ WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, HangarItem han
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(modalSheetContext).primaryColor,
           ),
-          onPressed: () {
+          onPressed: () async {
+            int number = int.tryParse(inputString) ?? 0;
+            if (number > hangarItem.number) {
+              showToast(message: "回收数量不能大于物品数量");
+              return;
+            }
+            if (number <= 0) {
+              showToast(message: "请输入正确的回收数量");
+              return;
+            }
 
-            authenticateWithBiometrics(reason: "请验证以回收物品").then((value) {
-              if (value == false) {
-                return;
-              } else {
-                Navigator.of(modalSheetContext).pop();
+            final result = await authenticateWithBiometrics(reason: "请验证以回收物品");
+            if (result == false) {
+              showToast(message: "验证失败");
+            }
+
+            final password = Provider.of<MainDataModel>(mainContext, listen: false).currentUser!.password;
+
+            RsiApiClient apiClient = RsiApiClient();
+
+            for (int i = 0; i < number; i++) {
+              final result = await apiClient.reclaimItem(pledge: hangarItem.idList[i].toString(), password: password);
+              if (result.success == 1) {
+                continue;
               }
-            });
+              showToast(message: result.msg);
+              return;
+            }
+
+            showToast(message: "回收成功");
+
+            Provider.of<MainDataModel>(mainContext, listen: false).updateHangarItems();
+            Navigator.of(modalSheetContext).pop();
+
           },
           child: const Text('确认回收', style: TextStyle(
             fontSize: 16,

@@ -11,6 +11,10 @@ import '../network/api_service.dart';
 import '../funcs/search.dart' show processSearch;
 import './models/searchProperty.dart';
 import '../repo/buyback.dart';
+import 'package:dio/dio.dart';
+import '../network/parsers/hangar_parser.dart';
+import '../funcs/toast.dart';
+import '../funcs/login.dart';
 
 
 enum HangarItemType {
@@ -123,7 +127,7 @@ class MainDataModel extends ChangeNotifier {
     });
   }
 
-  Future<void> updateBuybackItems() async {
+  Future<void> _updateBuybackItems() async {
     final items = await buybackRepo.refreshBuybackItems();
     final stackedItems = stackBuybackItems(items);
     _buybackItems = stackedItems;
@@ -133,8 +137,64 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> reLogin() async {
+    if (_currentUser == null) {
+      return false;
+    }
+    final result = await loginFirstStep(email: _currentUser!.email, password: _currentUser!.password);
+    if (result.success) {
+      final user = await userRepo.getCurrentUser();
+      if (user != null) {
+        await updateCurrentUser(user);
+        return true;
+      }
+    }
+    return false;
+  }
+
+
   Future<void> updateHangarItems() async {
-    final items = await hangarRepo.refreshHangarItems();
+    try {
+      await _updateHangarItems();
+    } on ParserError catch (e) {
+      showAlert(message: "登录失效, 正在重新登陆");
+      final result = await reLogin();
+      if (result) {
+        showToast(message: "重新登录成功");
+        _updateHangarItems();
+      } else {
+        showToast(message: "自动登录失败, 请手动登录");
+      }
+      return;
+    } on DioException catch (e) {
+      showAlert(message: "网络错误: ${e.message}");
+      return;
+    }
+  }
+
+  Future<void> updateBuybackItems() async {
+    try {
+      await _updateBuybackItems();
+    } on ParserError catch (e) {
+      showAlert(message: "登录失效, 正在重新登陆");
+      final result = await reLogin();
+      if (result) {
+        showToast(message: "重新登录成功");
+        _updateBuybackItems();
+      } else {
+        showToast(message: "自动登录失败, 请手动登录");
+      }
+      return;
+    } on DioException catch (e) {
+      showAlert(message: "网络错误: ${e.message}");
+      return;
+    }
+  }
+
+
+  Future<void> _updateHangarItems() async {
+    List<HangarItem> items = [];
+    items = await hangarRepo.refreshHangarItems();
     final filteredItems = filterHangarItemsByType(this, items);
     final stackedItems = stackHangarItems(filteredItems);
     final calculatedItems = await calculateShipPrice(stackedItems);

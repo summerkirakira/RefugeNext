@@ -111,6 +111,78 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
   );
 }
 
+Widget getReclaimButton(BuildContext context, HangarItem hangarItem) {
+  if (hangarItem.canReclaim) {
+    return Column(
+      children: [
+        IconButton(
+          padding: const EdgeInsets.all(0),
+          icon: const Icon(Icons.recycling),
+          onPressed: () {
+            WoltModalSheet.of(context).showAtIndex(1);
+          },
+        ),
+        const Text('回收')
+      ],
+    );
+  } else {
+    return Column(
+      children: [
+        IconButton(
+          padding: const EdgeInsets.all(0),
+          icon: const Icon(Icons.recycling, color: Colors.grey),
+          onPressed: () {
+          },
+        ),
+        const Text('回收', style: TextStyle(color: Colors.grey))
+      ],
+    );
+  }
+}
+
+
+Widget getGiftButton(BuildContext context, HangarItem hangarItem) {
+
+  if (hangarItem.status == "Gifted") {
+    return Column(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.undo_outlined),
+          onPressed: () {
+            WoltModalSheet.of(context).showAtIndex(3);
+          },
+        ),
+        const Text('撤回')
+      ],
+    );
+  }
+
+  if (hangarItem.canGit) {
+    return Column(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.card_giftcard_outlined),
+          onPressed: () {
+            WoltModalSheet.of(context).showAtIndex(2);
+          },
+        ),
+        const Text('礼物')
+      ],
+    );
+  } else {
+    return Column(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.card_giftcard_outlined, color: Colors.grey),
+          onPressed: () {
+          },
+        ),
+        const Text('礼物', style: TextStyle(color: Colors.grey))
+      ],
+    );
+  }
+}
+
 
 Widget getActionIconList({ required BuildContext context, required HangarItem hangarItem, required Function onShare}) {
   return Padding(
@@ -122,28 +194,9 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
     ),
     child: Row(
       children: [
-        Column(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.recycling),
-              onPressed: () {
-                WoltModalSheet.of(context).showAtIndex(1);
-              },
-            ),
-            const Text('回收')
-          ],
-        ),
+        getReclaimButton(context, hangarItem),
         Spacer(),
-        Column(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.card_giftcard_outlined),
-              onPressed: () {
-              },
-            ),
-            const Text('礼物')
-          ],
-        ),
+        getGiftButton(context, hangarItem),
         Spacer(),
         Column(
           children: [

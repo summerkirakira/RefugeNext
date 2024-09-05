@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'utils.dart';
 import '../datasource/models/login/login_property.dart';
 import 'dart:io';
+import 'hangar/property.dart';
 
 class RsiApiClient {
   static final RsiApiClient _instance = RsiApiClient._internal();
@@ -122,6 +123,11 @@ class RsiApiClient {
     return response;
   }
 
+  Future<Response> basicPost({required String endpoint, required Map<String, dynamic> data}) async {
+    final response = await _dio.post("$baseUrl$endpoint", data: data, options: Options());
+    return response;
+  }
+
   Future<Response> graphql({required Map<String, dynamic> data}) async {
     final response =
         await _dio.post("${baseUrl}graphql", data: data, options: Options());
@@ -167,5 +173,22 @@ class RsiApiClient {
   Future<String> getPage(String endpoint) async {
     final response = await basicGet(endpoint: endpoint);
     return response.data;
+  }
+
+  Future<BasicResponseBody> reclaimItem({required String pledge, required String password}) async {
+    final reclaimRequestBody = ReclaimRequestBody(pledgeId: pledge, currentPassword: password);
+    final response = await basicPost(endpoint: "api/account/reclaimPledge", data: reclaimRequestBody.toJson());
+    return BasicResponseBody.fromJson(response.data);
+  }
+
+  Future<BasicResponseBody> giftItem({required String pledge, required String password, required String email, String name = "避难所App用户"}) async {
+    final giftPledgeRequestBody = GiftPledgeRequestBody(pledgeId: pledge, currentPassword: password, email: email, name: name);
+    final response = await basicPost(endpoint: "api/account/giftPledge", data: giftPledgeRequestBody.toJson());
+    return BasicResponseBody.fromJson(response.data);
+  }
+
+  Future<BasicResponseBody> recallGift({required String pledge}) async {
+    final response = await basicPost(endpoint: "api/account/cancelGift", data: {"pledge_id": pledge});
+    return BasicResponseBody.fromJson(response.data);
   }
 }

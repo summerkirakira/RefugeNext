@@ -6,6 +6,10 @@ import '../network/api_service.dart';
 import '../network/parsers/hangar_parser.dart';
 import '../network/utils.dart' show runAsyncFunctionWithParams;
 import './translation.dart';
+import '../network/parsers/hangar_parser.dart';
+import '../funcs/toast.dart';
+import 'package:dio/dio.dart';
+import '../funcs/login.dart';
 
 
 class HangarRepo {
@@ -59,7 +63,9 @@ class HangarRepo {
     bool isEnd = false;
     while (!isEnd) {
       List<int> pages = List.generate(10, (index) => index + page);
-      List<List<HangarItem>> results = await runAsyncFunctionWithParams(getHangarItemByPage, pages, 10);
+      List<List<HangarItem>> results = [];
+      results = await runAsyncFunctionWithParams(getHangarItemByPage, pages, 10);
+
       for (var element in results) {
         if (element.isEmpty) {
           isEnd = true;
