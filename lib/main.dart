@@ -6,13 +6,9 @@ import 'src/widgets/navigation/main_navigation_bar.dart';
 import 'src/funcs/initial.dart';
 import 'src/widgets/hangar/hangar_page.dart';
 import 'src/widgets/user_info/user_page.dart';
-import 'src/widgets/hangar_buyback/hangar_buyback_page.dart';
+import 'src/widgets/shop/shop_page.dart';
 
 void main() async {
-  // ChangeNotifierProvider(
-  //   create: (context) => MainDataModel(),
-  //   child: RefugeApp(),
-  // );
   WidgetsFlutterBinding.ensureInitialized();
   await mustStartup();
   runApp(RefugeApp());
@@ -94,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 0:
         return HangarPage();
       case 1:
-        return Text('Favorites Page');
+        return ShopPage();
       case 2:
         return UserInfoPage();
       default:

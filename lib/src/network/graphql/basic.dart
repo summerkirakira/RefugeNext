@@ -9,5 +9,5 @@ class BasicGraphql<T> {
   });
 
   Future<dynamic> execute() async {}
-
 }
+

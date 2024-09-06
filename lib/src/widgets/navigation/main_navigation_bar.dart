@@ -47,7 +47,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.business),
-          label: '回购',
+          label: '商店',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.account_circle_outlined),

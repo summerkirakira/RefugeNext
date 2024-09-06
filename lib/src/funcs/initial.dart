@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
+import 'package:refuge_next/src/datasource/models/shop/filtered_ship_upgrade.dart';
 
 import '../network/api_service.dart';
 import '../repo/hangar.dart';
@@ -19,6 +20,8 @@ import '../network/cirno/cirno_api.dart';
 import '../repo/ship_alias.dart';
 
 import '../repo/buyback.dart';
+import '../network/graphql/init_ship_upgrade.dart';
+import '../network/graphql/filtered_ship_upgrade.dart';
 
 
 
@@ -32,7 +35,7 @@ Future<void> mustStartup() async {
 
 
   // if is light theme
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent, // 设置状态栏为透明
     statusBarIconBrightness: Brightness.dark, // 设置状态栏图标颜色为深色
   ));
@@ -71,15 +74,12 @@ Future<void> userInit() async {
   // final translation = await cirnoClient.getTranslationMap("https://image.biaoju.site/starcitizen/translation/test_translation.json");
 
   final translationRepo = TranslationRepo();
+
   // await translationRepo.writeTranslation(translation, 0);
 
-  final a = await translationRepo.readTranslation();
+  await translationRepo.readTranslation();
   //
   // final a = await translationRepo.getTranslation('Paints');
-
-  // if (translation != null) {
-  //
-  // }
 
   final shipAliases = await cirnoClient.getShipAliases("https://image.biaoju.site/starcitizen/formatted_ship_alias.1.1.6.json");
 
@@ -94,7 +94,11 @@ Future<void> userInit() async {
   // final items = await buybackRepo.refreshBuybackItems();
   // print(items);
 
-
+  await rsiApiClient.setAuthToken();
+  await rsiApiClient.setContextToken();
+  // final result = await InitShipUpgrade().execute();
+  // final c = await FilterUpgradeShip(fromId: null, toId: 14609).execute();
+  // final d = 1;
 }
 
 

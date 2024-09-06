@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:refuge_next/src/widgets/hangar/hangar_page.dart';
 
 
-class HangarBuybackPage extends StatefulWidget {
+class ShopListPage extends StatefulWidget {
   @override
-  _HangarBuybackPageState createState() => _HangarBuybackPageState();
+  _ShopListPageState createState() => _ShopListPageState();
 
   final List<Widget> children;
   final List<String> titles;
 
-  HangarBuybackPage({Key? key, required this.children, required this.titles}) : super(key: key);
+  ShopListPage({Key? key, required this.children, required this.titles}) : super(key: key);
 
 }
 
 
-class _HangarBuybackPageState extends State<HangarBuybackPage> {
+class _ShopListPageState extends State<ShopListPage> {
 
   final PageController _controller = PageController();
   final CustomTabBarController _tabBarController = CustomTabBarController();
@@ -53,7 +53,7 @@ class _HangarBuybackPageState extends State<HangarBuybackPage> {
         children: [
           Center(
             child: Container(
-              width: 120,
+              width: 180,
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

@@ -15,13 +15,15 @@ class RsiApiClient {
   String rsiDevice = "";
   String rsiToken = "";
   String xsrfToken = "";
+  String rsiAuth = "";
+  String upgradeContext = "";
   String rsiCookieContent =
       "{stamp:%27OxTvKGMly/MLoYR3VVQb40QHQbh68uSc2ORKIfKGhLQyPGB71fbjEA==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:true%2Cmethod:%27explicit%27%2Cver:1%2Cutc:1698762520261%2Cregion:%27gb%27}; _ga=GA1.2.789579038.1698763289; wsc_view_count=1; wsc_hide=true";
 
   String baseUrl = "https://robertsspaceindustries.com/";
 
   String get rsiCookie =>
-      "CookieConsent=$rsiCookieContent;_rsi_device=$rsiDevice;Rsi-Token=$rsiToken";
+      "CookieConsent=$rsiCookieContent;_rsi_device=$rsiDevice;Rsi-Token=$rsiToken;Rsi-Account-Auth=$rsiAuth;Rsi-ShipUpgrades-Context=$upgradeContext;";
 
   factory RsiApiClient() => _instance;
 
@@ -77,8 +79,14 @@ class RsiApiClient {
               final device = cookie.split(";")[0].split("=")[1];
               rsiDevice = device;
             }
-            // print('Set-Cookie: $cookie');
-            // 您可以在这里处理 cookie，例如存储到本地存储
+            if (cookie.contains("Rsi-Account-Auth")) {
+              final auth = cookie.split(";")[0].split("=")[1];
+              rsiAuth = auth;
+            }
+            if (cookie.contains("Rsi-ShipUpgrades-Context")) {
+              final context = cookie.split(";")[0].split("=")[1];
+              upgradeContext = context;
+            }
           }
         }
         handler.next(response); // 继续处理响应
@@ -131,6 +139,12 @@ class RsiApiClient {
   Future<Response> graphql({required Map<String, dynamic> data}) async {
     final response =
         await _dio.post("${baseUrl}graphql", data: data, options: Options());
+    return response;
+  }
+
+  Future<Response> upgradeGraphql({required Map<String, dynamic> data}) async {
+    final response =
+    await _dio.post("https://robertsspaceindustries.com/pledge-store/api/upgrade/graphql", data: data, options: Options());
     return response;
   }
 
@@ -191,4 +205,13 @@ class RsiApiClient {
     final response = await basicPost(endpoint: "api/account/cancelGift", data: {"pledge_id": pledge});
     return BasicResponseBody.fromJson(response.data);
   }
+  
+  Future<void> setAuthToken() async {
+    final response = await basicPost(endpoint: 'api/account/v2/setAuthToken', data: {});
+  }
+
+  Future<void> setContextToken() async {
+    final response = await basicPost(endpoint: 'api/ship-upgrades/setContextToken', data: {});
+  }
+  
 }

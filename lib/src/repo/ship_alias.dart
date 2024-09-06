@@ -73,4 +73,21 @@ class ShipAliasRepo {
 
     return null;
   }
+
+  ShipAlias? getShipAliasSync(String key) {
+    if (_shipAliases.isEmpty) {
+      return null;
+    }
+    for (var shipAlias in _shipAliases) {
+      if (shipAlias.name == key) {
+        return shipAlias;
+      }
+      if (shipAlias.alias.contains(key)) {
+        return shipAlias;
+      }
+    }
+
+    return null;
+  }
+
 }
