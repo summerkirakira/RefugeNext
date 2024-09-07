@@ -23,6 +23,7 @@ class FilterUpgradeShip {
       skus {
         id
         price
+        title
         upgradePrice
         unlimitedStock
         showStock

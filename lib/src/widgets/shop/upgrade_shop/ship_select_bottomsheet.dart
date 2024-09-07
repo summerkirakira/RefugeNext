@@ -99,7 +99,7 @@ class ShipItem extends StatelessWidget {
         onSelected(ship);
       },
       child: Card(
-          elevation: 1,
+          elevation: 0,
           child: Row(
             children: [
               Container(
@@ -149,6 +149,30 @@ class ShipItem extends StatelessWidget {
   }
 }
 
+Widget getPageTitle(bool isFromShip) {
+  if (isFromShip) {
+    return const Padding(
+        padding: EdgeInsets.only(left: 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('请选择起始舰船',
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+          ],
+        ));
+  } else {
+    return const Padding(
+        padding: EdgeInsets.only(left: 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('请选择目标舰船',
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+          ],
+        ));
+  }
+}
+
 WoltModalSheetPage getShipSelectBottomSheet(
     BuildContext context,
     List<UpgradeShipInfo> ships,
@@ -156,13 +180,12 @@ WoltModalSheetPage getShipSelectBottomSheet(
     bool isFromShip) {
   return WoltModalSheetPage(
       navBarHeight: 50,
-      pageTitle: const Padding(
+      pageTitle: Padding(
           padding: EdgeInsets.only(left: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('舰船选择',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))
+              getPageTitle(isFromShip)
             ],
           )),
       trailingNavBarWidget: Container(
@@ -184,11 +207,5 @@ WoltModalSheetPage getShipSelectBottomSheet(
             for (var ship in ships) ShipItem(ship, onSelected, isFromShip)
           ],
         ),
-      ),
-      stickyActionBar: TextButton(
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-        child: const Text('确定'),
       ));
 }

@@ -61,6 +61,7 @@ dependencies:
   flutter_multi_select_items: ^0.4.3
   fluttertoast: ^8.2.6
   flutter_custom_tab_bar: ^1.2.1
+  loader_overlay: ^4.0.1
 
 
 dev_dependencies:

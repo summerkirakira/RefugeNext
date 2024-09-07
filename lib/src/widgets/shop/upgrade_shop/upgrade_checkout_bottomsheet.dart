@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
+import 'package:refuge_next/src/network/graphql/shop/upgrade_add_to_cart.dart';
+import 'package:refuge_next/src/network/graphql/shop/cart_summary.dart';
+import 'package:refuge_next/src/network/graphql/shop/apply_upgrade_token.dart';
 
 
 
@@ -35,10 +38,11 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("确定要购买以下升级吗？"),
+          const Text("确定要购买以下升级吗？"),
           Text("从 ${fromShip.name} 升级到 ${toShip.name}"),
+          Text("升级版本: ${toSku.title}"),
           SizedBox(height: 20),
-          TextField(
+          const TextField(
             decoration: InputDecoration(
               // hintText: '购买数量',
               labelText: '购买数量',
@@ -58,8 +62,11 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
           ),
-          onPressed: () {
-
+          onPressed: () async {
+            String token = await UpgradeAddToCart(skuId: toSku.id!, fromShipId: fromShip.id!).execute();
+            await ApplyUpgradeToken(upgradeToken: token).execute();
+            final result = await CartSummary().execute();
+            final a = 1;
           },
           child: const Text('确认购买',
               style: TextStyle(

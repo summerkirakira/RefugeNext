@@ -7,6 +7,7 @@ import 'src/funcs/initial.dart';
 import 'src/widgets/hangar/hangar_page.dart';
 import 'src/widgets/user_info/user_page.dart';
 import 'src/widgets/shop/shop_page.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,9 @@ class RefugeApp extends StatelessWidget {
       theme: FlexColorScheme.light(scheme: FlexScheme.deepBlue).toTheme,
       home: ChangeNotifierProvider<MainDataModel>(
         create: (context) => MainDataModel(),
-        child: MyHomePage(),
+        child: LoaderOverlay(
+          child: MyHomePage(),
+        ),
       ),
     );
   }
