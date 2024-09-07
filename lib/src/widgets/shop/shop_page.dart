@@ -13,6 +13,8 @@ import 'shop_list_page.dart';
 import 'normal_shop/normal_shop_page.dart';
 import 'subscriber_shop/subscriber_shop_page.dart';
 import 'upgrade_shop/upgrade_page.dart';
+import './shop_page/shop_page.dart' show CatalogPage;
+import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart' show CatalogTypes;
 
 
 
@@ -55,7 +57,7 @@ class _ShopPageState extends State<ShopPage> {
         ShopTopBar(),
         ShopListPage(children: [
           UpgradePage(),
-          NormalShopPage(),
+          CatalogPage(catalogTypes: CatalogTypes.standAloneShip),
           SubscriberShopPage()
         ],
             titles: ["升级", "商店", "订阅"])

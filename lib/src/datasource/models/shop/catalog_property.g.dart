@@ -21,6 +21,9 @@ _$CatalogPropertyImpl _$$CatalogPropertyImplFromJson(
       stock: Stock.fromJson(json['stock'] as Map<String, dynamic>),
       nativePrice:
           NativePrice.fromJson(json['nativePrice'] as Map<String, dynamic>),
+      isWarbond: json['isWarbond'] as bool,
+      isPackage: json['isPackage'] as bool,
+      isVip: json['isVip'] as bool,
     );
 
 Map<String, dynamic> _$$CatalogPropertyImplToJson(
@@ -37,6 +40,9 @@ Map<String, dynamic> _$$CatalogPropertyImplToJson(
       'price': instance.price,
       'stock': instance.stock,
       'nativePrice': instance.nativePrice,
+      'isWarbond': instance.isWarbond,
+      'isPackage': instance.isPackage,
+      'isVip': instance.isVip,
     };
 
 _$MediaImpl _$$MediaImplFromJson(Map<String, dynamic> json) => _$MediaImpl(

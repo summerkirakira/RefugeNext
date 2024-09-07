@@ -17,6 +17,9 @@ class CatalogProperty with _$CatalogProperty {
     required Price price,
     required Stock stock,
     required NativePrice nativePrice,
+    required bool isWarbond,
+    required bool isPackage,
+    required bool isVip,
   }) = _CatalogProperty;
 
   factory CatalogProperty.fromJson(Map<String, dynamic> json) => _$CatalogPropertyFromJson(json);

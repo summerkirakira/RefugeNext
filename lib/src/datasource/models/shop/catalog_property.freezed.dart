@@ -31,6 +31,9 @@ mixin _$CatalogProperty {
   Price get price => throw _privateConstructorUsedError;
   Stock get stock => throw _privateConstructorUsedError;
   NativePrice get nativePrice => throw _privateConstructorUsedError;
+  bool get isWarbond => throw _privateConstructorUsedError;
+  bool get isPackage => throw _privateConstructorUsedError;
+  bool get isVip => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -55,7 +58,10 @@ abstract class $CatalogPropertyCopyWith<$Res> {
       Media media,
       Price price,
       Stock stock,
-      NativePrice nativePrice});
+      NativePrice nativePrice,
+      bool isWarbond,
+      bool isPackage,
+      bool isVip});
 
   $MediaCopyWith<$Res> get media;
   $PriceCopyWith<$Res> get price;
@@ -87,6 +93,9 @@ class _$CatalogPropertyCopyWithImpl<$Res, $Val extends CatalogProperty>
     Object? price = null,
     Object? stock = null,
     Object? nativePrice = null,
+    Object? isWarbond = null,
+    Object? isPackage = null,
+    Object? isVip = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -133,6 +142,18 @@ class _$CatalogPropertyCopyWithImpl<$Res, $Val extends CatalogProperty>
           ? _value.nativePrice
           : nativePrice // ignore: cast_nullable_to_non_nullable
               as NativePrice,
+      isWarbond: null == isWarbond
+          ? _value.isWarbond
+          : isWarbond // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isPackage: null == isPackage
+          ? _value.isPackage
+          : isPackage // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isVip: null == isVip
+          ? _value.isVip
+          : isVip // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 
@@ -188,7 +209,10 @@ abstract class _$$CatalogPropertyImplCopyWith<$Res>
       Media media,
       Price price,
       Stock stock,
-      NativePrice nativePrice});
+      NativePrice nativePrice,
+      bool isWarbond,
+      bool isPackage,
+      bool isVip});
 
   @override
   $MediaCopyWith<$Res> get media;
@@ -222,6 +246,9 @@ class __$$CatalogPropertyImplCopyWithImpl<$Res>
     Object? price = null,
     Object? stock = null,
     Object? nativePrice = null,
+    Object? isWarbond = null,
+    Object? isPackage = null,
+    Object? isVip = null,
   }) {
     return _then(_$CatalogPropertyImpl(
       id: null == id
@@ -268,6 +295,18 @@ class __$$CatalogPropertyImplCopyWithImpl<$Res>
           ? _value.nativePrice
           : nativePrice // ignore: cast_nullable_to_non_nullable
               as NativePrice,
+      isWarbond: null == isWarbond
+          ? _value.isWarbond
+          : isWarbond // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isPackage: null == isPackage
+          ? _value.isPackage
+          : isPackage // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isVip: null == isVip
+          ? _value.isVip
+          : isVip // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -286,7 +325,10 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
       required this.media,
       required this.price,
       required this.stock,
-      required this.nativePrice});
+      required this.nativePrice,
+      required this.isWarbond,
+      required this.isPackage,
+      required this.isVip});
 
   factory _$CatalogPropertyImpl.fromJson(Map<String, dynamic> json) =>
       _$$CatalogPropertyImplFromJson(json);
@@ -313,10 +355,16 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
   final Stock stock;
   @override
   final NativePrice nativePrice;
+  @override
+  final bool isWarbond;
+  @override
+  final bool isPackage;
+  @override
+  final bool isVip;
 
   @override
   String toString() {
-    return 'CatalogProperty(id: $id, name: $name, title: $title, subtitle: $subtitle, url: $url, excerpt: $excerpt, type: $type, media: $media, price: $price, stock: $stock, nativePrice: $nativePrice)';
+    return 'CatalogProperty(id: $id, name: $name, title: $title, subtitle: $subtitle, url: $url, excerpt: $excerpt, type: $type, media: $media, price: $price, stock: $stock, nativePrice: $nativePrice, isWarbond: $isWarbond, isPackage: $isPackage, isVip: $isVip)';
   }
 
   @override
@@ -336,13 +384,32 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
             (identical(other.price, price) || other.price == price) &&
             (identical(other.stock, stock) || other.stock == stock) &&
             (identical(other.nativePrice, nativePrice) ||
-                other.nativePrice == nativePrice));
+                other.nativePrice == nativePrice) &&
+            (identical(other.isWarbond, isWarbond) ||
+                other.isWarbond == isWarbond) &&
+            (identical(other.isPackage, isPackage) ||
+                other.isPackage == isPackage) &&
+            (identical(other.isVip, isVip) || other.isVip == isVip));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, title, subtitle, url,
-      excerpt, type, media, price, stock, nativePrice);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      name,
+      title,
+      subtitle,
+      url,
+      excerpt,
+      type,
+      media,
+      price,
+      stock,
+      nativePrice,
+      isWarbond,
+      isPackage,
+      isVip);
 
   @JsonKey(ignore: true)
   @override
@@ -371,7 +438,10 @@ abstract class _CatalogProperty implements CatalogProperty {
       required final Media media,
       required final Price price,
       required final Stock stock,
-      required final NativePrice nativePrice}) = _$CatalogPropertyImpl;
+      required final NativePrice nativePrice,
+      required final bool isWarbond,
+      required final bool isPackage,
+      required final bool isVip}) = _$CatalogPropertyImpl;
 
   factory _CatalogProperty.fromJson(Map<String, dynamic> json) =
       _$CatalogPropertyImpl.fromJson;
@@ -398,6 +468,12 @@ abstract class _CatalogProperty implements CatalogProperty {
   Stock get stock;
   @override
   NativePrice get nativePrice;
+  @override
+  bool get isWarbond;
+  @override
+  bool get isPackage;
+  @override
+  bool get isVip;
   @override
   @JsonKey(ignore: true)
   _$$CatalogPropertyImplCopyWith<_$CatalogPropertyImpl> get copyWith =>

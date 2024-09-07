@@ -5,6 +5,7 @@ import './models/hangar.dart';
 import './models/user.dart';
 import '../repo/hangar.dart';
 import '../repo/user.dart';
+import '../repo/catalog.dart';
 import '../funcs/hangar_utils.dart';
 import '../funcs/buyback_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,8 @@ import '../network/parsers/hangar_parser.dart';
 import '../funcs/toast.dart';
 import '../funcs/login.dart';
 import '../datasource/models/shop/upgrade_ship_info.dart';
+import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
+import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 
 
 enum HangarItemType {
@@ -68,6 +71,17 @@ class MainDataModel extends ChangeNotifier {
   Skus? get toSku => _toSku;
 
 
+  Map<String, List<CatalogProperty>> _catalog = {};
+
+  List<CatalogProperty> getCataLog(CatalogTypes catalogType) {
+    if (_catalog[catalogType.value] == null) {
+      // refreshCatalog(catalogType).then((value) => readCatalogs());
+      return [];
+    }
+    return _catalog[catalogType.value]!;
+  }
+
+
   User? _currentUser;
 
   User? get currentUser => _currentUser;
@@ -76,12 +90,14 @@ class MainDataModel extends ChangeNotifier {
   final userRepo = UserRepo();
   final buybackRepo = BuybackRepo();
   final shipUpgradeRepo = ShipUpgradeRepo();
+  final catalogRepo = CatalogRepo();
 
   MainDataModel() {
     initUser();
     readHangarItems();
     readBuybackItems();
     initShipUpgrade();
+    readCatalogs();
   }
 
 
@@ -91,6 +107,17 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> refreshShipUpgrade() async {
     await shipUpgradeRepo.initShipUpgrade();
+  }
+
+  void readCatalogs() {
+    catalogRepo.readCatalogs().then((value) => _catalog = value);
+    notifyListeners();
+  }
+
+  Future<void> refreshCatalog(CatalogTypes catalogType) async {
+    await catalogRepo.refreshCatalog(catalogType);
+    _catalog = await catalogRepo.readCatalogs();
+    notifyListeners();
   }
 
   Future<void> filterShipUpgrade(int? fromId, int? toId) async {
