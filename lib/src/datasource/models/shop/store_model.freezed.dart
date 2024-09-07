@@ -1172,7 +1172,7 @@ mixin _$Sku {
   String get url => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError;
   String get frequency => throw _privateConstructorUsedError;
-  String? get isWarbond => throw _privateConstructorUsedError;
+  bool? get isWarbond => throw _privateConstructorUsedError;
   bool get isPackage => throw _privateConstructorUsedError;
   List<GameItem> get gameItems => throw _privateConstructorUsedError;
   Stock get stock => throw _privateConstructorUsedError;
@@ -1202,7 +1202,7 @@ abstract class $SkuCopyWith<$Res> {
       String url,
       String type,
       String frequency,
-      String? isWarbond,
+      bool? isWarbond,
       bool isPackage,
       List<GameItem> gameItems,
       Stock stock,
@@ -1287,7 +1287,7 @@ class _$SkuCopyWithImpl<$Res, $Val extends Sku> implements $SkuCopyWith<$Res> {
       isWarbond: freezed == isWarbond
           ? _value.isWarbond
           : isWarbond // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as bool?,
       isPackage: null == isPackage
           ? _value.isPackage
           : isPackage // ignore: cast_nullable_to_non_nullable
@@ -1383,7 +1383,7 @@ abstract class _$$SkuImplCopyWith<$Res> implements $SkuCopyWith<$Res> {
       String url,
       String type,
       String frequency,
-      String? isWarbond,
+      bool? isWarbond,
       bool isPackage,
       List<GameItem> gameItems,
       Stock stock,
@@ -1470,7 +1470,7 @@ class __$$SkuImplCopyWithImpl<$Res> extends _$SkuCopyWithImpl<$Res, _$SkuImpl>
       isWarbond: freezed == isWarbond
           ? _value.isWarbond
           : isWarbond // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as bool?,
       isPackage: null == isPackage
           ? _value.isPackage
           : isPackage // ignore: cast_nullable_to_non_nullable
@@ -1555,7 +1555,7 @@ class _$SkuImpl implements _Sku {
   @override
   final String frequency;
   @override
-  final String? isWarbond;
+  final bool? isWarbond;
   @override
   final bool isPackage;
   final List<GameItem> _gameItems;
@@ -1666,7 +1666,7 @@ abstract class _Sku implements Sku {
       required final String url,
       required final String type,
       required final String frequency,
-      final String? isWarbond,
+      final bool? isWarbond,
       required final bool isPackage,
       required final List<GameItem> gameItems,
       required final Stock stock,
@@ -1696,7 +1696,7 @@ abstract class _Sku implements Sku {
   @override
   String get frequency;
   @override
-  String? get isWarbond;
+  bool? get isWarbond;
   @override
   bool get isPackage;
   @override

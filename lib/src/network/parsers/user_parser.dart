@@ -3,6 +3,8 @@ import 'package:html/dom.dart';
 import 'package:intl/intl.dart';
 import '../../datasource/models/user.dart';
 import '../../network/api_service.dart';
+import 'package:refuge_next/src/network/graphql/account/account_query.dart';
+import 'package:refuge_next/src/network/graphql/account/credit_query.dart';
 
 Future<User?> parseNewUser(String email, String password, String? rsiDevice, String? rsiToken) async {
 
@@ -19,23 +21,37 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
 
   var referralPage = await rsiClient.getPage('account/referral-program');
   Document referralDoc = html_parser.parse(referralPage);
-  String? userName = referralDoc.querySelector('.c-account-sidebar__profile-info-displayname')?.text;
-  String? userHandle = referralDoc.querySelector('.c-account-sidebar__profile-info-handle')?.text;
-  String? userCreditsString = referralDoc.querySelector('.c-account-sidebar__profile-info-credits-amount--pledge')?.text
-      .replaceAll('\$', '')
-      .replaceAll(' ', '')
-      .replaceAll('USD', '')
-      .replaceAll(',', '');
-  String? userUECString = referralDoc.querySelector('.c-account-sidebar__profile-info-credits-amount--uec')?.text
-      .replaceAll('¤', '')
-      .replaceAll(' ', '')
-      .replaceAll('UEC', '')
-      .replaceAll(',', '');
-  String? userRECString = referralDoc.querySelector('.c-account-sidebar__profile-info-credits-amount--rec')?.text
-      .replaceAll('¤', '')
-      .replaceAll(' ', '')
-      .replaceAll('REC', '')
-      .replaceAll(',', '');
+
+  final accountQuery = await AccountQuery().execute();
+  final creditQuery = await CreditQuery().execute();
+
+  String? userName = accountQuery.account.displayname;
+  String? userHandle = accountQuery.account.nickname;
+  int userCredit = creditQuery.ledgerCredit.amount.value;
+  int userUEC = creditQuery.ledgerUec.amount.value;
+  int userREC = creditQuery.ledgerRec.amount.value;
+
+
+
+  // String? userName = referralDoc.querySelector('.c-account-sidebar__profile-info-displayname')?.text;
+  // String? userHandle = referralDoc.querySelector('.c-account-sidebar__profile-info-handle')?.text;
+  // String? userCreditsString = referralDoc.querySelector('.c-account-sidebar__profile-info-credits-amount--pledge')?.text
+  //     .replaceAll('\$', '')
+  //     .replaceAll(' ', '')
+  //     .replaceAll('USD', '')
+  //     .replaceAll(',', '');
+  // String? userUECString = referralDoc.querySelector('.c-account-sidebar__profile-info-credits-amount--uec')?.text
+  //     .replaceAll('¤', '')
+  //     .replaceAll(' ', '')
+  //     .replaceAll('UEC', '')
+  //     .replaceAll(',', '');
+  // String? userRECString = referralDoc.querySelector('.c-account-sidebar__profile-info-credits-amount--rec')?.text
+  //     .replaceAll('¤', '')
+  //     .replaceAll(' ', '')
+  //     .replaceAll('REC', '')
+  //     .replaceAll(',', '');
+
+
   String? recruitNumberString = referralDoc.querySelector('div.progress')?.querySelector('.label')?.text
       .replaceAll('Total recruits: ', '');
   String? totalReferralNumberString = referralDoc.querySelector('a[href="/account/referral-program"][data-type="pending"]')?.text
@@ -80,7 +96,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     }
   }
 
-  if (userImage == null || userHandle == null || referralCode == null || recruitNumberString == null || totalReferralNumberString == null || userCreditsString == null || userUECString == null || userRECString == null || totalSpentString == null || enlisted == null) {
+  if (userImage == null || userHandle == null || referralCode == null || recruitNumberString == null || totalReferralNumberString == null || totalSpentString == null || enlisted == null) {
     return null;
   }
 
@@ -109,9 +125,9 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     referralCode: referralCode,
     referralCount: int.parse(recruitNumberString),
     referralProspectCount: int.parse(totalReferralNumberString),
-    usd: (double.parse(userCreditsString) * 100).toInt(),
-    uec: int.parse(userUECString),
-    rec: int.parse(userRECString),
+    usd: userCredit,
+    uec: userUEC,
+    rec: userREC,
     hangarValue: 0,
     currentHangarValue: 0,
     totalSpent: (double.parse(totalSpentString) * 100).toInt(),

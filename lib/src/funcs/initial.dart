@@ -94,8 +94,8 @@ Future<void> userInit() async {
   // final items = await buybackRepo.refreshBuybackItems();
   // print(items);
 
-  await rsiApiClient.setAuthToken();
-  await rsiApiClient.setContextToken();
+  // await rsiApiClient.setAuthToken();
+  // await rsiApiClient.setContextToken();
   // final result = await InitShipUpgrade().execute();
   // final c = await FilterUpgradeShip(fromId: null, toId: 14609).execute();
   // final d = 1;

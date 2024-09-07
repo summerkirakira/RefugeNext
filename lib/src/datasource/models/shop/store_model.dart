@@ -79,7 +79,7 @@ class Sku with _$Sku {
     required String url,
     required String type,
     required String frequency,
-    String? isWarbond,
+    bool? isWarbond,
     required bool isPackage,
     required List<GameItem> gameItems,
     required Stock stock,

@@ -65,8 +65,8 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
           onPressed: () async {
             String token = await UpgradeAddToCart(skuId: toSku.id!, fromShipId: fromShip.id!).execute();
             await ApplyUpgradeToken(upgradeToken: token).execute();
-            final result = await CartSummary().execute();
-            final a = 1;
+
+
           },
           child: const Text('确认购买',
               style: TextStyle(

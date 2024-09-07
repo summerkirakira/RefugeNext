@@ -19,6 +19,9 @@ class ShipUpgradeRepo {
   List<UpgradeShipInfo> _shipUpgrade = [];
 
   Future<List<UpgradeShipInfo>> initShipUpgrade() async {
+    await rsiApiClient.setAuthToken();
+    await rsiApiClient.setContextToken();
+
     final response = await InitShipUpgrade().execute();
     if (response == null) {
       return [];

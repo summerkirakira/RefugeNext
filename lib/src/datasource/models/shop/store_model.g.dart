@@ -102,7 +102,7 @@ _$SkuImpl _$$SkuImplFromJson(Map<String, dynamic> json) => _$SkuImpl(
       url: json['url'] as String,
       type: json['type'] as String,
       frequency: json['frequency'] as String,
-      isWarbond: json['isWarbond'] as String?,
+      isWarbond: json['isWarbond'] as bool?,
       isPackage: json['isPackage'] as bool,
       gameItems: (json['gameItems'] as List<dynamic>)
           .map((e) => GameItem.fromJson(e as Map<String, dynamic>))
