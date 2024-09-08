@@ -22,7 +22,7 @@ Future<void> removeCartItem(LineItem item) async {
   final response = await RemoveCartItem(skuId: item.skuId, identifier: item.identifier).execute();
 }
 
-Future<void> updateCredit(int amount) async {
+Future<void> updateCredit(double amount) async {
   final response = await AddCredit(amount).execute();
 }
 

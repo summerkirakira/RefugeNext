@@ -208,7 +208,7 @@ fragment TyCartLineItemDiscountFragment on TyCartLineItemDiscount {
   __typename
 }
 """;
-  final int amount;
+  final double amount;
 
   AddCredit(this.amount);
 

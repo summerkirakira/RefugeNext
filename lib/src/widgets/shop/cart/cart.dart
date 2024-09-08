@@ -233,10 +233,13 @@ Widget getTotalWidget(BuildContext context, StoreData step1query, CreditQueryPro
               labelText: '信用点',
               hintText: '已添加: \$${credit.store.cart.totals.credits.amount / 100} / 可用: \$${getMaxApplicable(step1query, credit) / 100}'),
               onSubmitted: (value) async {
-                final number = int.tryParse(value);
+                final number = double.tryParse(value);
+
                 if (number == null) {
+                  showToast(message: "请输入有效的数字");
                   return;
                 }
+
                 if (number * 100 > credit.store.cart.totals.credits.maxApplicable) {
                   showToast(message: "信用点不能大于总可用信用点");
                   return;
