@@ -92,6 +92,7 @@ fragment TySkuFragment on TyCartLineItem {
     media {
       thumbnail {
         storeSmall
+        slideshow
         __typename
       }
       __typename

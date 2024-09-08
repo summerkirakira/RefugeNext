@@ -1173,8 +1173,8 @@ mixin _$Sku {
   String get type => throw _privateConstructorUsedError;
   String get frequency => throw _privateConstructorUsedError;
   bool? get isWarbond => throw _privateConstructorUsedError;
-  bool get isPackage => throw _privateConstructorUsedError;
-  List<GameItem> get gameItems => throw _privateConstructorUsedError;
+  bool get isPackage =>
+      throw _privateConstructorUsedError; // required List<GameItem> gameItems,
   Stock get stock => throw _privateConstructorUsedError;
   Media get media => throw _privateConstructorUsedError;
   int get maxQty => throw _privateConstructorUsedError;
@@ -1204,7 +1204,6 @@ abstract class $SkuCopyWith<$Res> {
       String frequency,
       bool? isWarbond,
       bool isPackage,
-      List<GameItem> gameItems,
       Stock stock,
       Media media,
       int maxQty,
@@ -1242,7 +1241,6 @@ class _$SkuCopyWithImpl<$Res, $Val extends Sku> implements $SkuCopyWith<$Res> {
     Object? frequency = null,
     Object? isWarbond = freezed,
     Object? isPackage = null,
-    Object? gameItems = null,
     Object? stock = null,
     Object? media = null,
     Object? maxQty = null,
@@ -1292,10 +1290,6 @@ class _$SkuCopyWithImpl<$Res, $Val extends Sku> implements $SkuCopyWith<$Res> {
           ? _value.isPackage
           : isPackage // ignore: cast_nullable_to_non_nullable
               as bool,
-      gameItems: null == gameItems
-          ? _value.gameItems
-          : gameItems // ignore: cast_nullable_to_non_nullable
-              as List<GameItem>,
       stock: null == stock
           ? _value.stock
           : stock // ignore: cast_nullable_to_non_nullable
@@ -1385,7 +1379,6 @@ abstract class _$$SkuImplCopyWith<$Res> implements $SkuCopyWith<$Res> {
       String frequency,
       bool? isWarbond,
       bool isPackage,
-      List<GameItem> gameItems,
       Stock stock,
       Media media,
       int maxQty,
@@ -1425,7 +1418,6 @@ class __$$SkuImplCopyWithImpl<$Res> extends _$SkuCopyWithImpl<$Res, _$SkuImpl>
     Object? frequency = null,
     Object? isWarbond = freezed,
     Object? isPackage = null,
-    Object? gameItems = null,
     Object? stock = null,
     Object? media = null,
     Object? maxQty = null,
@@ -1475,10 +1467,6 @@ class __$$SkuImplCopyWithImpl<$Res> extends _$SkuCopyWithImpl<$Res, _$SkuImpl>
           ? _value.isPackage
           : isPackage // ignore: cast_nullable_to_non_nullable
               as bool,
-      gameItems: null == gameItems
-          ? _value._gameItems
-          : gameItems // ignore: cast_nullable_to_non_nullable
-              as List<GameItem>,
       stock: null == stock
           ? _value.stock
           : stock // ignore: cast_nullable_to_non_nullable
@@ -1525,15 +1513,13 @@ class _$SkuImpl implements _Sku {
       required this.frequency,
       this.isWarbond,
       required this.isPackage,
-      required final List<GameItem> gameItems,
       required this.stock,
       required this.media,
       required this.maxQty,
       required this.minQty,
       required this.publicType,
       required this.nativePrice,
-      required this.price})
-      : _gameItems = gameItems;
+      required this.price});
 
   factory _$SkuImpl.fromJson(Map<String, dynamic> json) =>
       _$$SkuImplFromJson(json);
@@ -1558,14 +1544,7 @@ class _$SkuImpl implements _Sku {
   final bool? isWarbond;
   @override
   final bool isPackage;
-  final List<GameItem> _gameItems;
-  @override
-  List<GameItem> get gameItems {
-    if (_gameItems is EqualUnmodifiableListView) return _gameItems;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_gameItems);
-  }
-
+// required List<GameItem> gameItems,
   @override
   final Stock stock;
   @override
@@ -1583,7 +1562,7 @@ class _$SkuImpl implements _Sku {
 
   @override
   String toString() {
-    return 'Sku(id: $id, productId: $productId, title: $title, label: $label, subtitle: $subtitle, url: $url, type: $type, frequency: $frequency, isWarbond: $isWarbond, isPackage: $isPackage, gameItems: $gameItems, stock: $stock, media: $media, maxQty: $maxQty, minQty: $minQty, publicType: $publicType, nativePrice: $nativePrice, price: $price)';
+    return 'Sku(id: $id, productId: $productId, title: $title, label: $label, subtitle: $subtitle, url: $url, type: $type, frequency: $frequency, isWarbond: $isWarbond, isPackage: $isPackage, stock: $stock, media: $media, maxQty: $maxQty, minQty: $minQty, publicType: $publicType, nativePrice: $nativePrice, price: $price)';
   }
 
   @override
@@ -1606,8 +1585,6 @@ class _$SkuImpl implements _Sku {
                 other.isWarbond == isWarbond) &&
             (identical(other.isPackage, isPackage) ||
                 other.isPackage == isPackage) &&
-            const DeepCollectionEquality()
-                .equals(other._gameItems, _gameItems) &&
             (identical(other.stock, stock) || other.stock == stock) &&
             (identical(other.media, media) || other.media == media) &&
             (identical(other.maxQty, maxQty) || other.maxQty == maxQty) &&
@@ -1633,7 +1610,6 @@ class _$SkuImpl implements _Sku {
       frequency,
       isWarbond,
       isPackage,
-      const DeepCollectionEquality().hash(_gameItems),
       stock,
       media,
       maxQty,
@@ -1668,7 +1644,6 @@ abstract class _Sku implements Sku {
       required final String frequency,
       final bool? isWarbond,
       required final bool isPackage,
-      required final List<GameItem> gameItems,
       required final Stock stock,
       required final Media media,
       required final int maxQty,
@@ -1699,9 +1674,7 @@ abstract class _Sku implements Sku {
   bool? get isWarbond;
   @override
   bool get isPackage;
-  @override
-  List<GameItem> get gameItems;
-  @override
+  @override // required List<GameItem> gameItems,
   Stock get stock;
   @override
   Media get media;
@@ -2273,7 +2246,7 @@ Media _$MediaFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Media {
-  String? get thumbnail => throw _privateConstructorUsedError;
+  ImageUrl? get thumbnail => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -2285,7 +2258,9 @@ abstract class $MediaCopyWith<$Res> {
   factory $MediaCopyWith(Media value, $Res Function(Media) then) =
       _$MediaCopyWithImpl<$Res, Media>;
   @useResult
-  $Res call({String? thumbnail});
+  $Res call({ImageUrl? thumbnail});
+
+  $ImageUrlCopyWith<$Res>? get thumbnail;
 }
 
 /// @nodoc
@@ -2307,8 +2282,20 @@ class _$MediaCopyWithImpl<$Res, $Val extends Media>
       thumbnail: freezed == thumbnail
           ? _value.thumbnail
           : thumbnail // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as ImageUrl?,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $ImageUrlCopyWith<$Res>? get thumbnail {
+    if (_value.thumbnail == null) {
+      return null;
+    }
+
+    return $ImageUrlCopyWith<$Res>(_value.thumbnail!, (value) {
+      return _then(_value.copyWith(thumbnail: value) as $Val);
+    });
   }
 }
 
@@ -2319,7 +2306,10 @@ abstract class _$$MediaImplCopyWith<$Res> implements $MediaCopyWith<$Res> {
       __$$MediaImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? thumbnail});
+  $Res call({ImageUrl? thumbnail});
+
+  @override
+  $ImageUrlCopyWith<$Res>? get thumbnail;
 }
 
 /// @nodoc
@@ -2339,7 +2329,7 @@ class __$$MediaImplCopyWithImpl<$Res>
       thumbnail: freezed == thumbnail
           ? _value.thumbnail
           : thumbnail // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as ImageUrl?,
     ));
   }
 }
@@ -2347,13 +2337,13 @@ class __$$MediaImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$MediaImpl implements _Media {
-  _$MediaImpl({this.thumbnail});
+  _$MediaImpl({required this.thumbnail});
 
   factory _$MediaImpl.fromJson(Map<String, dynamic> json) =>
       _$$MediaImplFromJson(json);
 
   @override
-  final String? thumbnail;
+  final ImageUrl? thumbnail;
 
   @override
   String toString() {
@@ -2388,15 +2378,151 @@ class _$MediaImpl implements _Media {
 }
 
 abstract class _Media implements Media {
-  factory _Media({final String? thumbnail}) = _$MediaImpl;
+  factory _Media({required final ImageUrl? thumbnail}) = _$MediaImpl;
 
   factory _Media.fromJson(Map<String, dynamic> json) = _$MediaImpl.fromJson;
 
   @override
-  String? get thumbnail;
+  ImageUrl? get thumbnail;
   @override
   @JsonKey(ignore: true)
   _$$MediaImplCopyWith<_$MediaImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+ImageUrl _$ImageUrlFromJson(Map<String, dynamic> json) {
+  return _ImageUrl.fromJson(json);
+}
+
+/// @nodoc
+mixin _$ImageUrl {
+  String get storeSmall => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $ImageUrlCopyWith<ImageUrl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ImageUrlCopyWith<$Res> {
+  factory $ImageUrlCopyWith(ImageUrl value, $Res Function(ImageUrl) then) =
+      _$ImageUrlCopyWithImpl<$Res, ImageUrl>;
+  @useResult
+  $Res call({String storeSmall});
+}
+
+/// @nodoc
+class _$ImageUrlCopyWithImpl<$Res, $Val extends ImageUrl>
+    implements $ImageUrlCopyWith<$Res> {
+  _$ImageUrlCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? storeSmall = null,
+  }) {
+    return _then(_value.copyWith(
+      storeSmall: null == storeSmall
+          ? _value.storeSmall
+          : storeSmall // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$ImageUrlImplCopyWith<$Res>
+    implements $ImageUrlCopyWith<$Res> {
+  factory _$$ImageUrlImplCopyWith(
+          _$ImageUrlImpl value, $Res Function(_$ImageUrlImpl) then) =
+      __$$ImageUrlImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String storeSmall});
+}
+
+/// @nodoc
+class __$$ImageUrlImplCopyWithImpl<$Res>
+    extends _$ImageUrlCopyWithImpl<$Res, _$ImageUrlImpl>
+    implements _$$ImageUrlImplCopyWith<$Res> {
+  __$$ImageUrlImplCopyWithImpl(
+      _$ImageUrlImpl _value, $Res Function(_$ImageUrlImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? storeSmall = null,
+  }) {
+    return _then(_$ImageUrlImpl(
+      storeSmall: null == storeSmall
+          ? _value.storeSmall
+          : storeSmall // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$ImageUrlImpl implements _ImageUrl {
+  const _$ImageUrlImpl({required this.storeSmall});
+
+  factory _$ImageUrlImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ImageUrlImplFromJson(json);
+
+  @override
+  final String storeSmall;
+
+  @override
+  String toString() {
+    return 'ImageUrl(storeSmall: $storeSmall)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ImageUrlImpl &&
+            (identical(other.storeSmall, storeSmall) ||
+                other.storeSmall == storeSmall));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, storeSmall);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ImageUrlImplCopyWith<_$ImageUrlImpl> get copyWith =>
+      __$$ImageUrlImplCopyWithImpl<_$ImageUrlImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ImageUrlImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _ImageUrl implements ImageUrl {
+  const factory _ImageUrl({required final String storeSmall}) = _$ImageUrlImpl;
+
+  factory _ImageUrl.fromJson(Map<String, dynamic> json) =
+      _$ImageUrlImpl.fromJson;
+
+  @override
+  String get storeSmall;
+  @override
+  @JsonKey(ignore: true)
+  _$$ImageUrlImplCopyWith<_$ImageUrlImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

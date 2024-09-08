@@ -104,9 +104,6 @@ _$SkuImpl _$$SkuImplFromJson(Map<String, dynamic> json) => _$SkuImpl(
       frequency: json['frequency'] as String,
       isWarbond: json['isWarbond'] as bool?,
       isPackage: json['isPackage'] as bool,
-      gameItems: (json['gameItems'] as List<dynamic>)
-          .map((e) => GameItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
       stock: Stock.fromJson(json['stock'] as Map<String, dynamic>),
       media: Media.fromJson(json['media'] as Map<String, dynamic>),
       maxQty: (json['maxQty'] as num).toInt(),
@@ -128,7 +125,6 @@ Map<String, dynamic> _$$SkuImplToJson(_$SkuImpl instance) => <String, dynamic>{
       'frequency': instance.frequency,
       'isWarbond': instance.isWarbond,
       'isPackage': instance.isPackage,
-      'gameItems': instance.gameItems,
       'stock': instance.stock,
       'media': instance.media,
       'maxQty': instance.maxQty,
@@ -181,12 +177,24 @@ Map<String, dynamic> _$$StockImplToJson(_$StockImpl instance) =>
     };
 
 _$MediaImpl _$$MediaImplFromJson(Map<String, dynamic> json) => _$MediaImpl(
-      thumbnail: json['thumbnail'] as String?,
+      thumbnail: json['thumbnail'] == null
+          ? null
+          : ImageUrl.fromJson(json['thumbnail'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$MediaImplToJson(_$MediaImpl instance) =>
     <String, dynamic>{
       'thumbnail': instance.thumbnail,
+    };
+
+_$ImageUrlImpl _$$ImageUrlImplFromJson(Map<String, dynamic> json) =>
+    _$ImageUrlImpl(
+      storeSmall: json['storeSmall'] as String,
+    );
+
+Map<String, dynamic> _$$ImageUrlImplToJson(_$ImageUrlImpl instance) =>
+    <String, dynamic>{
+      'storeSmall': instance.storeSmall,
     };
 
 _$PublicTypeImpl _$$PublicTypeImplFromJson(Map<String, dynamic> json) =>

@@ -1,6 +1,6 @@
 enum CatalogTypes {
   standAloneShip,
-  pants,
+  paints,
   gear,
   packs,
   addOns,
@@ -17,7 +17,7 @@ extension CatalogTypesExtension on CatalogTypes {
     switch (this) {
       case CatalogTypes.standAloneShip:
         return "72";
-      case CatalogTypes.pants:
+      case CatalogTypes.paints:
         return "268";
       case CatalogTypes.gear:
         return "289";

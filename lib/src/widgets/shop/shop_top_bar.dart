@@ -6,6 +6,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
+import 'upgrade_shop/upgrade_ship_widget.dart';
 
 class ShopTopBar extends StatefulWidget {
   const ShopTopBar({Key? key}) : super(key: key);
@@ -50,8 +51,10 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                   )),
-              const Text('舰船商店', style: TextStyle(fontSize: 24)),
+              const Text('商店', style: TextStyle(fontSize: 24)),
               const Spacer(),
+              IconButton(onPressed: () async { await onPressUpgrade(context); }, icon: Icon(Icons.keyboard_double_arrow_up_outlined)),
+              IconButton(onPressed: () async { await onPressCart(context); }, icon: Icon(Icons.shopping_cart_outlined)),
               IconButton(
                   onPressed: () {
                     WoltModalSheet.show<void>(

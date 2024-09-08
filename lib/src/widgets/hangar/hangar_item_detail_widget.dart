@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../widgets/general/screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:image/image.dart' as img;
 import '../../funcs/images.dart';
 
 
@@ -378,11 +377,11 @@ WoltModalSheetPage getHangarItemDetailSheet(BuildContext modalSheetContext, Hang
   ScreenshotController screenshotController = ScreenshotController();
 
   final detailPage = WoltModalSheetPage(
-    navBarHeight: 10,
-    topBarTitle: const Text('机库详情', style: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.bold
-    )),
+    navBarHeight: 1,
+    // topBarTitle: const Text('机库详情', style: TextStyle(
+    //   fontSize: 20,
+    //   fontWeight: FontWeight.bold
+    // )),
     // isTopBarLayerAlwaysVisible: true,
     // trailingNavBarWidget: Container(
     //   height: 38,

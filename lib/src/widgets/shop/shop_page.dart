@@ -6,13 +6,7 @@ import 'package:provider/provider.dart';
 import '../../repo/hangar.dart';
 import 'shop_top_bar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-import '../../datasource/data_model.dart';
-import '../hangar_buyback/hangar_buyback_page.dart';
-import '../buyback/buyback_page.dart';
 import 'shop_list_page.dart';
-import 'normal_shop/normal_shop_page.dart';
-import 'subscriber_shop/subscriber_shop_page.dart';
-import 'upgrade_shop/upgrade_page.dart';
 import './shop_page/shop_page.dart' show CatalogPage;
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart' show CatalogTypes;
 
@@ -56,11 +50,17 @@ class _ShopPageState extends State<ShopPage> {
       children: [
         ShopTopBar(),
         ShopListPage(children: [
-          UpgradePage(),
           CatalogPage(catalogTypes: CatalogTypes.standAloneShip),
-          SubscriberShopPage()
+          CatalogPage(catalogTypes: CatalogTypes.paints),
+          CatalogPage(catalogTypes: CatalogTypes.gear),
+          CatalogPage(catalogTypes: CatalogTypes.package),
+          CatalogPage(catalogTypes: CatalogTypes.addOns),
+          CatalogPage(catalogTypes: CatalogTypes.packs),
+          CatalogPage(catalogTypes: CatalogTypes.uec),
+          CatalogPage(catalogTypes: CatalogTypes.giftCard),
+          CatalogPage(catalogTypes: CatalogTypes.combo)
         ],
-            titles: ["升级", "商店", "订阅"])
+            titles: const ["舰船", "涂装", "装备", "游戏包", "附加", "组合包", "UEC", "礼品卡", "组合包"])
       ],
     );
   }

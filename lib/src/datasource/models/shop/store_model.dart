@@ -81,7 +81,7 @@ class Sku with _$Sku {
     required String frequency,
     bool? isWarbond,
     required bool isPackage,
-    required List<GameItem> gameItems,
+    // required List<GameItem> gameItems,
     required Stock stock,
     required Media media,
     required int maxQty,
@@ -130,10 +130,19 @@ class Stock with _$Stock {
 @freezed
 class Media with _$Media {
   factory Media({
-    String? thumbnail,
+    required ImageUrl? thumbnail,
   }) = _Media;
 
   factory Media.fromJson(Map<String, dynamic> json) => _$MediaFromJson(json);
+}
+
+@freezed
+class ImageUrl with _$ImageUrl {
+  const factory ImageUrl({
+    required String storeSmall,
+  }) = _ImageUrl;
+
+  factory ImageUrl.fromJson(Map<String, dynamic> json) => _$ImageUrlFromJson(json);
 }
 
 @freezed

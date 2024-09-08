@@ -11,35 +11,61 @@ import './upgrade_select_sku.dart';
 import '../cart/cart.dart';
 
 
-class UpgradeShipWidget extends StatefulWidget {
+Future<void> onPressUpgrade(BuildContext context) async {
+  context.loaderOverlay.show();
+  await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, null);
+  context.loaderOverlay.hide();
 
-  @override
-  _UpgradeShipWidgetState createState() => _UpgradeShipWidgetState();
-}
+  WoltModalSheet.show<void>(
+      context: context,
+      pageListBuilder: (modalSheetContext) {
+        return [
+          getShipSelectBottomSheet(modalSheetContext, Provider.of<MainDataModel>(context).upgradeToShip, (UpgradeShipInfo ship) async {
 
-class _UpgradeShipWidgetState extends State<UpgradeShipWidget> {
+            if (ship.skus == null) {
+              showToast(message: "未找到可升级的版本~");
+              Navigator.of(modalSheetContext).pop();
+              return;
+            }
 
+            if (ship.skus!.length == 1) {
+              context.loaderOverlay.show();
+              await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, ship.skus![0].id);
+              context.loaderOverlay.hide();
+              final fromShips = Provider.of<MainDataModel>(context, listen: false).upgradeFromShip;
 
-  Future<void> _onPress() async {
-    context.loaderOverlay.show();
-    await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, null);
-    context.loaderOverlay.hide();
-
-    WoltModalSheet.show<void>(
-        context: context,
-        pageListBuilder: (modalSheetContext) {
-          return [
-            getShipSelectBottomSheet(modalSheetContext, Provider.of<MainDataModel>(context).upgradeToShip, (UpgradeShipInfo ship) async {
-
-              if (ship.skus == null) {
-                showToast(message: "未找到可升级的版本~");
+              if(fromShips.isEmpty){
+                showToast(message: "未找到可升级舰船");
                 Navigator.of(modalSheetContext).pop();
                 return;
               }
+              Provider.of<MainDataModel>(context, listen: false).setToSku(ship.skus![0]);
 
-              if (ship.skus!.length == 1) {
+              WoltModalSheet.of(modalSheetContext).addPage(
+                  getShipSelectBottomSheet(modalSheetContext, fromShips, (UpgradeShipInfo fromShip) async {
+
+                    Provider.of<MainDataModel>(context, listen: false).setFromShip(fromShip);
+                    WoltModalSheet.of(modalSheetContext).showNext();
+
+                    final page = getUpgradeCheckoutBottomSheet(modalSheetContext, fromShip, ship, ship.skus![0]);
+                    WoltModalSheet.of(modalSheetContext).addPage(page);
+                    WoltModalSheet.of(modalSheetContext).showNext();
+
+
+                  }, true)
+              );
+              Provider.of<MainDataModel>(context, listen: false).setFromShip(ship);
+              WoltModalSheet.of(modalSheetContext).showNext();
+            } else {
+              final skuSelectPage = getSelectSkuBottomSheet(modalSheetContext, ship, (Skus sku) async {
                 context.loaderOverlay.show();
-                await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, ship.skus![0].id);
+                Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, sku.id);
+                context.loaderOverlay.hide();
+                Provider.of<MainDataModel>(context, listen: false).setToSku(sku);
+
+
+                context.loaderOverlay.show();
+                await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, sku.id);
                 context.loaderOverlay.hide();
                 final fromShips = Provider.of<MainDataModel>(context, listen: false).upgradeFromShip;
 
@@ -65,71 +91,18 @@ class _UpgradeShipWidgetState extends State<UpgradeShipWidget> {
                 );
                 Provider.of<MainDataModel>(context, listen: false).setFromShip(ship);
                 WoltModalSheet.of(modalSheetContext).showNext();
-              } else {
-                final skuSelectPage = getSelectSkuBottomSheet(modalSheetContext, ship, (Skus sku) async {
-                  context.loaderOverlay.show();
-                  Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, sku.id);
-                  context.loaderOverlay.hide();
-                  Provider.of<MainDataModel>(context, listen: false).setToSku(sku);
 
+              });
+              WoltModalSheet.of(modalSheetContext).addPage(skuSelectPage);
+              WoltModalSheet.of(modalSheetContext).showNext();
+            }
 
-                  context.loaderOverlay.show();
-                  await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, sku.id);
-                  context.loaderOverlay.hide();
-                  final fromShips = Provider.of<MainDataModel>(context, listen: false).upgradeFromShip;
+          }, false)
+        ];
+      }
+  );
+}
 
-                  if(fromShips.isEmpty){
-                    showToast(message: "未找到可升级舰船");
-                    Navigator.of(modalSheetContext).pop();
-                    return;
-                  }
-                  Provider.of<MainDataModel>(context, listen: false).setToSku(ship.skus![0]);
-
-                  WoltModalSheet.of(modalSheetContext).addPage(
-                      getShipSelectBottomSheet(modalSheetContext, fromShips, (UpgradeShipInfo fromShip) async {
-
-                        Provider.of<MainDataModel>(context, listen: false).setFromShip(fromShip);
-                        WoltModalSheet.of(modalSheetContext).showNext();
-
-                        final page = getUpgradeCheckoutBottomSheet(modalSheetContext, fromShip, ship, ship.skus![0]);
-                        WoltModalSheet.of(modalSheetContext).addPage(page);
-                        WoltModalSheet.of(modalSheetContext).showNext();
-
-
-                      }, true)
-                  );
-                  Provider.of<MainDataModel>(context, listen: false).setFromShip(ship);
-                  WoltModalSheet.of(modalSheetContext).showNext();
-
-                });
-                WoltModalSheet.of(modalSheetContext).addPage(skuSelectPage);
-                WoltModalSheet.of(modalSheetContext).showNext();
-              }
-
-            }, false)
-          ];
-        }
-    );
-  }
-
-  Future<void> _onPressCart() async {
-    await showCartBottomSheet(context);
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ElevatedButton(
-          onPressed: _onPress,
-          child: const Text('Upgrade Ship'),
-        ),
-        ElevatedButton(
-            onPressed: _onPressCart,
-            child: const Text('Cart')
-        )
-      ],
-    );
-  }
+Future<void> onPressCart(BuildContext context) async {
+  await showCartBottomSheet(context);
 }

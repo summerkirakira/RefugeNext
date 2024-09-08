@@ -53,7 +53,7 @@ class _ShopListPageState extends State<ShopListPage> {
         children: [
           Center(
             child: Container(
-              width: 180,
+              // width: 280,
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

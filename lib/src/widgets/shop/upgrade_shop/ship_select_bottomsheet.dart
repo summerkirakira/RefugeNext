@@ -49,7 +49,7 @@ class ShipItem extends StatelessWidget {
     }
     if (!isFromShip && ship.skus != null && ship.skus!.length > 1) {
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (ship.skus != null && ship.skus!.length > 1)
             Row(
@@ -101,10 +101,11 @@ class ShipItem extends StatelessWidget {
       child: Card(
           elevation: 0,
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                   height: 80,
-                  width: 80,
+                  width: 120,
                   child: CachedNetworkImage(
                       imageUrl: ship.medias!.productThumbMediumAndSmall!,
                       errorWidget: (context, url, error) => Icon(Icons.error),
@@ -120,28 +121,34 @@ class ShipItem extends StatelessWidget {
                             )),
                       ))),
               Container(
-                width: 200,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(ship.name!,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(ship.focus!, style: const TextStyle(fontSize: 14)),
-                    ],
+                // width: 240,
+                height: 80,
+                child: Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        left: 10, top: 2, right: 10, bottom: 0
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(ship.name!,
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(ship.focus!, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                        Spacer(),
+                        Padding(padding: const EdgeInsets.all(0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                getPriceWidget(context),
+                              ],
+                            )
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Spacer(),
-              Padding(padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      getPriceWidget(context),
-                    ],
-                  )
               ),
             ],
           )),

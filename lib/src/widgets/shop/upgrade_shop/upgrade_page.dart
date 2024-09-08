@@ -12,7 +12,7 @@ class _UpgradePageState extends State<UpgradePage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        UpgradeShipWidget(),
+        // UpgradeShipWidget(),
       ],
     );
   }
