@@ -21,19 +21,33 @@ CatalogProperty _$CatalogPropertyFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$CatalogProperty {
   String get id => throw _privateConstructorUsedError;
+  set id(String value) => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
+  set name(String value) => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
+  set title(String value) => throw _privateConstructorUsedError;
   String get subtitle => throw _privateConstructorUsedError;
+  set subtitle(String value) => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
+  set url(String value) => throw _privateConstructorUsedError;
   String? get excerpt => throw _privateConstructorUsedError;
+  set excerpt(String? value) => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError;
+  set type(String value) => throw _privateConstructorUsedError;
   Media get media => throw _privateConstructorUsedError;
+  set media(Media value) => throw _privateConstructorUsedError;
   Price get price => throw _privateConstructorUsedError;
+  set price(Price value) => throw _privateConstructorUsedError;
   Stock get stock => throw _privateConstructorUsedError;
+  set stock(Stock value) => throw _privateConstructorUsedError;
   NativePrice get nativePrice => throw _privateConstructorUsedError;
+  set nativePrice(NativePrice value) => throw _privateConstructorUsedError;
   bool get isWarbond => throw _privateConstructorUsedError;
+  set isWarbond(bool value) => throw _privateConstructorUsedError;
   bool get isPackage => throw _privateConstructorUsedError;
+  set isPackage(bool value) => throw _privateConstructorUsedError;
   bool get isVip => throw _privateConstructorUsedError;
+  set isVip(bool value) => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -314,7 +328,7 @@ class __$$CatalogPropertyImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$CatalogPropertyImpl implements _CatalogProperty {
-  const _$CatalogPropertyImpl(
+  _$CatalogPropertyImpl(
       {required this.id,
       required this.name,
       required this.title,
@@ -334,82 +348,38 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
       _$$CatalogPropertyImplFromJson(json);
 
   @override
-  final String id;
+  String id;
   @override
-  final String name;
+  String name;
   @override
-  final String title;
+  String title;
   @override
-  final String subtitle;
+  String subtitle;
   @override
-  final String url;
+  String url;
   @override
-  final String? excerpt;
+  String? excerpt;
   @override
-  final String type;
+  String type;
   @override
-  final Media media;
+  Media media;
   @override
-  final Price price;
+  Price price;
   @override
-  final Stock stock;
+  Stock stock;
   @override
-  final NativePrice nativePrice;
+  NativePrice nativePrice;
   @override
-  final bool isWarbond;
+  bool isWarbond;
   @override
-  final bool isPackage;
+  bool isPackage;
   @override
-  final bool isVip;
+  bool isVip;
 
   @override
   String toString() {
     return 'CatalogProperty(id: $id, name: $name, title: $title, subtitle: $subtitle, url: $url, excerpt: $excerpt, type: $type, media: $media, price: $price, stock: $stock, nativePrice: $nativePrice, isWarbond: $isWarbond, isPackage: $isPackage, isVip: $isVip)';
   }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$CatalogPropertyImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.title, title) || other.title == title) &&
-            (identical(other.subtitle, subtitle) ||
-                other.subtitle == subtitle) &&
-            (identical(other.url, url) || other.url == url) &&
-            (identical(other.excerpt, excerpt) || other.excerpt == excerpt) &&
-            (identical(other.type, type) || other.type == type) &&
-            (identical(other.media, media) || other.media == media) &&
-            (identical(other.price, price) || other.price == price) &&
-            (identical(other.stock, stock) || other.stock == stock) &&
-            (identical(other.nativePrice, nativePrice) ||
-                other.nativePrice == nativePrice) &&
-            (identical(other.isWarbond, isWarbond) ||
-                other.isWarbond == isWarbond) &&
-            (identical(other.isPackage, isPackage) ||
-                other.isPackage == isPackage) &&
-            (identical(other.isVip, isVip) || other.isVip == isVip));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      name,
-      title,
-      subtitle,
-      url,
-      excerpt,
-      type,
-      media,
-      price,
-      stock,
-      nativePrice,
-      isWarbond,
-      isPackage,
-      isVip);
 
   @JsonKey(ignore: true)
   @override
@@ -427,53 +397,67 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
 }
 
 abstract class _CatalogProperty implements CatalogProperty {
-  const factory _CatalogProperty(
-      {required final String id,
-      required final String name,
-      required final String title,
-      required final String subtitle,
-      required final String url,
-      final String? excerpt,
-      required final String type,
-      required final Media media,
-      required final Price price,
-      required final Stock stock,
-      required final NativePrice nativePrice,
-      required final bool isWarbond,
-      required final bool isPackage,
-      required final bool isVip}) = _$CatalogPropertyImpl;
+  factory _CatalogProperty(
+      {required String id,
+      required String name,
+      required String title,
+      required String subtitle,
+      required String url,
+      String? excerpt,
+      required String type,
+      required Media media,
+      required Price price,
+      required Stock stock,
+      required NativePrice nativePrice,
+      required bool isWarbond,
+      required bool isPackage,
+      required bool isVip}) = _$CatalogPropertyImpl;
 
   factory _CatalogProperty.fromJson(Map<String, dynamic> json) =
       _$CatalogPropertyImpl.fromJson;
 
   @override
   String get id;
+  set id(String value);
   @override
   String get name;
+  set name(String value);
   @override
   String get title;
+  set title(String value);
   @override
   String get subtitle;
+  set subtitle(String value);
   @override
   String get url;
+  set url(String value);
   @override
   String? get excerpt;
+  set excerpt(String? value);
   @override
   String get type;
+  set type(String value);
   @override
   Media get media;
+  set media(Media value);
   @override
   Price get price;
+  set price(Price value);
   @override
   Stock get stock;
+  set stock(Stock value);
   @override
   NativePrice get nativePrice;
+  set nativePrice(NativePrice value);
   @override
   bool get isWarbond;
+  set isWarbond(bool value);
   @override
   bool get isPackage;
+  set isPackage(bool value);
   @override
   bool get isVip;
+  set isVip(bool value);
   @override
   @JsonKey(ignore: true)
   _$$CatalogPropertyImplCopyWith<_$CatalogPropertyImpl> get copyWith =>

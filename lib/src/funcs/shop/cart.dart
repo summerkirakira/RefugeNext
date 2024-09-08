@@ -3,6 +3,7 @@ import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/network/graphql/shop/add_cart_item.dart';
 import 'package:refuge_next/src/network/graphql/shop/update_cart_number.dart';
 import 'package:refuge_next/src/network/graphql/shop/remove_cart_item.dart';
+import 'package:refuge_next/src/network/graphql/shop/add_credit.dart';
 import 'package:refuge_next/src/datasource/models/shop/store_model.dart'
     show LineItem, StoreData;
 
@@ -17,4 +18,8 @@ Future<void> updateCartNumber(LineItem item, int quantity) async {
 
 Future<void> removeCartItem(LineItem item) async {
   final response = await RemoveCartItem(skuId: item.skuId, identifier: item.identifier).execute();
+}
+
+Future<void> updateCredit(int amount) async {
+  final response = await AddCredit(amount).execute();
 }

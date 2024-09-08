@@ -3,9 +3,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'catalog_property.freezed.dart';
 part 'catalog_property.g.dart';
 
-@freezed
+@unfreezed
 class CatalogProperty with _$CatalogProperty {
-  const factory CatalogProperty({
+  factory CatalogProperty({
     required String id,
     required String name,
     required String title,

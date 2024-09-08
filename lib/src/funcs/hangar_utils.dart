@@ -71,7 +71,7 @@ Future<String> trainslateHangarItemName(TranslationRepo repo, String name) async
   List<String> translatedNameList = [];
 
   for (var name in totalNameList) {
-    translatedNameList.add(await repo.getTranslation(name));
+    translatedNameList.add(repo.getTranslationSync(name));
   }
 
   return translatedNameList.join(" - ");
@@ -145,7 +145,6 @@ List<String> splitShipName(String title) {
 Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async {
   final shipAliasRepo = ShipAliasRepo();
   final List<HangarItem> newHangarItems = [];
-
 
 
   for (var hangarItem in hangarItems) {

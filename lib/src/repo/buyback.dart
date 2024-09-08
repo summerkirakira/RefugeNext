@@ -11,6 +11,7 @@ import './translation.dart';
 class BuybackRepo {
   
   static final BuybackRepo _instance = BuybackRepo._internal();
+  final TranslationRepo translationRepo = TranslationRepo();
   
   BuybackRepo._internal();
   
@@ -49,6 +50,15 @@ class BuybackRepo {
     return parseBuybackItem(response.data);
   }
 
+
+  List<BuybackItem> translateBuybackItems(List<BuybackItem> items) {
+    return items.map((e) {
+      e.chinesName = translationRepo.getTranslationSync(e.title);
+      return e;
+    }).toList();
+  }
+
+
   Future<List<BuybackItem>> refreshBuybackItems() async {
     List<BuybackItem> buybackItems = [];
 
@@ -68,6 +78,7 @@ class BuybackRepo {
       }
       page += 10;
     }
+    buybackItems = translateBuybackItems(buybackItems);
     await writeBuybackItems(buybackItems);
     return buybackItems;
   }

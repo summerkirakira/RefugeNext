@@ -1,4 +1,5 @@
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
@@ -204,15 +205,23 @@ Widget getListItem(BuildContext context, LineItem item) {
   }
 }
 
-int getCartTotalPrice(StoreData step1query) {
+int getCartTotalPrice(StoreData step1query, CreditQueryProperty credit) {
   int total = 0;
   for (var item in step1query.store.cart.lineItems) {
     total += item.unitPriceWithTax.amount * item.qty;
   }
+  total -= credit.store.cart.totals.credits.amount;
   return total;
 }
 
-Widget getTotalWidget(BuildContext context, StoreData step1query, int credit) {
+int getMaxApplicable(StoreData step1query, CreditQueryProperty credit) {
+  if (credit.store.cart.totals.credits.maxApplicable > credit.customer.ledger.amount.value) {
+    return credit.customer.ledger.amount.value;
+  }
+  return credit.store.cart.totals.credits.maxApplicable;
+}
+
+Widget getTotalWidget(BuildContext context, StoreData step1query, CreditQueryProperty credit) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: Row(
@@ -222,11 +231,32 @@ Widget getTotalWidget(BuildContext context, StoreData step1query, int credit) {
           decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: '信用点',
-              hintText: '当前可用: \$${credit / 100}'),
+              hintText: '已添加: \$${credit.store.cart.totals.credits.amount / 100} / 可用: \$${getMaxApplicable(step1query, credit) / 100}'),
+              onSubmitted: (value) async {
+                final number = int.tryParse(value);
+                if (number == null) {
+                  return;
+                }
+                if (number * 100 > credit.store.cart.totals.credits.maxApplicable) {
+                  showToast(message: "信用点不能大于总可用信用点");
+                  return;
+                }
+                if (number * 100 > credit.customer.ledger.amount.value) {
+                  showToast(message: "剩余信用点不足");
+                  return;
+                }
+                try {
+                  await updateCredit(number);
+                } catch (e) {
+                  showToast(message: "添加信用点失败");
+                }
+
+                await refreshPage(context);
+              },
         )),
         SizedBox(width: 40),
         const Text('总计: '),
-        Text('\$${getCartTotalPrice(step1query) / 100}',
+        Text('\$${getCartTotalPrice(step1query, credit) / 100}',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))
       ],
     ),
@@ -276,7 +306,7 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
           getListItem(context, item),
         const Divider(),
         getTotalWidget(
-            context, step1query, creditQuery.customer.ledger.amount.value),
+            context, step1query, creditQuery),
         SizedBox(height: 90)
       ]),
     ),

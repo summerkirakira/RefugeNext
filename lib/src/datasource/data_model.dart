@@ -14,6 +14,7 @@ import '../funcs/search.dart' show processSearch;
 import './models/searchProperty.dart';
 import '../repo/buyback.dart';
 import '../repo/ship_upgrade.dart';
+import '../repo/translation.dart';
 import 'package:dio/dio.dart';
 import '../network/parsers/hangar_parser.dart';
 import '../funcs/toast.dart';
@@ -70,6 +71,13 @@ class MainDataModel extends ChangeNotifier {
   UpgradeShipInfo? get fromShip => _fromShip;
   Skus? get toSku => _toSku;
 
+  int _upgradeWbNumber = 0;
+  int _cartItemNumber = 0;
+
+
+  int get upgradeWbNumber => _upgradeWbNumber;
+  int get cartItemNumber => _cartItemNumber;
+
 
   Map<String, List<CatalogProperty>> _catalog = {};
 
@@ -91,12 +99,13 @@ class MainDataModel extends ChangeNotifier {
   final buybackRepo = BuybackRepo();
   final shipUpgradeRepo = ShipUpgradeRepo();
   final catalogRepo = CatalogRepo();
+  final translationRepo = TranslationRepo();
 
   MainDataModel() {
     initUser();
     readHangarItems();
     readBuybackItems();
-    initShipUpgrade();
+    initShipUpgrade().then((value) => filterShipUpgrade(null, null));
     readCatalogs();
   }
 
@@ -120,10 +129,29 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<UpgradeShipInfo> translateShipUpgrade(List<UpgradeShipInfo> ships) {
+    return ships.map((ship) {
+      ship.name = translationRepo.getTranslationSync(ship.name!);
+      return ship;
+    }).toList();
+  }
+
   Future<void> filterShipUpgrade(int? fromId, int? toId) async {
     final response = await shipUpgradeRepo.filterShipUpgrade(fromId, toId);
-    upgradeFromShip = response[0];
-    upgradeToShip = response[1];
+    upgradeFromShip = translateShipUpgrade(response[0]);
+    upgradeToShip = translateShipUpgrade(response[1]);
+
+    if (toId == null) {
+      int totalWbNumber = 0;
+      for (var ship in upgradeToShip) {
+        if (ship.skus != null && ship.skus!.length > 1) {
+          totalWbNumber += 1;
+        }
+      }
+      if (totalWbNumber != _upgradeWbNumber) {
+        _upgradeWbNumber = totalWbNumber;
+      }
+    }
     notifyListeners();
   }
 
@@ -174,12 +202,39 @@ class MainDataModel extends ChangeNotifier {
     // notifyListeners();
   }
 
+  void updateUpgradeWbNumber(int newNumber) {
+    _upgradeWbNumber = newNumber;
+    notifyListeners();
+  }
+
+  void updateCartItemNumber(int newNumber) {
+    _cartItemNumber = newNumber;
+    notifyListeners();
+  }
+
 
   void readHangarItems() {
     hangarRepo.readHangarItems().then((value) {
       final filteredItems = filterHangarItemsByType(this, value);
       final stackedItems = stackHangarItems(filteredItems);
       calculateShipPrice(stackedItems).then((shipValue) {
+
+        int totalPrice = 0;
+        int totalCurrentPrice = 0;
+        shipValue.forEach((element) {
+          totalPrice += element.price * element.number;
+          totalCurrentPrice += element.currentPrice * element.number;
+        });
+
+        if (_currentUser != null) {
+          if (_currentUser!.hangarValue != totalPrice || _currentUser!.currentHangarValue != totalCurrentPrice) {
+            _currentUser!.hangarValue = totalPrice;
+            _currentUser!.currentHangarValue = totalCurrentPrice;
+            notifyListeners();
+            userRepo.addUser(_currentUser!);
+          }
+        }
+
         translateHangarItem(shipValue).then((value) {
           _hangarItems = value;
           notifyListeners();
@@ -268,6 +323,19 @@ class MainDataModel extends ChangeNotifier {
     final filteredItems = filterHangarItemsByType(this, items);
     final stackedItems = stackHangarItems(filteredItems);
     final calculatedItems = await calculateShipPrice(stackedItems);
+
+    int totalPrice = 0;
+    calculatedItems.forEach((element) {
+      totalPrice += element.price * element.number;
+    });
+
+    if (_currentUser != null) {
+      if (_currentUser!.hangarValue != totalPrice) {
+        _currentUser!.hangarValue = totalPrice;
+        await userRepo.addUser(_currentUser!);
+      }
+    }
+
     final translatedItems = await translateHangarItem(calculatedItems);
     _hangarItems = translatedItems;
 

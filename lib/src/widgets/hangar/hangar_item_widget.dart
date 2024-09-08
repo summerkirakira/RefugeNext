@@ -101,7 +101,7 @@ class TagWidget extends StatelessWidget {
 
   bool get isReclaimable => hangarItem.canReclaim;
 
-  Color get warbondColor => isWarbond ? Colors.red : Colors.grey;
+  Color get warbondColor => isWarbond ? Colors.orange : Colors.grey;
 
   Color get ccuColor => isCCU ? Colors.blue : Colors.grey;
 
@@ -109,7 +109,7 @@ class TagWidget extends StatelessWidget {
 
   Color get canGiftColor => canGift ? Colors.pink : Colors.grey;
 
-  Color get reclaimableColor => isReclaimable ? Colors.orange : Colors.grey;
+  Color get reclaimableColor => isReclaimable ? Colors.green : Colors.grey;
 
   @override
   Widget build(BuildContext context) {
@@ -134,8 +134,8 @@ class TagWidget extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Icon(
-            Icons.switch_access_shortcut,
-            size: 20,
+            Icons.keyboard_double_arrow_up_outlined,
+            size: 24,
             color: ccuColor,
           ),
           const SizedBox(width: 4),

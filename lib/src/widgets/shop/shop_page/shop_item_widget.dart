@@ -119,6 +119,18 @@ class ShopItemWidget extends StatelessWidget {
     return null;
   }
 
+  Widget getTitleWidget(BuildContext context, CatalogProperty catalogProperty) {
+    if (!catalogProperty.isWarbond) {
+      return Text(catalogProperty.title,
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold));
+    } else {
+      return Text(catalogProperty.title,
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -145,9 +157,8 @@ class ShopItemWidget extends StatelessWidget {
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                        child: Text(catalogProperty.title,
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold))),
+                        child: getTitleWidget(context, catalogProperty)
+                    ),
                   ],
                 ),
               ),

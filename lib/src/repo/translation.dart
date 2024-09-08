@@ -63,4 +63,14 @@ class TranslationRepo {
     return _translation[finalKey] ?? finalKey;
   }
 
+  String getTranslationSync(String key) {
+    final finalKey = key.replaceAll("\n", "").trim();
+    final keyList = finalKey.split(" - ");
+    List<String> translationList = [];
+    for (var key in keyList) {
+      translationList.add(_translation[key] ?? key);
+    }
+    return translationList.join(" - ");
+  }
+
 }

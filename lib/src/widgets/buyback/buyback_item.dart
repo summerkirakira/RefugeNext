@@ -108,7 +108,7 @@ class BuybackItemWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(buybackItem.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),),
+                        Text(buybackItem.chinesName!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),),
                         Spacer(),
                         Row(
                           children: [

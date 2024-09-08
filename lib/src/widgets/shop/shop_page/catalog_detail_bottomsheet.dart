@@ -35,7 +35,7 @@ WoltModalSheetPage getCatalogItemDetailSheet(BuildContext modelSheetContext, Cat
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(catalogProperty.name, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                Text(catalogProperty.title, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                 SizedBox(height: 10,),
                 if (catalogProperty.excerpt != null)
                   Text(catalogProperty.excerpt!, style: TextStyle(fontSize: 16)),

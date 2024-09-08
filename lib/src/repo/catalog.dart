@@ -5,10 +5,12 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:refuge_next/src/network/graphql/catalog.dart' show CatalogReq;
+import './translation.dart';
 
 
 class CatalogRepo {
   static final CatalogRepo _instance = CatalogRepo._internal();
+  final TranslationRepo translationRepo = TranslationRepo();
 
   CatalogRepo._internal() {
     readCatalogs().then((value) => _catalog = value);
@@ -46,6 +48,13 @@ class CatalogRepo {
     return file.writeAsString(jsonEncode(items));
   }
 
+  List<CatalogProperty> translateCatalog(List<CatalogProperty> catalog) {
+    return catalog.map((e) {
+      e.title = translationRepo.getTranslationSync(e.title);
+      return e;
+    }).toList();
+  }
+
   Future<void> refreshCatalog(CatalogTypes catalogType) async {
     int page = 1;
     List<CatalogProperty> catalog = [];
@@ -59,6 +68,7 @@ class CatalogRepo {
     }
 
     catalog.sort((a, b) => a.nativePrice.amount.compareTo(b.nativePrice.amount));
+    catalog = translateCatalog(catalog);
 
     _catalog[catalogType.value] = catalog;
     await writeCatalogs(_catalog);

@@ -1,11 +1,14 @@
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import '../../datasource/data_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_switch_bottomsheet.dart';
+import 'package:refuge_next/src/network/parsers/user_parser.dart' show parseNewUser;
+import 'package:refuge_next/src/network/api_service.dart';
 
 class TopBar extends StatefulWidget {
   const TopBar({Key? key}) : super(key: key);
@@ -341,7 +344,7 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
               DetailInfoItem(
                 leading: Icon(Icons.paid_outlined),
                 title: '当前机库价值',
-                value: _formatRec(
+                value: _formatPrice(
                     Provider.of<MainDataModel>(context).currentUser!.currentHangarValue),
               ),
               SizedBox(height: 10),
@@ -391,18 +394,25 @@ class _UserInfoPageState extends State<UserInfoPage>
       builder: (context, model, child) {
         return model.currentUser == null
             ? const Center(child: Text('No user data'))
-            : ListView(
-                // shrinkWrap: true,
-                // physics: NeverScrollableScrollPhysics(),
-                physics: BouncingScrollPhysics(),
-                children: [
-                  TopBar(),
-                  UserSimpleInfo(),
-                  UserDetailInfo(),
-                  Divider(),
+            : RefreshIndicator(child: ListView(
+          // shrinkWrap: true,
+          // physics: NeverScrollableScrollPhysics(),
+          physics: BouncingScrollPhysics(),
+          children: [
+            TopBar(),
+            UserSimpleInfo(),
+            UserDetailInfo(),
+            Divider(),
 
-                ],
-              );
+          ],
+        ), onRefresh: () async {
+              final newUser = await parseNewUser(model.currentUser!.email, model.currentUser!.password, RsiApiClient().rsiDevice, model.currentUser!.rsiToken);
+              if (newUser == null) {
+                showToast(message: "用户信息刷新失败");
+                return;
+              }
+              model.updateCurrentUser(newUser);
+        });
       },
     );
   }

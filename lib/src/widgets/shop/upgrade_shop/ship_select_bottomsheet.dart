@@ -98,60 +98,90 @@ class ShipItem extends StatelessWidget {
       onTap: () {
         onSelected(ship);
       },
-      child: Card(
-          elevation: 0,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                  height: 80,
-                  width: 120,
-                  child: CachedNetworkImage(
-                      imageUrl: ship.medias!.productThumbMediumAndSmall!,
-                      errorWidget: (context, url, error) => Icon(Icons.error),
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(5),
-                              bottomLeft: Radius.circular(5),
-                            )),
-                      ))),
-              Container(
-                // width: 240,
-                height: 80,
-                child: Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        left: 10, top: 2, right: 10, bottom: 0
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(ship.name!,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(ship.focus!, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                        Spacer(),
-                        Padding(padding: const EdgeInsets.all(0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                getPriceWidget(context),
-                              ],
+      child: Stack(
+        children: [
+          Card(
+              elevation: 0,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                      height: 80,
+                      width: 120,
+                      child: CachedNetworkImage(
+                          imageUrl: ship.medias!.productThumbMediumAndSmall!,
+                          errorWidget: (context, url, error) => Icon(Icons.error),
+                          imageBuilder: (context, imageProvider) => Container(
+                            decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.cover,
+                                ),
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(5),
+                                  bottomLeft: Radius.circular(5),
+                                )),
+                          ))),
+                  Container(
+                    // width: 240,
+                    height: 80,
+                    child: Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            left: 10, top: 2, right: 10, bottom: 0
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            if (ship.skus != null && ship.skus!.length > 1)
+                              Text(ship.name!,
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    color: Colors.orange
+                                  ))
+                            else
+                              Text(ship.name!,
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                  )),
+                            Text(ship.focus!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                            Spacer(),
+                            Padding(padding: const EdgeInsets.all(0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    getPriceWidget(context),
+                                  ],
+                                )
                             )
-                        )
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
-          )),
+                ],
+              )),
+          // if (ship.skus != null && ship.skus!.length > 1)
+          //   Positioned(
+          //     right: 0,
+          //     bottom: 0,
+          //     child: Container(
+          //       // decoration: BoxDecoration(
+          //       //   color: Colors.orange, // 设置背景颜色
+          //       //   shape: BoxShape.rectangle, // 设置形状为圆形
+          //       // ),
+          //       child: Icon(
+          //         Icons.sell,
+          //         color: Colors.orange,
+          //         size: 30,
+          //       ),
+          //     ),
+          //   )
+        ],
+      ),
     );
   }
 }

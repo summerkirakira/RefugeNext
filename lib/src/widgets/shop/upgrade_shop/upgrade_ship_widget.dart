@@ -9,11 +9,22 @@ import 'package:refuge_next/src/funcs/toast.dart';
 import './upgrade_checkout_bottomsheet.dart';
 import './upgrade_select_sku.dart';
 import '../cart/cart.dart';
+import 'package:refuge_next/src/network/api_service.dart';
 
 
 Future<void> onPressUpgrade(BuildContext context) async {
   context.loaderOverlay.show();
-  await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, null);
+  try {
+    final rsiApiClient = RsiApiClient();
+    await rsiApiClient.setAuthToken();
+    await rsiApiClient.setContextToken();
+    await Provider.of<MainDataModel>(context, listen: false).filterShipUpgrade(null, null);
+  } catch (e) {
+    showToast(message: "获取升级信息失败");
+    context.loaderOverlay.hide();
+    return;
+  }
+
   context.loaderOverlay.hide();
 
   WoltModalSheet.show<void>(

@@ -21,28 +21,51 @@ User _$UserFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$User {
   String get handle => throw _privateConstructorUsedError;
+  set handle(String value) => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
+  set name(String value) => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
+  set email(String value) => throw _privateConstructorUsedError;
   String get password => throw _privateConstructorUsedError;
+  set password(String value) => throw _privateConstructorUsedError;
   String get rsiToken => throw _privateConstructorUsedError;
+  set rsiToken(String value) => throw _privateConstructorUsedError;
   String get profileImage => throw _privateConstructorUsedError;
+  set profileImage(String value) => throw _privateConstructorUsedError;
   String get referralCode => throw _privateConstructorUsedError;
+  set referralCode(String value) => throw _privateConstructorUsedError;
   int get referralCount => throw _privateConstructorUsedError;
+  set referralCount(int value) => throw _privateConstructorUsedError;
   int get referralProspectCount => throw _privateConstructorUsedError;
+  set referralProspectCount(int value) => throw _privateConstructorUsedError;
   int get usd => throw _privateConstructorUsedError;
+  set usd(int value) => throw _privateConstructorUsedError;
   int get uec => throw _privateConstructorUsedError;
+  set uec(int value) => throw _privateConstructorUsedError;
   int get rec => throw _privateConstructorUsedError;
+  set rec(int value) => throw _privateConstructorUsedError;
   int get hangarValue => throw _privateConstructorUsedError;
+  set hangarValue(int value) => throw _privateConstructorUsedError;
   int get currentHangarValue => throw _privateConstructorUsedError;
+  set currentHangarValue(int value) => throw _privateConstructorUsedError;
   int get totalSpent => throw _privateConstructorUsedError;
+  set totalSpent(int value) => throw _privateConstructorUsedError;
   String? get organization => throw _privateConstructorUsedError;
+  set organization(String? value) => throw _privateConstructorUsedError;
   String? get organizationName => throw _privateConstructorUsedError;
+  set organizationName(String? value) => throw _privateConstructorUsedError;
   String? get organizationImage => throw _privateConstructorUsedError;
+  set organizationImage(String? value) => throw _privateConstructorUsedError;
   String? get orgRank => throw _privateConstructorUsedError;
+  set orgRank(String? value) => throw _privateConstructorUsedError;
   int get orgLevel => throw _privateConstructorUsedError;
+  set orgLevel(int value) => throw _privateConstructorUsedError;
   DateTime get registerTime => throw _privateConstructorUsedError;
+  set registerTime(DateTime value) => throw _privateConstructorUsedError;
   String get registerTimeString => throw _privateConstructorUsedError;
+  set registerTimeString(String value) => throw _privateConstructorUsedError;
   String get extra => throw _privateConstructorUsedError;
+  set extra(String value) => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -410,131 +433,57 @@ class _$UserImpl implements _User {
       _$$UserImplFromJson(json);
 
   @override
-  final String handle;
+  String handle;
   @override
-  final String name;
+  String name;
   @override
-  final String email;
+  String email;
   @override
-  final String password;
+  String password;
   @override
-  final String rsiToken;
+  String rsiToken;
   @override
-  final String profileImage;
+  String profileImage;
   @override
-  final String referralCode;
+  String referralCode;
   @override
-  final int referralCount;
+  int referralCount;
   @override
-  final int referralProspectCount;
+  int referralProspectCount;
   @override
-  final int usd;
+  int usd;
   @override
-  final int uec;
+  int uec;
   @override
-  final int rec;
+  int rec;
   @override
-  final int hangarValue;
+  int hangarValue;
   @override
-  final int currentHangarValue;
+  int currentHangarValue;
   @override
-  final int totalSpent;
+  int totalSpent;
   @override
-  final String? organization;
+  String? organization;
   @override
-  final String? organizationName;
+  String? organizationName;
   @override
-  final String? organizationImage;
+  String? organizationImage;
   @override
-  final String? orgRank;
+  String? orgRank;
   @override
-  final int orgLevel;
+  int orgLevel;
   @override
-  final DateTime registerTime;
+  DateTime registerTime;
   @override
-  final String registerTimeString;
+  String registerTimeString;
   @override
   @JsonKey()
-  final String extra;
+  String extra;
 
   @override
   String toString() {
     return 'User(handle: $handle, name: $name, email: $email, password: $password, rsiToken: $rsiToken, profileImage: $profileImage, referralCode: $referralCode, referralCount: $referralCount, referralProspectCount: $referralProspectCount, usd: $usd, uec: $uec, rec: $rec, hangarValue: $hangarValue, currentHangarValue: $currentHangarValue, totalSpent: $totalSpent, organization: $organization, organizationName: $organizationName, organizationImage: $organizationImage, orgRank: $orgRank, orgLevel: $orgLevel, registerTime: $registerTime, registerTimeString: $registerTimeString, extra: $extra)';
   }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$UserImpl &&
-            (identical(other.handle, handle) || other.handle == handle) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.email, email) || other.email == email) &&
-            (identical(other.password, password) ||
-                other.password == password) &&
-            (identical(other.rsiToken, rsiToken) ||
-                other.rsiToken == rsiToken) &&
-            (identical(other.profileImage, profileImage) ||
-                other.profileImage == profileImage) &&
-            (identical(other.referralCode, referralCode) ||
-                other.referralCode == referralCode) &&
-            (identical(other.referralCount, referralCount) ||
-                other.referralCount == referralCount) &&
-            (identical(other.referralProspectCount, referralProspectCount) ||
-                other.referralProspectCount == referralProspectCount) &&
-            (identical(other.usd, usd) || other.usd == usd) &&
-            (identical(other.uec, uec) || other.uec == uec) &&
-            (identical(other.rec, rec) || other.rec == rec) &&
-            (identical(other.hangarValue, hangarValue) ||
-                other.hangarValue == hangarValue) &&
-            (identical(other.currentHangarValue, currentHangarValue) ||
-                other.currentHangarValue == currentHangarValue) &&
-            (identical(other.totalSpent, totalSpent) ||
-                other.totalSpent == totalSpent) &&
-            (identical(other.organization, organization) ||
-                other.organization == organization) &&
-            (identical(other.organizationName, organizationName) ||
-                other.organizationName == organizationName) &&
-            (identical(other.organizationImage, organizationImage) ||
-                other.organizationImage == organizationImage) &&
-            (identical(other.orgRank, orgRank) || other.orgRank == orgRank) &&
-            (identical(other.orgLevel, orgLevel) ||
-                other.orgLevel == orgLevel) &&
-            (identical(other.registerTime, registerTime) ||
-                other.registerTime == registerTime) &&
-            (identical(other.registerTimeString, registerTimeString) ||
-                other.registerTimeString == registerTimeString) &&
-            (identical(other.extra, extra) || other.extra == extra));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hashAll([
-        runtimeType,
-        handle,
-        name,
-        email,
-        password,
-        rsiToken,
-        profileImage,
-        referralCode,
-        referralCount,
-        referralProspectCount,
-        usd,
-        uec,
-        rec,
-        hangarValue,
-        currentHangarValue,
-        totalSpent,
-        organization,
-        organizationName,
-        organizationImage,
-        orgRank,
-        orgLevel,
-        registerTime,
-        registerTimeString,
-        extra
-      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -552,78 +501,101 @@ class _$UserImpl implements _User {
 
 abstract class _User implements User {
   factory _User(
-      {required final String handle,
-      required final String name,
-      required final String email,
-      required final String password,
-      required final String rsiToken,
-      required final String profileImage,
-      required final String referralCode,
-      required final int referralCount,
-      required final int referralProspectCount,
-      required final int usd,
-      required final int uec,
-      required final int rec,
-      required final int hangarValue,
-      required final int currentHangarValue,
-      required final int totalSpent,
-      final String? organization,
-      final String? organizationName,
-      final String? organizationImage,
-      final String? orgRank,
-      required final int orgLevel,
-      required final DateTime registerTime,
-      required final String registerTimeString,
-      final String extra}) = _$UserImpl;
+      {required String handle,
+      required String name,
+      required String email,
+      required String password,
+      required String rsiToken,
+      required String profileImage,
+      required String referralCode,
+      required int referralCount,
+      required int referralProspectCount,
+      required int usd,
+      required int uec,
+      required int rec,
+      required int hangarValue,
+      required int currentHangarValue,
+      required int totalSpent,
+      String? organization,
+      String? organizationName,
+      String? organizationImage,
+      String? orgRank,
+      required int orgLevel,
+      required DateTime registerTime,
+      required String registerTimeString,
+      String extra}) = _$UserImpl;
 
   factory _User.fromJson(Map<String, dynamic> json) = _$UserImpl.fromJson;
 
   @override
   String get handle;
+  set handle(String value);
   @override
   String get name;
+  set name(String value);
   @override
   String get email;
+  set email(String value);
   @override
   String get password;
+  set password(String value);
   @override
   String get rsiToken;
+  set rsiToken(String value);
   @override
   String get profileImage;
+  set profileImage(String value);
   @override
   String get referralCode;
+  set referralCode(String value);
   @override
   int get referralCount;
+  set referralCount(int value);
   @override
   int get referralProspectCount;
+  set referralProspectCount(int value);
   @override
   int get usd;
+  set usd(int value);
   @override
   int get uec;
+  set uec(int value);
   @override
   int get rec;
+  set rec(int value);
   @override
   int get hangarValue;
+  set hangarValue(int value);
   @override
   int get currentHangarValue;
+  set currentHangarValue(int value);
   @override
   int get totalSpent;
+  set totalSpent(int value);
   @override
   String? get organization;
+  set organization(String? value);
   @override
   String? get organizationName;
+  set organizationName(String? value);
   @override
   String? get organizationImage;
+  set organizationImage(String? value);
   @override
   String? get orgRank;
+  set orgRank(String? value);
   @override
   int get orgLevel;
+  set orgLevel(int value);
   @override
   DateTime get registerTime;
+  set registerTime(DateTime value);
   @override
   String get registerTimeString;
+  set registerTimeString(String value);
   @override
   String get extra;
+  set extra(String value);
   @override
   @JsonKey(ignore: true)
   _$$UserImplCopyWith<_$UserImpl> get copyWith =>

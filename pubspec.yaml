@@ -62,6 +62,7 @@ dependencies:
   fluttertoast: ^8.2.6
   flutter_custom_tab_bar: ^1.2.1
   loader_overlay: ^4.0.1
+  badges: ^3.1.2
 
 
 dev_dependencies:

@@ -7,6 +7,7 @@ import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import 'upgrade_shop/upgrade_ship_widget.dart';
+import 'package:badges/badges.dart' as badges;
 
 class ShopTopBar extends StatefulWidget {
   const ShopTopBar({Key? key}) : super(key: key);
@@ -53,19 +54,32 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   )),
               const Text('商店', style: TextStyle(fontSize: 24)),
               const Spacer(),
-              IconButton(onPressed: () async { await onPressUpgrade(context); }, icon: Icon(Icons.keyboard_double_arrow_up_outlined)),
+              GestureDetector(
+                onTap: () async {
+                  await onPressUpgrade(context);
+                },
+                child: badges.Badge(
+                  showBadge: Provider.of<MainDataModel>(context).upgradeWbNumber > 0,
+                  badgeStyle: badges.BadgeStyle(
+                    badgeColor: Colors.orange,
+                  ),
+                  badgeContent: Text(Provider.of<MainDataModel>(context).upgradeWbNumber.toString(), style: TextStyle(color: Colors.white),),
+                  child: Icon(Icons.keyboard_double_arrow_up_outlined, size: 30,),
+                ),
+              ),
+              SizedBox(width: 5,),
               IconButton(onPressed: () async { await onPressCart(context); }, icon: Icon(Icons.shopping_cart_outlined)),
-              IconButton(
-                  onPressed: () {
-                    WoltModalSheet.show<void>(
-                        context: context,
-                        pageListBuilder: (modalSheetContext) {
-                          return [
-
-                          ];
-                        });
-                  },
-                  icon: const Icon(Icons.search)),
+              // IconButton(
+              //     onPressed: () {
+              //       WoltModalSheet.show<void>(
+              //           context: context,
+              //           pageListBuilder: (modalSheetContext) {
+              //             return [
+              //
+              //             ];
+              //           });
+              //     },
+              //     icon: const Icon(Icons.search)),
             ],
           ),
         ));
