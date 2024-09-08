@@ -23,6 +23,8 @@ import '../repo/buyback.dart';
 import '../network/graphql/init_ship_upgrade.dart';
 import '../network/graphql/filtered_ship_upgrade.dart';
 
+import 'package:refuge_next/src/funcs/shop/cart.dart';
+
 
 
 
@@ -105,7 +107,10 @@ Future<void> userInit() async {
 Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
-  final hangarRepo = HangarRepo();
+
+
+
+  await setCurrency();
 
 
 }

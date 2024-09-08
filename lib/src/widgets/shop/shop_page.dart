@@ -53,6 +53,7 @@ class _ShopPageState extends State<ShopPage> {
           CatalogPage(catalogTypes: CatalogTypes.standAloneShip),
           CatalogPage(catalogTypes: CatalogTypes.paints),
           CatalogPage(catalogTypes: CatalogTypes.gear),
+          CatalogPage(catalogTypes: CatalogTypes.subscriber),
           CatalogPage(catalogTypes: CatalogTypes.package),
           CatalogPage(catalogTypes: CatalogTypes.addOns),
           CatalogPage(catalogTypes: CatalogTypes.packs),
@@ -60,7 +61,7 @@ class _ShopPageState extends State<ShopPage> {
           CatalogPage(catalogTypes: CatalogTypes.giftCard),
           CatalogPage(catalogTypes: CatalogTypes.combo)
         ],
-            titles: const ["舰船", "涂装", "装备", "游戏包", "附加", "组合包", "UEC", "礼品卡", "组合包"])
+            titles: const ["舰船", "涂装", "装备", "订阅", "游戏包", "附加", "组合包", "UEC", "礼品卡", "组合包"])
       ],
     );
   }

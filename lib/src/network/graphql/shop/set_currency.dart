@@ -38,6 +38,6 @@ class SetCurrency {
       }
     };
 
-    await RsiApiClient().graphql(data: data);
+    final response = await RsiApiClient().graphql(data: data);
   }
 }

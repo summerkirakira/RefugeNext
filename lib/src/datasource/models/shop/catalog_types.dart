@@ -10,6 +10,7 @@ enum CatalogTypes {
   ticket,
   ltiPackage,
   combo,
+  subscriber,
 }
 
 extension CatalogTypesExtension on CatalogTypes {
@@ -37,6 +38,8 @@ extension CatalogTypesExtension on CatalogTypes {
         return "9";
       case CatalogTypes.combo:
         return "46";
+      case CatalogTypes.subscriber:
+        return "65";
     }
   }
 }
