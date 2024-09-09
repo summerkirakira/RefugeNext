@@ -218,7 +218,6 @@ class MainDataModel extends ChangeNotifier {
       final filteredItems = filterHangarItemsByType(this, value);
       final stackedItems = stackHangarItems(filteredItems);
       calculateShipPrice(stackedItems).then((shipValue) {
-
         int totalPrice = 0;
         int totalCurrentPrice = 0;
         shipValue.forEach((element) {
@@ -234,7 +233,6 @@ class MainDataModel extends ChangeNotifier {
             userRepo.addUser(_currentUser!);
           }
         }
-
         translateHangarItem(shipValue).then((value) {
           _hangarItems = value;
           notifyListeners();
@@ -320,6 +318,9 @@ class MainDataModel extends ChangeNotifier {
   Future<void> _updateHangarItems() async {
     List<HangarItem> items = [];
     items = await hangarRepo.refreshHangarItems();
+    await hangarRepo.writeHangarItems(items);
+
+
     final filteredItems = filterHangarItemsByType(this, items);
     final stackedItems = stackHangarItems(filteredItems);
     final calculatedItems = await calculateShipPrice(stackedItems);
@@ -339,7 +340,6 @@ class MainDataModel extends ChangeNotifier {
     final translatedItems = await translateHangarItem(calculatedItems);
     _hangarItems = translatedItems;
 
-    await hangarRepo.writeHangarItems(items);
 
     notifyListeners();
   }

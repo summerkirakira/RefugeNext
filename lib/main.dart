@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'src/datasource/data_model.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
+import 'src/widgets/navigation/main_navigation_rail.dart';
 import 'src/funcs/initial.dart';
 import 'src/widgets/hangar/hangar_page.dart';
 import 'src/widgets/user_info/user_page.dart';
@@ -50,33 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Row(
         children: [
           if (isWideScreen)
-            NavigationRail(
-              selectedIndex: context.watch<MainDataModel>().selectedPage,
-              onDestinationSelected: (int index) {
-                setState(() {
-
-                });
-              },
-              labelType: NavigationRailLabelType.selected,
-              groupAlignment: 0.0,
-              destinations: const [
-                NavigationRailDestination(
-                  icon: Icon(Icons.home),
-                  selectedIcon: Icon(Icons.home_filled),
-                  label: Text('机库'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.star),
-                  selectedIcon: Icon(Icons.star),
-                  label: Text('Favorites'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.settings),
-                  selectedIcon: Icon(Icons.settings),
-                  label: Text('Settings'),
-                ),
-              ],
-            ),
+            MainNavigationRail(),
           Expanded(
             child: Center(
               child: _getSelectedPage(selectedPage),

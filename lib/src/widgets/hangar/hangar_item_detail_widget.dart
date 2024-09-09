@@ -114,26 +114,33 @@ Widget getReclaimButton(BuildContext context, HangarItem hangarItem) {
   if (hangarItem.canReclaim) {
     return Column(
       children: [
-        IconButton(
-          padding: const EdgeInsets.all(0),
-          icon: const Icon(Icons.recycling),
-          onPressed: () {
+        GestureDetector(
+          onTap: () {
             WoltModalSheet.of(context).showAtIndex(1);
           },
+          child: Column(
+            children: [
+              const Icon(Icons.recycling),
+              const Text('回收')
+            ]
+          ),
         ),
-        const Text('回收')
       ],
     );
   } else {
     return Column(
       children: [
-        IconButton(
-          padding: const EdgeInsets.all(0),
-          icon: const Icon(Icons.recycling, color: Colors.grey),
-          onPressed: () {
+        GestureDetector(
+          onTap: () {
+            // WoltModalSheet.of(context).showAtIndex(1);
           },
+          child: Column(
+              children: [
+                const Icon(Icons.recycling, color: Colors.grey),
+                const Text('回收', style: TextStyle(color: Colors.grey))
+              ]
+          ),
         ),
-        const Text('回收', style: TextStyle(color: Colors.grey))
       ],
     );
   }
@@ -145,13 +152,17 @@ Widget getGiftButton(BuildContext context, HangarItem hangarItem) {
   if (hangarItem.status == "Gifted") {
     return Column(
       children: [
-        IconButton(
-          icon: const Icon(Icons.undo_outlined),
-          onPressed: () {
+        GestureDetector(
+          onTap: () {
             WoltModalSheet.of(context).showAtIndex(3);
           },
+          child: const Column(
+              children: [
+                Icon(Icons.undo_outlined),
+                Text('撤回')
+              ]
+          ),
         ),
-        const Text('撤回')
       ],
     );
   }
@@ -159,24 +170,33 @@ Widget getGiftButton(BuildContext context, HangarItem hangarItem) {
   if (hangarItem.canGit) {
     return Column(
       children: [
-        IconButton(
-          icon: const Icon(Icons.card_giftcard_outlined),
-          onPressed: () {
+        GestureDetector(
+          onTap: () {
             WoltModalSheet.of(context).showAtIndex(2);
           },
+          child: const Column(
+              children: [
+                Icon(Icons.card_giftcard_outlined),
+                Text('礼物')
+              ]
+          ),
         ),
-        const Text('礼物')
       ],
     );
   } else {
     return Column(
       children: [
-        IconButton(
-          icon: const Icon(Icons.card_giftcard_outlined, color: Colors.grey),
-          onPressed: () {
+        GestureDetector(
+          onTap: () {
+
           },
-        ),
-        const Text('礼物', style: TextStyle(color: Colors.grey))
+          child: const Column(
+              children: [
+                Icon(Icons.card_giftcard_outlined, color: Colors.grey),
+                Text('礼物', style: TextStyle(color: Colors.grey))
+              ]
+          ),
+        )
       ],
     );
   }
@@ -199,35 +219,49 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
         Spacer(),
         Column(
           children: [
-            IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
+
               },
-            ),
-            const Text('收藏')
+              child: const Column(
+                  children: [
+                    Icon(Icons.favorite_border, color: Colors.grey),
+                    Text('收藏', style: TextStyle(color: Colors.grey))
+                  ]
+              ),
+            )
           ],
         ),
         Spacer(),
         Column(
           children: [
-            IconButton(
-              icon: const Icon(Icons.share),
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
                 onShare();
               },
+              child: const Column(
+                  children: [
+                    Icon(Icons.share_outlined),
+                    Text('分享')
+                  ]
+              ),
             ),
-            const Text('分享')
           ],
         ),
         Spacer(),
         Column(
           children: [
-            IconButton(
-              icon: const Icon(Icons.description_outlined),
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
+
               },
-            ),
-            const Text('日志')
+              child: const Column(
+                  children: [
+                    Icon(Icons.description_outlined, color: Colors.grey),
+                    Text('日志', style: TextStyle(color: Colors.grey))
+                  ]
+              ),
+            )
           ],
         )
       ],

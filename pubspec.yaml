@@ -64,6 +64,7 @@ dependencies:
   loader_overlay: ^4.0.1
   badges: ^3.1.2
   url_launcher: ^6.3.0
+  flutter_native_splash: ^2.4.1
 
 
 dev_dependencies:
@@ -122,3 +123,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+flutter_native_splash:
+  color: "#42a5f5"
