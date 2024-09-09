@@ -16,9 +16,9 @@ Future<void> performAliPay(BuildContext context, String validateId) async {
     );
     try {
       final urlData = await getAlipayUrl(paymentData);
-      final qrcodeUrl = await getAliPayQrCodeUrl(urlData.next_action.alipay_handle_redirect.url);
+      // final qrcodeUrl = await getAliPayQrCodeUrl(urlData.next_action.alipay_handle_redirect.url);
 
-      final topic = "alipays://platformapi/startapp?saId=10000007&qrcode=";
+      // final topic = "alipays://platformapi/startapp?saId=10000007&qrcode=";
       // final jumpUrl = topic + qrcodeUrl;
 
       final jumpUrl = Uri.parse(urlData.next_action.alipay_handle_redirect.url);
@@ -26,13 +26,10 @@ Future<void> performAliPay(BuildContext context, String validateId) async {
       await launchUrl(jumpUrl);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("无法拉起支付宝, 请在浏览器窗口中继续")),
+        const SnackBar(content: Text("购买失败")),
       );
-
-
     }
-
-    print("PaymentData: $paymentData");
+    // print("PaymentData: $paymentData");
   } catch (e) {
     print("PaymentData Error: $e");
   }

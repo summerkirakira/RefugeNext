@@ -12,6 +12,7 @@ import 'package:refuge_next/src/datasource/models/shop/credit_query_property.dar
     show CreditQueryProperty;
 import 'package:refuge_next/src/funcs/shop/cart.dart';
 import 'package:refuge_next/src/funcs/shop/alipay.dart';
+import 'package:refuge_next/src/funcs/validation.dart';
 
 Future<void> refreshPage(BuildContext context) async {
   final step1query = await Step1Query().execute();
@@ -324,6 +325,11 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
             backgroundColor: Theme.of(context).primaryColor,
           ),
           onPressed: () async {
+            final result = await authenticateWithBiometrics(reason: "请验证以购买物品");
+            if (result == false) {
+              showToast(message: "验证失败");
+              return;
+            }
             try {
               if (step1query.store.cart.lineItems.isEmpty) {
                 showToast(message: "购物车为空");
@@ -332,7 +338,7 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
               final steps = await getStepperQuery();
               final finalStep = steps.store.cart.flow.steps.last;
               if (finalStep.step == "Payment" && finalStep.action != null) {
-                showToast(message: "已经到达最后一步");
+                // showToast(message: "已经到达最后一步");
               } else {
                 await gotoNextStep();
                 await assignFirstAddress();

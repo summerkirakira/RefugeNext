@@ -124,19 +124,6 @@ WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, BuildContext m
               color: Colors.grey
           )),
           const SizedBox(height: 20),
-          // SfSlider(
-          //   min: 0.0,
-          //   max: hangarItem.idList.length,
-          //   interval: 1,
-          //   showTicks: true,
-          //   showLabels: true,
-          //   value: sliderValue,
-          //   onChanged: (dynamic value) {
-          //     setState(() {
-          //       sliderValue = value;
-          //     });
-          //   },
-          // )
           TextField(
             onChanged: (value) {
               inputString = value;
