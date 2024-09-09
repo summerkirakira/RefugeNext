@@ -33,33 +33,11 @@ Map<String, dynamic> _$$StoreImplToJson(_$StoreImpl instance) =>
 _$AddressImpl _$$AddressImplFromJson(Map<String, dynamic> json) =>
     _$AddressImpl(
       id: json['id'] as String,
-      defaultBilling: json['defaultBilling'] as bool,
-      defaultShipping: json['defaultShipping'] as bool,
-      company: json['company'] as String,
-      firstname: json['firstname'] as String,
-      lastname: json['lastname'] as String,
-      addressLine: json['addressLine'] as String,
-      postalCode: json['postalCode'] as String,
-      phone: json['phone'] as String,
-      city: json['city'] as String,
-      country: Destination.fromJson(json['country'] as Map<String, dynamic>),
-      region: Destination.fromJson(json['region'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$AddressImplToJson(_$AddressImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'defaultBilling': instance.defaultBilling,
-      'defaultShipping': instance.defaultShipping,
-      'company': instance.company,
-      'firstname': instance.firstname,
-      'lastname': instance.lastname,
-      'addressLine': instance.addressLine,
-      'postalCode': instance.postalCode,
-      'phone': instance.phone,
-      'city': instance.city,
-      'country': instance.country,
-      'region': instance.region,
     };
 
 _$CartImpl _$$CartImplFromJson(Map<String, dynamic> json) => _$CartImpl(
@@ -136,8 +114,6 @@ Map<String, dynamic> _$$CartCouponImplToJson(_$CartCouponImpl instance) =>
 _$CreditsImpl _$$CreditsImplFromJson(Map<String, dynamic> json) =>
     _$CreditsImpl(
       amount: (json['amount'] as num).toDouble(),
-      nativeAmount:
-          Money.fromJson(json['nativeAmount'] as Map<String, dynamic>),
       applicable: json['applicable'] as bool,
       maxApplicable: (json['maxApplicable'] as num).toDouble(),
     );
@@ -145,7 +121,6 @@ _$CreditsImpl _$$CreditsImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$CreditsImplToJson(_$CreditsImpl instance) =>
     <String, dynamic>{
       'amount': instance.amount,
-      'nativeAmount': instance.nativeAmount,
       'applicable': instance.applicable,
       'maxApplicable': instance.maxApplicable,
     };

@@ -11,6 +11,7 @@ import 'package:refuge_next/src/network/graphql/shop/credit_query.dart';
 import 'package:refuge_next/src/datasource/models/shop/credit_query_property.dart'
     show CreditQueryProperty;
 import 'package:refuge_next/src/funcs/shop/cart.dart';
+import 'package:refuge_next/src/funcs/shop/alipay.dart';
 
 Future<void> refreshPage(BuildContext context) async {
   final step1query = await Step1Query().execute();
@@ -322,7 +323,30 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
           ),
-          onPressed: () {},
+          onPressed: () async {
+            try {
+              if (step1query.store.cart.lineItems.isEmpty) {
+                showToast(message: "购物车为空");
+                return;
+              }
+              final steps = await getStepperQuery();
+              final finalStep = steps.store.cart.flow.steps.last;
+              if (finalStep.step == "Payment" && finalStep.action != null) {
+                showToast(message: "已经到达最后一步");
+              } else {
+                await gotoNextStep();
+                await assignFirstAddress();
+                await validateCart();
+              }
+              await performAliPay(context, steps.store.order.slug);
+
+            } catch (e) {
+              showToast(message: e.toString());
+              return;
+            }
+
+            Navigator.of(context).pop();
+          },
           child: const Text('确认购买',
               style: TextStyle(
                 fontSize: 16,

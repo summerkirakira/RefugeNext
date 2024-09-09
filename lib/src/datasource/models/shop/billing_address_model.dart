@@ -26,17 +26,6 @@ class Store with _$Store {
 class Address with _$Address {
   factory Address({
     required String id,
-    required bool defaultBilling,
-    required bool defaultShipping,
-    required String company,
-    required String firstname,
-    required String lastname,
-    required String addressLine,
-    required String postalCode,
-    required String phone,
-    required String city,
-    required Destination country,
-    required Destination region,
   }) = _Address;
 
   factory Address.fromJson(Map<String, dynamic> json) => _$AddressFromJson(json);
@@ -96,7 +85,6 @@ class CartCoupon with _$CartCoupon {
 class Credits with _$Credits {
   factory Credits({
     required double amount,
-    required Money nativeAmount,
     required bool applicable,
     required double maxApplicable,
   }) = _Credits;

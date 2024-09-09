@@ -4,10 +4,14 @@ import '../../../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/network/graphql/shop/upgrade_add_to_cart.dart';
 import 'package:refuge_next/src/network/graphql/shop/cart_summary.dart';
 import 'package:refuge_next/src/network/graphql/shop/apply_upgrade_token.dart';
+import '../cart/cart.dart';
+// import 'package:refuge_next/src/funcs/shop/cart.dart';
+// import 'package:refuge_next/src/network/graphql/shop/step1query.dart';
+// import 'package:refuge_next/src/network/graphql/shop/credit_query.dart';
 
 
 
-WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeShipInfo fromShip, UpgradeShipInfo toShip, Skus toSku) {
+WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeShipInfo fromShip, UpgradeShipInfo toShip, Skus toSku, BuildContext rootContext) {
   return WoltModalSheetPage(
     navBarHeight: 50,
     pageTitle: const Padding(
@@ -66,6 +70,9 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
             String token = await UpgradeAddToCart(skuId: toSku.id!, fromShipId: fromShip.id!).execute();
             await ApplyUpgradeToken(upgradeToken: token).execute();
 
+            Navigator.of(context).pop();
+
+            await showCartBottomSheet(rootContext);
 
           },
           child: const Text('确认购买',

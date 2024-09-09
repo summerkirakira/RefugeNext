@@ -343,17 +343,6 @@ Address _$AddressFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Address {
   String get id => throw _privateConstructorUsedError;
-  bool get defaultBilling => throw _privateConstructorUsedError;
-  bool get defaultShipping => throw _privateConstructorUsedError;
-  String get company => throw _privateConstructorUsedError;
-  String get firstname => throw _privateConstructorUsedError;
-  String get lastname => throw _privateConstructorUsedError;
-  String get addressLine => throw _privateConstructorUsedError;
-  String get postalCode => throw _privateConstructorUsedError;
-  String get phone => throw _privateConstructorUsedError;
-  String get city => throw _privateConstructorUsedError;
-  Destination get country => throw _privateConstructorUsedError;
-  Destination get region => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -365,22 +354,7 @@ abstract class $AddressCopyWith<$Res> {
   factory $AddressCopyWith(Address value, $Res Function(Address) then) =
       _$AddressCopyWithImpl<$Res, Address>;
   @useResult
-  $Res call(
-      {String id,
-      bool defaultBilling,
-      bool defaultShipping,
-      String company,
-      String firstname,
-      String lastname,
-      String addressLine,
-      String postalCode,
-      String phone,
-      String city,
-      Destination country,
-      Destination region});
-
-  $DestinationCopyWith<$Res> get country;
-  $DestinationCopyWith<$Res> get region;
+  $Res call({String id});
 }
 
 /// @nodoc
@@ -397,84 +371,13 @@ class _$AddressCopyWithImpl<$Res, $Val extends Address>
   @override
   $Res call({
     Object? id = null,
-    Object? defaultBilling = null,
-    Object? defaultShipping = null,
-    Object? company = null,
-    Object? firstname = null,
-    Object? lastname = null,
-    Object? addressLine = null,
-    Object? postalCode = null,
-    Object? phone = null,
-    Object? city = null,
-    Object? country = null,
-    Object? region = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      defaultBilling: null == defaultBilling
-          ? _value.defaultBilling
-          : defaultBilling // ignore: cast_nullable_to_non_nullable
-              as bool,
-      defaultShipping: null == defaultShipping
-          ? _value.defaultShipping
-          : defaultShipping // ignore: cast_nullable_to_non_nullable
-              as bool,
-      company: null == company
-          ? _value.company
-          : company // ignore: cast_nullable_to_non_nullable
-              as String,
-      firstname: null == firstname
-          ? _value.firstname
-          : firstname // ignore: cast_nullable_to_non_nullable
-              as String,
-      lastname: null == lastname
-          ? _value.lastname
-          : lastname // ignore: cast_nullable_to_non_nullable
-              as String,
-      addressLine: null == addressLine
-          ? _value.addressLine
-          : addressLine // ignore: cast_nullable_to_non_nullable
-              as String,
-      postalCode: null == postalCode
-          ? _value.postalCode
-          : postalCode // ignore: cast_nullable_to_non_nullable
-              as String,
-      phone: null == phone
-          ? _value.phone
-          : phone // ignore: cast_nullable_to_non_nullable
-              as String,
-      city: null == city
-          ? _value.city
-          : city // ignore: cast_nullable_to_non_nullable
-              as String,
-      country: null == country
-          ? _value.country
-          : country // ignore: cast_nullable_to_non_nullable
-              as Destination,
-      region: null == region
-          ? _value.region
-          : region // ignore: cast_nullable_to_non_nullable
-              as Destination,
     ) as $Val);
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $DestinationCopyWith<$Res> get country {
-    return $DestinationCopyWith<$Res>(_value.country, (value) {
-      return _then(_value.copyWith(country: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $DestinationCopyWith<$Res> get region {
-    return $DestinationCopyWith<$Res>(_value.region, (value) {
-      return _then(_value.copyWith(region: value) as $Val);
-    });
   }
 }
 
@@ -485,24 +388,7 @@ abstract class _$$AddressImplCopyWith<$Res> implements $AddressCopyWith<$Res> {
       __$$AddressImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      bool defaultBilling,
-      bool defaultShipping,
-      String company,
-      String firstname,
-      String lastname,
-      String addressLine,
-      String postalCode,
-      String phone,
-      String city,
-      Destination country,
-      Destination region});
-
-  @override
-  $DestinationCopyWith<$Res> get country;
-  @override
-  $DestinationCopyWith<$Res> get region;
+  $Res call({String id});
 }
 
 /// @nodoc
@@ -517,67 +403,12 @@ class __$$AddressImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? defaultBilling = null,
-    Object? defaultShipping = null,
-    Object? company = null,
-    Object? firstname = null,
-    Object? lastname = null,
-    Object? addressLine = null,
-    Object? postalCode = null,
-    Object? phone = null,
-    Object? city = null,
-    Object? country = null,
-    Object? region = null,
   }) {
     return _then(_$AddressImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      defaultBilling: null == defaultBilling
-          ? _value.defaultBilling
-          : defaultBilling // ignore: cast_nullable_to_non_nullable
-              as bool,
-      defaultShipping: null == defaultShipping
-          ? _value.defaultShipping
-          : defaultShipping // ignore: cast_nullable_to_non_nullable
-              as bool,
-      company: null == company
-          ? _value.company
-          : company // ignore: cast_nullable_to_non_nullable
-              as String,
-      firstname: null == firstname
-          ? _value.firstname
-          : firstname // ignore: cast_nullable_to_non_nullable
-              as String,
-      lastname: null == lastname
-          ? _value.lastname
-          : lastname // ignore: cast_nullable_to_non_nullable
-              as String,
-      addressLine: null == addressLine
-          ? _value.addressLine
-          : addressLine // ignore: cast_nullable_to_non_nullable
-              as String,
-      postalCode: null == postalCode
-          ? _value.postalCode
-          : postalCode // ignore: cast_nullable_to_non_nullable
-              as String,
-      phone: null == phone
-          ? _value.phone
-          : phone // ignore: cast_nullable_to_non_nullable
-              as String,
-      city: null == city
-          ? _value.city
-          : city // ignore: cast_nullable_to_non_nullable
-              as String,
-      country: null == country
-          ? _value.country
-          : country // ignore: cast_nullable_to_non_nullable
-              as Destination,
-      region: null == region
-          ? _value.region
-          : region // ignore: cast_nullable_to_non_nullable
-              as Destination,
     ));
   }
 }
@@ -585,51 +416,17 @@ class __$$AddressImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$AddressImpl implements _Address {
-  _$AddressImpl(
-      {required this.id,
-      required this.defaultBilling,
-      required this.defaultShipping,
-      required this.company,
-      required this.firstname,
-      required this.lastname,
-      required this.addressLine,
-      required this.postalCode,
-      required this.phone,
-      required this.city,
-      required this.country,
-      required this.region});
+  _$AddressImpl({required this.id});
 
   factory _$AddressImpl.fromJson(Map<String, dynamic> json) =>
       _$$AddressImplFromJson(json);
 
   @override
   final String id;
-  @override
-  final bool defaultBilling;
-  @override
-  final bool defaultShipping;
-  @override
-  final String company;
-  @override
-  final String firstname;
-  @override
-  final String lastname;
-  @override
-  final String addressLine;
-  @override
-  final String postalCode;
-  @override
-  final String phone;
-  @override
-  final String city;
-  @override
-  final Destination country;
-  @override
-  final Destination region;
 
   @override
   String toString() {
-    return 'Address(id: $id, defaultBilling: $defaultBilling, defaultShipping: $defaultShipping, company: $company, firstname: $firstname, lastname: $lastname, addressLine: $addressLine, postalCode: $postalCode, phone: $phone, city: $city, country: $country, region: $region)';
+    return 'Address(id: $id)';
   }
 
   @override
@@ -637,42 +434,12 @@ class _$AddressImpl implements _Address {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AddressImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.defaultBilling, defaultBilling) ||
-                other.defaultBilling == defaultBilling) &&
-            (identical(other.defaultShipping, defaultShipping) ||
-                other.defaultShipping == defaultShipping) &&
-            (identical(other.company, company) || other.company == company) &&
-            (identical(other.firstname, firstname) ||
-                other.firstname == firstname) &&
-            (identical(other.lastname, lastname) ||
-                other.lastname == lastname) &&
-            (identical(other.addressLine, addressLine) ||
-                other.addressLine == addressLine) &&
-            (identical(other.postalCode, postalCode) ||
-                other.postalCode == postalCode) &&
-            (identical(other.phone, phone) || other.phone == phone) &&
-            (identical(other.city, city) || other.city == city) &&
-            (identical(other.country, country) || other.country == country) &&
-            (identical(other.region, region) || other.region == region));
+            (identical(other.id, id) || other.id == id));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      defaultBilling,
-      defaultShipping,
-      company,
-      firstname,
-      lastname,
-      addressLine,
-      postalCode,
-      phone,
-      city,
-      country,
-      region);
+  int get hashCode => Object.hash(runtimeType, id);
 
   @JsonKey(ignore: true)
   @override
@@ -689,46 +456,12 @@ class _$AddressImpl implements _Address {
 }
 
 abstract class _Address implements Address {
-  factory _Address(
-      {required final String id,
-      required final bool defaultBilling,
-      required final bool defaultShipping,
-      required final String company,
-      required final String firstname,
-      required final String lastname,
-      required final String addressLine,
-      required final String postalCode,
-      required final String phone,
-      required final String city,
-      required final Destination country,
-      required final Destination region}) = _$AddressImpl;
+  factory _Address({required final String id}) = _$AddressImpl;
 
   factory _Address.fromJson(Map<String, dynamic> json) = _$AddressImpl.fromJson;
 
   @override
   String get id;
-  @override
-  bool get defaultBilling;
-  @override
-  bool get defaultShipping;
-  @override
-  String get company;
-  @override
-  String get firstname;
-  @override
-  String get lastname;
-  @override
-  String get addressLine;
-  @override
-  String get postalCode;
-  @override
-  String get phone;
-  @override
-  String get city;
-  @override
-  Destination get country;
-  @override
-  Destination get region;
   @override
   @JsonKey(ignore: true)
   _$$AddressImplCopyWith<_$AddressImpl> get copyWith =>
@@ -1654,7 +1387,6 @@ Credits _$CreditsFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Credits {
   double get amount => throw _privateConstructorUsedError;
-  Money get nativeAmount => throw _privateConstructorUsedError;
   bool get applicable => throw _privateConstructorUsedError;
   double get maxApplicable => throw _privateConstructorUsedError;
 
@@ -1668,13 +1400,7 @@ abstract class $CreditsCopyWith<$Res> {
   factory $CreditsCopyWith(Credits value, $Res Function(Credits) then) =
       _$CreditsCopyWithImpl<$Res, Credits>;
   @useResult
-  $Res call(
-      {double amount,
-      Money nativeAmount,
-      bool applicable,
-      double maxApplicable});
-
-  $MoneyCopyWith<$Res> get nativeAmount;
+  $Res call({double amount, bool applicable, double maxApplicable});
 }
 
 /// @nodoc
@@ -1691,7 +1417,6 @@ class _$CreditsCopyWithImpl<$Res, $Val extends Credits>
   @override
   $Res call({
     Object? amount = null,
-    Object? nativeAmount = null,
     Object? applicable = null,
     Object? maxApplicable = null,
   }) {
@@ -1700,10 +1425,6 @@ class _$CreditsCopyWithImpl<$Res, $Val extends Credits>
           ? _value.amount
           : amount // ignore: cast_nullable_to_non_nullable
               as double,
-      nativeAmount: null == nativeAmount
-          ? _value.nativeAmount
-          : nativeAmount // ignore: cast_nullable_to_non_nullable
-              as Money,
       applicable: null == applicable
           ? _value.applicable
           : applicable // ignore: cast_nullable_to_non_nullable
@@ -1714,14 +1435,6 @@ class _$CreditsCopyWithImpl<$Res, $Val extends Credits>
               as double,
     ) as $Val);
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $MoneyCopyWith<$Res> get nativeAmount {
-    return $MoneyCopyWith<$Res>(_value.nativeAmount, (value) {
-      return _then(_value.copyWith(nativeAmount: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -1731,14 +1444,7 @@ abstract class _$$CreditsImplCopyWith<$Res> implements $CreditsCopyWith<$Res> {
       __$$CreditsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {double amount,
-      Money nativeAmount,
-      bool applicable,
-      double maxApplicable});
-
-  @override
-  $MoneyCopyWith<$Res> get nativeAmount;
+  $Res call({double amount, bool applicable, double maxApplicable});
 }
 
 /// @nodoc
@@ -1753,7 +1459,6 @@ class __$$CreditsImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? amount = null,
-    Object? nativeAmount = null,
     Object? applicable = null,
     Object? maxApplicable = null,
   }) {
@@ -1762,10 +1467,6 @@ class __$$CreditsImplCopyWithImpl<$Res>
           ? _value.amount
           : amount // ignore: cast_nullable_to_non_nullable
               as double,
-      nativeAmount: null == nativeAmount
-          ? _value.nativeAmount
-          : nativeAmount // ignore: cast_nullable_to_non_nullable
-              as Money,
       applicable: null == applicable
           ? _value.applicable
           : applicable // ignore: cast_nullable_to_non_nullable
@@ -1783,7 +1484,6 @@ class __$$CreditsImplCopyWithImpl<$Res>
 class _$CreditsImpl implements _Credits {
   _$CreditsImpl(
       {required this.amount,
-      required this.nativeAmount,
       required this.applicable,
       required this.maxApplicable});
 
@@ -1793,15 +1493,13 @@ class _$CreditsImpl implements _Credits {
   @override
   final double amount;
   @override
-  final Money nativeAmount;
-  @override
   final bool applicable;
   @override
   final double maxApplicable;
 
   @override
   String toString() {
-    return 'Credits(amount: $amount, nativeAmount: $nativeAmount, applicable: $applicable, maxApplicable: $maxApplicable)';
+    return 'Credits(amount: $amount, applicable: $applicable, maxApplicable: $maxApplicable)';
   }
 
   @override
@@ -1810,8 +1508,6 @@ class _$CreditsImpl implements _Credits {
         (other.runtimeType == runtimeType &&
             other is _$CreditsImpl &&
             (identical(other.amount, amount) || other.amount == amount) &&
-            (identical(other.nativeAmount, nativeAmount) ||
-                other.nativeAmount == nativeAmount) &&
             (identical(other.applicable, applicable) ||
                 other.applicable == applicable) &&
             (identical(other.maxApplicable, maxApplicable) ||
@@ -1821,7 +1517,7 @@ class _$CreditsImpl implements _Credits {
   @JsonKey(ignore: true)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, amount, nativeAmount, applicable, maxApplicable);
+      Object.hash(runtimeType, amount, applicable, maxApplicable);
 
   @JsonKey(ignore: true)
   @override
@@ -1840,7 +1536,6 @@ class _$CreditsImpl implements _Credits {
 abstract class _Credits implements Credits {
   factory _Credits(
       {required final double amount,
-      required final Money nativeAmount,
       required final bool applicable,
       required final double maxApplicable}) = _$CreditsImpl;
 
@@ -1848,8 +1543,6 @@ abstract class _Credits implements Credits {
 
   @override
   double get amount;
-  @override
-  Money get nativeAmount;
   @override
   bool get applicable;
   @override

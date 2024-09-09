@@ -1,4 +1,5 @@
 import '../../api_service.dart' show RsiApiClient;
+import 'package:refuge_next/src/datasource/models/shop/cart_validation_property.dart';
 
 
 class CartValidate {
@@ -50,7 +51,7 @@ fragment OrderSlugFragment on TyStore {
 
   CartValidate({required this.token, required this.mark});
 
-  Future<void> execute() async {
+  Future<CartValidationProperty> execute() async {
     final data = {
       'query': query,
       'variables': {
@@ -61,6 +62,9 @@ fragment OrderSlugFragment on TyStore {
     };
 
     final response = await RsiApiClient().graphql(data: data);
-
+    if (response.data!['errors'] != null) {
+      throw Exception(response.data!['errors']);
+    }
+    return CartValidationProperty.fromJson(response.data!['data']['store']);
   }
 }
