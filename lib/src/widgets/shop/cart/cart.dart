@@ -268,6 +268,20 @@ Widget getTotalWidget(BuildContext context, StoreData step1query, CreditQueryPro
   );
 }
 
+Widget getEmptyCartWidget(BuildContext context) {
+  return const Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(height: 40),
+        Icon(Icons.shopping_cart_outlined, size: 60, color: Colors.grey,),
+        SizedBox(height: 40),
+        // const Text('购物车为空', style: TextStyle(fontSize: 20)),
+      ],
+    ),
+  );
+}
+
 Future<void> showCartBottomSheet(BuildContext context) async {
   final step1query = await Step1Query().execute();
   final creditQuery = await CreditQuery().execute();
@@ -309,6 +323,8 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
       child: Column(children: [
         for (var item in step1query.store.cart.lineItems)
           getListItem(context, item),
+        if (step1query.store.cart.lineItems.isEmpty)
+          getEmptyCartWidget(context),
         const Divider(),
         getTotalWidget(
             context, step1query, creditQuery),
@@ -343,6 +359,7 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
                 await gotoNextStep();
                 await assignFirstAddress();
                 await validateCart();
+                showToast(message: "自动确认成功，正在解析...");
               }
               await performAliPay(context, steps.store.order.slug);
 

@@ -241,7 +241,11 @@ WoltModalSheetPage getShipSelectBottomSheet(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            for (var ship in ships) ShipItem(ship, onSelected, isFromShip)
+            for (var ship in ships) ShipItem(ship, onSelected, isFromShip),
+            if (ships.length < 3)
+              const SizedBox(
+                height: 100,
+              )
           ],
         ),
       ));
