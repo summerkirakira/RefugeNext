@@ -93,6 +93,7 @@ class MainDataModel extends ChangeNotifier {
   User? _currentUser;
 
   User? get currentUser => _currentUser;
+  bool userInitFinished = false;
 
   final hangarRepo = HangarRepo();
   final userRepo = UserRepo();
@@ -103,10 +104,17 @@ class MainDataModel extends ChangeNotifier {
 
   MainDataModel() {
     initUser();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    await initUser();
+    await translationRepo.readTranslation();
     readHangarItems();
     readBuybackItems();
-    initShipUpgrade().then((value) => filterShipUpgrade(null, null));
     readCatalogs();
+    await initShipUpgrade();
+    await filterShipUpgrade(null, null);
   }
 
 
@@ -174,9 +182,11 @@ class MainDataModel extends ChangeNotifier {
     }
     final user = await userRepo.getUser(handle: handle);
     if (user == null) {
+      userInitFinished = true;
       return;
     }
     _currentUser = user;
+    userInitFinished = true;
     notifyListeners();
   }
 

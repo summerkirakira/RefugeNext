@@ -50,6 +50,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
     bool isLogin = context.watch<MainDataModel>().currentUser != null;
 
+    bool isUserInit = context.watch<MainDataModel>().userInitFinished;
+
+    if (!isUserInit) {
+      return Scaffold(
+        body: Center(
+          child: Container(),
+        ),
+      );
+    }
+
     if (isLogin) {
       return Scaffold(
         body: Row(

@@ -49,7 +49,7 @@ class _HangarPageState extends State<HangarPage> {
   @override
   void initState() {
     super.initState();
-    Provider.of<MainDataModel>(context, listen: false).readHangarItems();
+    // Provider.of<MainDataModel>(context, listen: false).readHangarItems();
   }
 
   @override

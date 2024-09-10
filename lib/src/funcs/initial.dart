@@ -112,6 +112,4 @@ Future<void> startup() async {
   await updateTranslation(cirnoAuth.property);
 
   await setCurrency();
-
-
 }
