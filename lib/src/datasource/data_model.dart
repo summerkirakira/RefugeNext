@@ -26,6 +26,7 @@ import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 
 import 'package:refuge_next/src/funcs/initial.dart' show startup;
 import 'package:refuge_next/src/funcs/cirno_auth.dart' show CirnoAuth;
+import 'package:refuge_next/src/network/cirno/property/property.dart';
 
 
 enum HangarItemType {
@@ -377,13 +378,15 @@ class MainDataModel extends ChangeNotifier {
 
 
   Future<void> updateCurrentUser(User newUser) async {
-
+    final rsiApiClient = RsiApiClient();
     final prefs = await SharedPreferences.getInstance();
+    rsiApiClient.setRSIToken(token: newUser.rsiToken);
     prefs.setString('vip.kirakira.user.handle', newUser.handle);
 
     _currentUser = newUser;
-    final rsiApiClient = RsiApiClient();
+
     rsiApiClient.setRSIToken(token: newUser.rsiToken);
+    await rsiApiClient.refreshCsrfToken();
     notifyListeners();
   }
 

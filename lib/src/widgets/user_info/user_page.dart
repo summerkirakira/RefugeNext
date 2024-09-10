@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_switch_bottomsheet.dart';
 import 'package:refuge_next/src/network/parsers/user_parser.dart' show parseNewUser;
 import 'package:refuge_next/src/network/api_service.dart';
+import 'package:refuge_next/src/widgets/settings/settings_page.dart';
 
 class TopBar extends StatefulWidget {
   const TopBar({Key? key}) : super(key: key);
@@ -328,28 +330,28 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
               ),
               SizedBox(height: 10),
               DetailInfoItem(
-                leading: Icon(Icons.donut_large_outlined),
+                leading: Icon(Icons.donut_large_outlined, color: Theme.of(context).iconTheme.color),
                 title: 'UEC',
                 value: _formatRec(
                     Provider.of<MainDataModel>(context).currentUser!.uec),
               ),
               SizedBox(height: 10),
               DetailInfoItem(
-                leading: Icon(Icons.my_location_outlined),
+                leading: Icon(Icons.my_location_outlined, color: Theme.of(context).iconTheme.color),
                 title: 'REC',
                 value: _formatRec(
                     Provider.of<MainDataModel>(context).currentUser!.rec),
               ),
               SizedBox(height: 10),
               DetailInfoItem(
-                leading: Icon(Icons.paid_outlined),
+                leading: Icon(Icons.paid_outlined, color: Theme.of(context).iconTheme.color),
                 title: '当前机库价值',
                 value: _formatPrice(
                     Provider.of<MainDataModel>(context).currentUser!.currentHangarValue),
               ),
               SizedBox(height: 10),
               DetailInfoItem(
-                leading: Icon(Icons.groups),
+                leading: Icon(Icons.groups, color: Theme.of(context).iconTheme.color),
                 title: '邀请人数',
                 value: Provider.of<MainDataModel>(context)
                     .currentUser!
@@ -358,7 +360,7 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
               ),
               SizedBox(height: 10),
               DetailInfoItem(
-                leading: Icon(Icons.person_add_disabled_outlined),
+                leading: Icon(Icons.person_add_disabled_outlined, color: Theme.of(context).iconTheme.color),
                 title: '未购买资格包人数',
                 value: Provider.of<MainDataModel>(context)
                     .currentUser!
@@ -367,7 +369,7 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
               ),
               SizedBox(height: 10),
               DetailInfoItem(
-                leading: Icon(Icons.card_giftcard_outlined),
+                leading: Icon(Icons.card_giftcard_outlined, color: Theme.of(context).iconTheme.color),
                 title: '邀请码',
                 value: Provider.of<MainDataModel>(context)
                     .currentUser!
@@ -375,6 +377,53 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
               ),
             ],
           ),
+        )
+      ],
+    );
+  }
+}
+
+
+class SettingsWidget extends StatelessWidget {
+  const SettingsWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+    //     ListTile(
+    // contentPadding: EdgeInsets.all(0),
+    //       title: Padding(
+    //         padding: const EdgeInsets.only(left: 30, top: 0),
+    //         child: Row(
+    //           children: [
+    //             Icon(Icons.logout_outlined, color: Theme.of(context).iconTheme.color,),
+    //             SizedBox(width: 10),
+    //             Text('退出当前账号',
+    //                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+    //           ],
+    //         ),
+    //       ),
+    //       onTap: () {
+    //         // Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage()));
+    //       },
+    //     ),
+        ListTile(
+          contentPadding: EdgeInsets.all(0),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 30, top: 0, bottom: 0),
+            child: Row(
+              children: [
+                Icon(Icons.settings_outlined, color: Theme.of(context).iconTheme.color,),
+                SizedBox(width: 10),
+                Text('设置',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          onTap: () {
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => SettingsPage()));
+          },
         )
       ],
     );
@@ -403,7 +452,7 @@ class _UserInfoPageState extends State<UserInfoPage>
             UserSimpleInfo(),
             UserDetailInfo(),
             Divider(),
-
+            SettingsWidget()
           ],
         ), onRefresh: () async {
               final newUser = await parseNewUser(model.currentUser!.email, model.currentUser!.password, RsiApiClient().rsiDevice, model.currentUser!.rsiToken);

@@ -30,8 +30,8 @@ class _HangarBuybackPageState extends State<HangarBuybackPage> {
     return TabBarItem(
       index: index,
       transform: ColorsTransform(
-          highlightColor: Colors.pink,
-          normalColor: Colors.black,
+          highlightColor: Theme.of(context).primaryColor,
+          normalColor: Theme.of(context).colorScheme.onSurface,
           builder: (context, color) {
             return Container(
               padding: EdgeInsets.all(2),
@@ -60,7 +60,7 @@ class _HangarBuybackPageState extends State<HangarBuybackPage> {
                 itemCount: widget.titles.length,
                 builder: getTabbarChild,
                 indicator: StandardIndicator(
-                  color: Colors.pink,
+                  color: Theme.of(context).primaryColor,
                   radius: const BorderRadius.all(Radius.circular(5)),
                   width: 40,
                 ),

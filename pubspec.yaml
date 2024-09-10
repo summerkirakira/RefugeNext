@@ -34,7 +34,7 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.6
+  cupertino_icons: ^1.0.8
   flex_color_scheme: ^7.3.1
   provider: ^6.1.2
   dio: ^5.5.0+1
@@ -70,6 +70,7 @@ dependencies:
   device_info_plus: ^10.1.2
   ota_update: ^6.0.0
   quickalert: ^1.1.0
+  babstrap_settings_screen: ^0.1.7
 
 
 dev_dependencies:

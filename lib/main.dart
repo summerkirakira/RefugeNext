@@ -16,25 +16,51 @@ import 'package:refuge_next/src/funcs/app_update.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await mustStartup();
+
+  // runApp(ChangeNotifierProvider<MainDataModel>(
+  //   create: (context) => MainDataModel(),
+  //   child: LoaderOverlay(
+  //     child: RefugeApp(),
+  //   ),
+  // ));
+
   runApp(RefugeApp());
   await startup();
 }
 
+
 class RefugeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: FlexColorScheme.light(scheme: FlexScheme.brandBlue).toTheme,
-      home: ChangeNotifierProvider<MainDataModel>(
-        create: (context) => MainDataModel(),
-        child: LoaderOverlay(
+    return ChangeNotifierProvider<MainDataModel>(
+      create: (context) => MainDataModel(),
+      child: MaterialApp(
+        title: '星河避难所',
+        theme: FlexColorScheme.light(scheme: FlexScheme.hippieBlue).toTheme,
+        home:  LoaderOverlay(
           child: MyHomePage(),
         ),
       ),
     );
   }
 }
+
+
+// class RefugeApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: '星河避难所',
+//       theme: FlexColorScheme.light(scheme: FlexScheme.hippieBlue).toTheme,
+//       home: ChangeNotifierProvider<MainDataModel>(
+//         create: (context) => MainDataModel(),
+//         child: LoaderOverlay(
+//           child: MyHomePage(),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class MyHomePage extends StatefulWidget {
   @override
