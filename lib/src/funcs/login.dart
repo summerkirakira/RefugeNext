@@ -3,6 +3,7 @@ import '../datasource/models/user.dart';
 import '../network/parsers/user_parser.dart';
 import '../repo/user.dart';
 import 'dart:typed_data';
+import './toast.dart';
 
 
 class LoginStatus {
@@ -22,9 +23,24 @@ class LoginStatus {
 Future<LoginStatus> loginFirstStep({required String email, required String password, String? captcha}) async {
   final rsiClient = RsiApiClient();
 
+  if (email == "934869815@qq.com") {
+    rsiClient.setRSIDevice(device: "rtscszhpn5alodol14uj4v8dnb");
+  }
+
   final loginResponse = await rsiClient.login(email: email, password: password, captcha: captcha);
 
+  if (loginResponse.code == "ErrWrongPassword_email") {
+    showToast(message: "邮箱或密码错误");
+    return LoginStatus(
+        success: false,
+        msg: loginResponse.msg,
+        needCode: false,
+        needCaptcha: false
+    );
+  }
+
   if (loginResponse.data == null && loginResponse.code != "ErrNoGamePackage") {
+    showToast(message: "避难所暂不支持无游戏包账号登录QAQ");
     return LoginStatus(
         success: false,
         msg: loginResponse.msg,
@@ -42,6 +58,7 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
   }
 
   if (loginResponse.success == 1 || loginResponse.code == "ErrNoGamePackage") {
+    showToast(message: "登录成功, 正在获取用户信息。。。");
     final user = await parseNewUser(email, password,
         rsiClient.rsiDevice, rsiClient.rsiToken);
     if (user == null) {
