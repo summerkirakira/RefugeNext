@@ -15,6 +15,7 @@ import './models/searchProperty.dart';
 import '../repo/buyback.dart';
 import '../repo/ship_upgrade.dart';
 import '../repo/translation.dart';
+import '../repo/ship_alias.dart';
 import 'package:dio/dio.dart';
 import '../network/parsers/hangar_parser.dart';
 import '../funcs/toast.dart';
@@ -101,6 +102,7 @@ class MainDataModel extends ChangeNotifier {
   final shipUpgradeRepo = ShipUpgradeRepo();
   final catalogRepo = CatalogRepo();
   final translationRepo = TranslationRepo();
+  final shipAliasRepo = ShipAliasRepo();
 
   MainDataModel() {
     initUser();
@@ -110,6 +112,7 @@ class MainDataModel extends ChangeNotifier {
   Future<void> initialize() async {
     await initUser();
     await translationRepo.readTranslation();
+    await shipAliasRepo.getShipAliases();
     readHangarItems();
     readBuybackItems();
     readCatalogs();
