@@ -58,7 +58,7 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
   }
 
   if (loginResponse.success == 1 || loginResponse.code == "ErrNoGamePackage") {
-    showToast(message: "登录成功, 正在获取用户信息。。。");
+    showToast(message: "登录成功, 正在获取用户信息...");
     final user = await parseNewUser(email, password,
         rsiClient.rsiDevice, rsiClient.rsiToken);
     if (user == null) {

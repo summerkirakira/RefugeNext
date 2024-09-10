@@ -65,6 +65,7 @@ class CirnoAuth {
   late String _uuid;
   late RefugeVersionProperty _property;
   bool _initialized = false;
+  List<Function> _afterInit = [];
 
 
   static Future<CirnoAuth> getInstance() async {
@@ -84,6 +85,17 @@ class CirnoAuth {
   Future<void> initialize() async {
     await getRefugeVersion();
     _initialized = true;
+    for (var func in _afterInit) {
+      func();
+    }
+  }
+
+  void addAfterInit(Function func) {
+    if (_initialized) {
+      func();
+    } else {
+      _afterInit.add(func);
+    }
   }
 
   Future<void> getRefugeVersion() async {

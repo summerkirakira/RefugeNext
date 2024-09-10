@@ -37,6 +37,8 @@ class RefugeVersionProperty {
   final bool isVip;
   final int vipExpire;
   final int credit;
+  final String appUrl;
+  final String updateContent;
 
   RefugeVersionProperty({
     required this.versionCode,
@@ -48,6 +50,8 @@ class RefugeVersionProperty {
     required this.isVip,
     required this.vipExpire,
     required this.credit,
+    required this.appUrl,
+    required this.updateContent,
   });
 
   factory RefugeVersionProperty.fromJson(Map<String, dynamic> json) {
@@ -61,6 +65,8 @@ class RefugeVersionProperty {
       isVip: json['isVip'] as bool,
       vipExpire: json['vipExpire'] as int,
       credit: json['credit'] as int,
+      appUrl: json['appUrl'] as String,
+      updateContent: json['updateContent'] as String,
     );
   }
 
@@ -75,6 +81,8 @@ class RefugeVersionProperty {
       'isVip': isVip,
       'vipExpire': vipExpire,
       'credit': credit,
+      'appUrl': appUrl,
+      'updateContent': updateContent,
     };
   }
 }

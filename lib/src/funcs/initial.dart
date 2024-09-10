@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/models/cirno/property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/filtered_ship_upgrade.dart';
+import 'package:refuge_next/src/funcs/app_update.dart';
 
 import '../network/api_service.dart';
 import '../repo/hangar.dart';
@@ -27,6 +28,7 @@ import '../network/graphql/filtered_ship_upgrade.dart';
 import 'package:refuge_next/src/funcs/shop/cart.dart';
 import 'package:refuge_next/src/services/android.dart';
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
+import 'package:ota_update/ota_update.dart';
 
 
 
@@ -113,6 +115,8 @@ Future<void> startup() async {
     await updateTranslation(cirnoAuth.property);
 
     await setCurrency();
+
+
   } catch (e) {
     print('Error during startup: $e');
   }

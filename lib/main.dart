@@ -10,6 +10,8 @@ import 'src/widgets/user_info/user_page.dart';
 import 'src/widgets/shop/shop_page.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:refuge_next/src/widgets/empty_page/empty_page.dart' show EmptyPage;
+import 'package:refuge_next/src/funcs/cirno_auth.dart';
+import 'package:refuge_next/src/funcs/app_update.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,4 +97,18 @@ class _MyHomePageState extends State<MyHomePage> {
         return Text('Home Page');
     }
   }
+
+  Future<void> checkUpdate() async {
+    final auth = await CirnoAuth.getInstance();
+    auth.addAfterInit(() => showUpdateDialog(context, auth.property));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkUpdate();
+    });
+  }
+
 }

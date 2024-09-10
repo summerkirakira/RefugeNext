@@ -34,7 +34,7 @@ List<HangarItem> filterHangarItemsByType(
 
 
 String getStackKey(HangarItem hangarItem) {
-  String stackKey = "${hangarItem.name}#${hangarItem.status}#${hangarItem.price}#${hangarItem.alsoContains}";
+  String stackKey = "${hangarItem.name}#${hangarItem.status}#${hangarItem.price}#${hangarItem.alsoContains}#${hangarItem.canReclaim}#${hangarItem.canGit}";
 
   for (var subItem in hangarItem.items) {
     stackKey += subItem.title;
