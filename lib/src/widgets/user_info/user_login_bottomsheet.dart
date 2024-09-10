@@ -237,7 +237,7 @@ WoltModalSheetPage getEmailInputBottomSheet(
           children: [
             Text('输入验证码',
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-            Text('请输入RSI邮箱绑定的验证码',
+            Text('请输入RSI绑定邮箱的验证码',
                 style: TextStyle(fontSize: 15, color: Colors.grey)),
           ],
         )),

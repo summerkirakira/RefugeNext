@@ -104,12 +104,17 @@ Future<void> updateShipAlias(RefugeVersionProperty latestVersion) async {
 
 Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
-  await rsiApiClient.refreshCsrfToken();
   final cirnoAuth = await CirnoAuth.getInstance();
-  await cirnoAuth.initialize();
+  try {
+    await rsiApiClient.refreshCsrfToken();
+    await cirnoAuth.initialize();
 
-  await updateShipAlias(cirnoAuth.property);
-  await updateTranslation(cirnoAuth.property);
+    await updateShipAlias(cirnoAuth.property);
+    await updateTranslation(cirnoAuth.property);
 
-  await setCurrency();
+    await setCurrency();
+  } catch (e) {
+    print('Error during startup: $e');
+  }
+
 }

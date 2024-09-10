@@ -64,6 +64,7 @@ class CirnoAuth {
   static CirnoAuth? _instance;
   late String _uuid;
   late RefugeVersionProperty _property;
+  bool _initialized = false;
 
 
   static Future<CirnoAuth> getInstance() async {
@@ -82,6 +83,7 @@ class CirnoAuth {
 
   Future<void> initialize() async {
     await getRefugeVersion();
+    _initialized = true;
   }
 
   Future<void> getRefugeVersion() async {
@@ -93,5 +95,7 @@ class CirnoAuth {
   String get uuid => _uuid;
 
   RefugeVersionProperty get property => _property;
+
+  bool get isInitialized => _initialized;
 
 }

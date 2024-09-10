@@ -24,6 +24,9 @@ import '../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 
+import 'package:refuge_next/src/funcs/initial.dart' show startup;
+import 'package:refuge_next/src/funcs/cirno_auth.dart' show CirnoAuth;
+
 
 enum HangarItemType {
   all,
@@ -116,8 +119,13 @@ class MainDataModel extends ChangeNotifier {
     readHangarItems();
     readBuybackItems();
     readCatalogs();
-    await initShipUpgrade();
-    await filterShipUpgrade(null, null);
+    try {
+      await initShipUpgrade();
+      await filterShipUpgrade(null, null);
+    } catch (e) {
+      print(e);
+    }
+
   }
 
 
@@ -181,13 +189,11 @@ class MainDataModel extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     String? handle = prefs.getString('vip.kirakira.user.handle');
     if (handle == null) {
+      userInitFinished = true;
+      notifyListeners();
       return;
     }
     final user = await userRepo.getUser(handle: handle);
-    if (user == null) {
-      userInitFinished = true;
-      return;
-    }
     _currentUser = user;
     userInitFinished = true;
     notifyListeners();
@@ -291,6 +297,12 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> updateHangarItems() async {
     try {
+      final cirnoAuth = await CirnoAuth.getInstance();
+      if (!cirnoAuth.isInitialized) {
+        await startup();
+        await initShipUpgrade();
+        await filterShipUpgrade(null, null);
+      }
       await _updateHangarItems();
     } on ParserError catch (e) {
       showAlert(message: "登录失效, 正在重新登陆");
