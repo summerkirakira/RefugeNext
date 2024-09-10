@@ -5,12 +5,14 @@ import 'package:dio/io.dart';
 import 'package:flutter/cupertino.dart';
 import 'property/property.dart';
 import 'dart:convert';
+import 'package:refuge_next/src/funcs/cirno_auth.dart';
+import 'package:refuge_next/src/datasource/models/cirno/property.dart';
 
 
 class CirnoApiClient {
   static final CirnoApiClient _instance = CirnoApiClient._internal();
   late final Dio _dio;
-  final String baseUrl = "https://biaoju.site:6188";
+  final String baseUrl = "https://biaoju.site:6188/";
 
 
   CirnoApiClient._internal() {
@@ -23,7 +25,9 @@ class CirnoApiClient {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-
+        options.headers["User-Agent"] =
+            "RefugeNext/1.0.0 (iPhone; iOS 14.5; Scale/2.00)";
+        options.headers["cirno-token"] = CirnoAuth.instance!.uuid;
         handler.next(options);
       },
     ));
@@ -44,6 +48,21 @@ class CirnoApiClient {
     final data = response.data;
 
     return List<ShipAlias>.from(data.map((e) => ShipAlias.fromJson(e)));
+  }
+
+  Future<Response> basicPost({required String endpoint, required Map<String, dynamic> data}) async {
+    final response = await _dio.post("$baseUrl$endpoint", data: data, options: Options());
+    return response;
+  }
+
+  Future<RefugeVersionProperty> getRefugeVersion(String version, String androidVersion, String systemModel) async {
+    final data = {
+      'version': version,
+      'androidVersion': androidVersion,
+      'systemModel': systemModel,
+    };
+    final response = await basicPost(endpoint: 'v2/version', data: data);
+    return RefugeVersionProperty.fromJson(response.data);
   }
 
 

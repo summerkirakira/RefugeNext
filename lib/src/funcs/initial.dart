@@ -1,4 +1,5 @@
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/datasource/models/cirno/property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/filtered_ship_upgrade.dart';
 
@@ -24,6 +25,8 @@ import '../network/graphql/init_ship_upgrade.dart';
 import '../network/graphql/filtered_ship_upgrade.dart';
 
 import 'package:refuge_next/src/funcs/shop/cart.dart';
+import 'package:refuge_next/src/services/android.dart';
+import 'package:refuge_next/src/funcs/cirno_auth.dart';
 
 
 
@@ -42,9 +45,12 @@ Future<void> mustStartup() async {
     statusBarIconBrightness: Brightness.dark, // 设置状态栏图标颜色为深色
   ));
 
+  await authStartup();
   await userInit();
+}
 
-
+Future<void> authStartup() async {
+  await CirnoAuth.getInstance();
 }
 
 Future<void> userInit() async {
@@ -70,45 +76,40 @@ Future<void> userInit() async {
     rsiApiClient.setRSIDevice(device: device);
   }
   rsiApiClient.setRSIToken(token: user.rsiToken);
+}
 
+
+Future<void> updateTranslation(RefugeVersionProperty latestVersion) async {
   final cirnoClient = CirnoApiClient();
-
-  // final translation = await cirnoClient.getTranslationMap("https://image.biaoju.site/starcitizen/translation/test_translation.json");
-
   final translationRepo = TranslationRepo();
+  final version = await translationRepo.getTranslationVersion();
+  if (version >= latestVersion.translationVersionCode) {
+    return;
+  }
+  final translation = await cirnoClient.getTranslationMap(latestVersion.translationUrl);
+  await translationRepo.writeTranslation(translation, latestVersion.translationVersionCode);
+}
 
-  // await translationRepo.writeTranslation(translation, 0);
-
-  await translationRepo.readTranslation();
-  //
-  // final a = await translationRepo.getTranslation('Paints');
-
-  final shipAliases = await cirnoClient.getShipAliases("https://image.biaoju.site/starcitizen/formatted_ship_alias.1.1.6.json");
-
+Future<void> updateShipAlias(RefugeVersionProperty latestVersion) async {
+  final cirnoClient = CirnoApiClient();
   final shipAliasRepo = ShipAliasRepo();
-  await shipAliasRepo.writeShipAliases(shipAliases, 0);
-  // final a = await shipAliasRepo.getShipAlias('Carrack');
-  // print(a);
-
-
-  // final buybackRepo = BuybackRepo();
-  // await buybackRepo.readBuybackItems();
-  // final items = await buybackRepo.refreshBuybackItems();
-  // print(items);
-
-  // await rsiApiClient.setAuthToken();
-  // await rsiApiClient.setContextToken();
-  // final result = await InitShipUpgrade().execute();
-  // final c = await FilterUpgradeShip(fromId: null, toId: 14609).execute();
-  // final d = 1;
+  final version = await shipAliasRepo.getShipAliasesVersion();
+  if (version >= latestVersion.shipAliasVersionCode) {
+    return;
+  }
+  final shipAliases = await cirnoClient.getShipAliases(latestVersion.shipAliasUrl);
+  await shipAliasRepo.writeShipAliases(shipAliases, latestVersion.shipAliasVersionCode);
 }
 
 
 Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   await rsiApiClient.refreshCsrfToken();
+  final cirnoAuth = await CirnoAuth.getInstance();
+  await cirnoAuth.initialize();
 
-
+  await updateShipAlias(cirnoAuth.property);
+  await updateTranslation(cirnoAuth.property);
 
   await setCurrency();
 
