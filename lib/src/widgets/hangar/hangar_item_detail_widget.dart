@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import '../../datasource/models/hangar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
@@ -221,12 +222,12 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
           children: [
             GestureDetector(
               onTap: () {
-
+                openRsiHangarWebview(context: context, page: hangarItem.page);
               },
               child: const Column(
                   children: [
-                    Icon(Icons.favorite_border, color: Colors.grey),
-                    Text('收藏', style: TextStyle(color: Colors.grey))
+                    Icon(Icons.arrow_outward_outlined),
+                    Text('跳转')
                   ]
               ),
             )

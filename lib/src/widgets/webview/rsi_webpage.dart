@@ -37,3 +37,8 @@ void openRsiCartWebview({ required BuildContext context, bool replace = false}) 
   final String url = 'https://robertsspaceindustries.com/store/pledge/cart';
   openRsiWebview(context: context, replace: replace, url: url);
 }
+
+void openRsiHangarWebview({ required BuildContext context, bool replace = false, int page = 1}) {
+  final String url = 'https://robertsspaceindustries.com/account/pledges?page=$page';
+  openRsiWebview(context: context, replace: replace, url: url);
+}

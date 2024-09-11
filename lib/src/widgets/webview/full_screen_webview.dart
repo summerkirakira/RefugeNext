@@ -84,7 +84,7 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('全屏 WebView'),
+        title: Text('Roberts Space Industries'),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
