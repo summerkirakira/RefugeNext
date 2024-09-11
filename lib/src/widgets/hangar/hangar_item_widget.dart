@@ -257,7 +257,7 @@ class HangarItemWidget extends StatelessWidget {
       child: Container(
         height: 108,
         child: Card(
-          elevation: 0.6,
+          elevation: 0,
           color: Theme.of(context).cardColor,
           shadowColor: Colors.transparent,
           child: Row(
