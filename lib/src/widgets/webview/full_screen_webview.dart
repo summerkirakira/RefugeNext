@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import '../../datasource/data_model.dart';
 
 class FullScreenWebView extends StatefulWidget {
   final String url;
@@ -20,8 +24,15 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
 
   @override
   void initState() {
+    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     super.initState();
     _initWebView();
+  }
+
+  @override
+  void dispose() {
+    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual);
+    super.dispose();
   }
 
   Future<void> _initWebView() async {
@@ -83,27 +94,62 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Roberts Space Industries'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () {
-              _controller!.reload();
-            },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          if (_controller != null)
-            WebViewWidget(controller: _controller!),
-          // WebViewWidget(controller: _controller),
-          if (_isLoading)
-            Center(
-              child: CircularProgressIndicator(),
+      // appBar: AppBar(
+      //   title: Text('Roberts Space Industries'),
+      //   systemOverlayStyle: SystemUiOverlayStyle.light,
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(Icons.refresh),
+      //       onPressed: () {
+      //         _controller!.reload();
+      //       },
+      //     ),
+      //   ],
+      // ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            if (_controller != null)
+              WebViewWidget(controller: _controller!),
+            // WebViewWidget(controller: _controller),
+            if (_isLoading)
+              Center(
+                child: CircularProgressIndicator(),
+              ),
+            Positioned(
+              top: 100,
+              right: 10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.close_rounded),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
             ),
-        ],
+            Positioned(
+              top: 160,
+              right: 10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.refresh_outlined),
+                  onPressed: () {
+                    _controller!.reload();
+                  },
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
