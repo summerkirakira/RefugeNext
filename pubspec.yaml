@@ -53,7 +53,7 @@ dependencies:
   wolt_modal_sheet: ^0.7.0
   syncfusion_flutter_sliders: ^26.1.40
   local_auth: ^2.2.0
-  shared_preferences: ^2.2.3
+  shared_preferences: 2.0.15
   flutter_keyboard_visibility: ^6.0.0
   share_plus: ^9.0.0
   image: ^4.2.0
@@ -71,6 +71,8 @@ dependencies:
   ota_update: ^6.0.0
   quickalert: ^1.1.0
   babstrap_settings_screen: ^0.1.7
+  flutter_material_color_picker: ^1.2.0
+  webview_flutter: ^4.8.0
 
 
 dev_dependencies:
@@ -102,6 +104,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/cirno_avatar.jpeg
+    - assets/images/user_profile_pic.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

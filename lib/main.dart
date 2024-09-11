@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/widgets/webview/full_screen_webview.dart';
+import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'src/datasource/data_model.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
@@ -17,14 +19,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await mustStartup();
 
-  // runApp(ChangeNotifierProvider<MainDataModel>(
-  //   create: (context) => MainDataModel(),
-  //   child: LoaderOverlay(
-  //     child: RefugeApp(),
-  //   ),
-  // ));
+  runApp(ChangeNotifierProvider<MainDataModel>(
+    create: (context) => MainDataModel(),
+    child: RefugeApp(),
+  ));
 
-  runApp(RefugeApp());
+  // runApp(RefugeApp());
   await startup();
 }
 
@@ -32,18 +32,36 @@ void main() async {
 class RefugeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<MainDataModel>(
-      create: (context) => MainDataModel(),
-      child: MaterialApp(
+    return Consumer<MainDataModel>(
+        builder: (context, dataModel, _) {
+      return MaterialApp(
         title: '星河避难所',
-        theme: FlexColorScheme.light(scheme: FlexScheme.hippieBlue).toTheme,
-        home:  LoaderOverlay(
+        theme: dataModel.getTheme(context),
+        // theme: FlexColorScheme.light(scheme: FlexScheme.aquaBlue).toTheme,
+        home: LoaderOverlay(
           child: MyHomePage(),
         ),
-      ),
-    );
+      );
+    });
   }
 }
+
+
+// class RefugeApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return ChangeNotifierProvider<MainDataModel>(
+//       create: (context) => MainDataModel(),
+//       child: MaterialApp(
+//         title: '星河避难所',
+//         theme: Provider.of<MainDataModel>(context).getTheme(context),
+//         home:  LoaderOverlay(
+//           child: MyHomePage(),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 
 // class RefugeApp extends StatelessWidget {
@@ -92,6 +110,9 @@ class _MyHomePageState extends State<MyHomePage> {
       return Scaffold(
         body: Row(
           children: [
+            // ElevatedButton(onPressed: () => {
+            //   openRsiCartWebview(context: context)
+            // }, child: Text('test')),
             if (isWideScreen)
               MainNavigationRail(),
             Expanded(

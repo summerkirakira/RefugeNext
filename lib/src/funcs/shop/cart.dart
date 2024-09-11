@@ -12,6 +12,7 @@ import 'package:refuge_next/src/network/graphql/shop/cart_validate.dart';
 import 'package:refuge_next/src/network/graphql/shop/stepper_query.dart';
 import 'package:refuge_next/src/network/graphql/shop/set_payment_method.dart';
 import 'package:refuge_next/src/network/graphql/shop/get_stripe_payment_method.dart';
+import 'package:refuge_next/src/network/graphql/shop/set_step.dart';
 
 
 import 'package:refuge_next/src/datasource/models/shop/stepper_query_property.dart';
@@ -90,4 +91,8 @@ Future<GetStripePaymentMethodProperty> getStripePaymentMethod(String orderSlug) 
 
 Future<void> setPaymentMethod(String paymentMethod, String orderSlug) async {
   final response = await SetPaymentMethod(paymentMethod: paymentMethod, orderSlug: orderSlug).execute();
+}
+
+Future<void> setStep(String step) async {
+  final response = await SetStep(step: step).execute();
 }

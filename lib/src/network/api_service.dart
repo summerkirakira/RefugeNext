@@ -27,6 +27,16 @@ class RsiApiClient {
 
   factory RsiApiClient() => _instance;
 
+  Map<String, String>  getHeaders() {
+    return {
+      "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+      "Referer": "https://robertsspaceindustries.com/",
+      'cookie': 'CookieConsent=$rsiCookieContent;_rsi_device=$rsiDevice;Rsi-Token=$rsiToken;Rsi-Account-Auth=$rsiAuth;Rsi-ShipUpgrades-Context=$upgradeContext;',
+      'x-csrf-token': xsrfToken,
+    };
+  }
+
   RsiApiClient._internal() {
     _dio = Dio();
 

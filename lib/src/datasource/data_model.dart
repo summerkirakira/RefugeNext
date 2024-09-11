@@ -26,7 +26,9 @@ import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 
 import 'package:refuge_next/src/funcs/initial.dart' show startup;
 import 'package:refuge_next/src/funcs/cirno_auth.dart' show CirnoAuth;
-import 'package:refuge_next/src/network/cirno/property/property.dart';
+import 'package:refuge_next/src/datasource/models/cirno/property.dart' show RefugeVersionProperty;
+import 'package:refuge_next/src/funcs/theme.dart' show ThemeManager, FlexSchemeHelper;
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 
 
 enum HangarItemType {
@@ -100,6 +102,23 @@ class MainDataModel extends ChangeNotifier {
   User? get currentUser => _currentUser;
   bool userInitFinished = false;
 
+  ThemeData getTheme(BuildContext context) {
+    return ThemeManager.getTheme(context);
+  }
+
+  Future<void> setTheme(bool? isDark, FlexScheme scheme) async {
+    final themeName = scheme.name;
+    await ThemeManager.setTheme(isDark, themeName);
+    notifyListeners();
+  }
+
+  Future<void> toggleDarkMode() async {
+    await ThemeManager.setTheme(!isDarkMode, null);
+    notifyListeners();
+  }
+
+  bool get isDarkMode => ThemeManager().isDark;
+
   final hangarRepo = HangarRepo();
   final userRepo = UserRepo();
   final buybackRepo = BuybackRepo();
@@ -107,6 +126,17 @@ class MainDataModel extends ChangeNotifier {
   final catalogRepo = CatalogRepo();
   final translationRepo = TranslationRepo();
   final shipAliasRepo = ShipAliasRepo();
+
+
+  RefugeVersionProperty? get property => CirnoAuth.instance?.property;
+
+  bool get isVIP {
+    if (property == null) {
+      return true;
+    }
+    return property!.isVip;
+  }
+
 
   MainDataModel() {
     initUser();

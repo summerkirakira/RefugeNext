@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'cart.dart';
 import 'package:refuge_next/src/datasource/models/shop/get_stripe_payment_method_property.dart';
@@ -9,12 +10,12 @@ import 'package:refuge_next/src/datasource/models/shop/stripe_payment_property.d
 
 Future<void> performAliPay(BuildContext context, String validateId) async {
   await setPaymentMethod('alipay', validateId);
-  try {
+  // try {
     final paymentData = await getStripePaymentMethod(validateId);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("支付信息已确认，尝试拉起支付宝")),
     );
-    try {
+    // try {
       final urlData = await getAlipayUrl(paymentData);
       // final qrcodeUrl = await getAliPayQrCodeUrl(urlData.next_action.alipay_handle_redirect.url);
 
@@ -24,15 +25,15 @@ Future<void> performAliPay(BuildContext context, String validateId) async {
       final jumpUrl = Uri.parse(urlData.next_action.alipay_handle_redirect.url);
 
       await launchUrl(jumpUrl);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("购买失败")),
-      );
-    }
+    // } catch (e) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text("购买失败: ${e.toString()}")),
+    //   );
+    // }
     // print("PaymentData: $paymentData");
-  } catch (e) {
-    print("PaymentData Error: $e");
-  }
+  // } catch (e) {
+  //   showToast(message: "支付信息获取失败$e");
+  // }
 }
 
 Future<StripePaymentProperty> getAlipayUrl(GetStripePaymentMethodProperty data) async {

@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
@@ -223,7 +224,51 @@ int getMaxApplicable(StoreData step1query, CreditQueryProperty credit) {
   return credit.store.cart.totals.credits.maxApplicable;
 }
 
+class Communicator {
+  List<Future<void> Function()> listeners = [];
+  Future<void> onButtonPressed() async {
+    await listeners.last();
+  }
+  void addListener(Future<void> Function() listener) {
+    listeners.add(listener);
+  }
+}
+
+Communicator communicator = Communicator();
+
 Widget getTotalWidget(BuildContext context, StoreData step1query, CreditQueryProperty credit) {
+  String creditString = "";
+
+  Future<void> updateCreditInput() async {
+    if (creditString.isEmpty) {
+      return;
+    }
+    final number = double.tryParse(creditString);
+
+    if (number == null) {
+      showToast(message: "请输入有效的数字");
+      return;
+    }
+
+    if (number * 100 > credit.store.cart.totals.credits.maxApplicable) {
+      showToast(message: "信用点不能大于总可用信用点");
+      return;
+    }
+    if (number * 100 > credit.customer.ledger.amount.value) {
+      showToast(message: "剩余信用点不足");
+      return;
+    }
+    try {
+      await updateCredit(number);
+    } catch (e) {
+      showToast(message: "添加信用点失败");
+    }
+  }
+
+  communicator.addListener(() async {
+    await updateCreditInput();
+  });
+
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: Row(
@@ -234,28 +279,10 @@ Widget getTotalWidget(BuildContext context, StoreData step1query, CreditQueryPro
               border: OutlineInputBorder(),
               labelText: '信用点',
               hintText: '已添加: \$${credit.store.cart.totals.credits.amount / 100} / 可用: \$${getMaxApplicable(step1query, credit) / 100}'),
+
+              onChanged: (value) => creditString = value,
               onSubmitted: (value) async {
-                final number = double.tryParse(value);
-
-                if (number == null) {
-                  showToast(message: "请输入有效的数字");
-                  return;
-                }
-
-                if (number * 100 > credit.store.cart.totals.credits.maxApplicable) {
-                  showToast(message: "信用点不能大于总可用信用点");
-                  return;
-                }
-                if (number * 100 > credit.customer.ledger.amount.value) {
-                  showToast(message: "剩余信用点不足");
-                  return;
-                }
-                try {
-                  await updateCredit(number);
-                } catch (e) {
-                  showToast(message: "添加信用点失败");
-                }
-
+                await updateCreditInput();
                 await refreshPage(context);
               },
         )),
@@ -295,6 +322,7 @@ Future<void> showCartBottomSheet(BuildContext context) async {
 
 WoltModalSheetPage getCartBottomSheet(BuildContext context,
     StoreData step1query, CreditQueryProperty creditQuery) {
+  setStep("CartLines");
   return WoltModalSheetPage(
     navBarHeight: 50,
     pageTitle: const Padding(
@@ -351,24 +379,33 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
                 showToast(message: "购物车为空");
                 return;
               }
-              final steps = await getStepperQuery();
-              final finalStep = steps.store.cart.flow.steps.last;
-              if (finalStep.step == "Payment" && finalStep.action != null) {
-                // showToast(message: "已经到达最后一步");
-              } else {
-                await gotoNextStep();
-                await assignFirstAddress();
-                await validateCart();
-                showToast(message: "自动确认成功，正在解析...");
+
+              await communicator.onButtonPressed();
+
+              // final steps = await getStepperQuery();
+              // final finalStep = steps.store.cart.flow.steps.last;
+
+              await gotoNextStep();
+              await assignFirstAddress();
+              final validateResult = await validateCart();
+                // final checkSteps = await getStepperQuery();
+              if (!validateResult.cart.flow.current.orderCreated) {
+                showToast(message: "购买成功！");
+                Navigator.of(context).pop();
+                return;
               }
-              await performAliPay(context, steps.store.order.slug);
+
+              openRsiCartWebview(context: context, replace: true);
+
+              // showToast(message: "自动确认成功，正在解析...");
+              // await performAliPay(context, steps.store.order.slug);
 
             } catch (e) {
-              showToast(message: e.toString());
+              showToast(message: "购买失败: $e");
               return;
             }
 
-            Navigator.of(context).pop();
+            // Navigator.of(context).pop();
           },
           child: const Text('确认购买',
               style: TextStyle(

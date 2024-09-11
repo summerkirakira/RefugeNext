@@ -28,7 +28,7 @@ import '../network/graphql/filtered_ship_upgrade.dart';
 import 'package:refuge_next/src/funcs/shop/cart.dart';
 import 'package:refuge_next/src/services/android.dart';
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
-import 'package:ota_update/ota_update.dart';
+import './theme.dart';
 
 
 
@@ -40,15 +40,13 @@ Future<void> mustStartup() async {
   String storageLocation = (await getApplicationDocumentsDirectory()).path;
   await FastCachedImageConfig.init(subDir: storageLocation, clearCacheAfter: const Duration(days: 15));
 
-
-  // if is light theme
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent, // 设置状态栏为透明
-    statusBarIconBrightness: Brightness.dark, // 设置状态栏图标颜色为深色
-  ));
-
   await authStartup();
   await userInit();
+  await initThemeManager();
+}
+
+Future<void> initThemeManager() async {
+  await ThemeManager().init();
 }
 
 Future<void> authStartup() async {
@@ -103,6 +101,15 @@ Future<void> updateShipAlias(RefugeVersionProperty latestVersion) async {
   await shipAliasRepo.writeShipAliases(shipAliases, latestVersion.shipAliasVersionCode);
 }
 
+Future<void> setVip() async {
+  final cirnoAuth = await CirnoAuth.getInstance();
+  if (cirnoAuth.isInitialized) {
+    if (!cirnoAuth.property.isVip) {
+      await ThemeManager.setTheme(false, 'blue');
+    }
+  }
+}
+
 
 Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
@@ -115,6 +122,8 @@ Future<void> startup() async {
     await updateTranslation(cirnoAuth.property);
 
     await setCurrency();
+
+    await setVip();
 
 
   } catch (e) {

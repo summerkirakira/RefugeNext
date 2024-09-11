@@ -1,9 +1,124 @@
+import 'dart:io';
+
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:refuge_next/src/datasource/data_model.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:refuge_next/src/funcs/cirno_auth.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/network/cirno/cirno_api.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import './theme_settings/color_pick_bottomsheet.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
-class SettingsPage extends StatelessWidget {
+Color cardBackgroundColor(BuildContext context) {
+
+  final isVip = Provider.of<MainDataModel>(context).isVIP;
+
+  if (!isVip) {
+    return Colors.grey[400]!;
+  }
+
+  final isDarkMode = Provider.of<MainDataModel>(context).isDarkMode;
+  if (isDarkMode) {
+    return Theme.of(context).primaryColorDark;
+  } else {
+    return Theme.of(context).primaryColor;
+  }
+}
+
+int getRemainingDays(int remainingTime) {
+
+  final days = remainingTime ~/ 86400;
+
+  // 将差异转换为天数并返回
+  return days;
+}
+
+
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({Key? key}) : super(key: key);
+
+  @override
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+
+class _SettingsPageState extends State<SettingsPage> {
+
+  String version = "loading...";
+
+  void getVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      version = packageInfo.version;
+    });
+  }
+
+  String getUserNameString(BuildContext context) {
+    if (Provider.of<MainDataModel>(context).currentUser == null) {
+      return "未登录";
+    }
+    final handle = Provider.of<MainDataModel>(context).currentUser!.handle;
+    final nickName = Provider.of<MainDataModel>(context).currentUser!.name;
+    return "$handle\n$nickName";
+  }
+
+
+  Widget getUserCard(BuildContext context) {
+
+    final userNameString = getUserNameString(context);
+
+    final imageUrl = Provider.of<MainDataModel>(context).currentUser?.profileImage ??
+        "https://cdn.robertsspaceindustries.com/static/images/account/avatar_default_big.jpg";
+
+    final userProfilePic = AssetImage("assets/images/user_profile_pic.jpeg");
+    final title = Provider.of<MainDataModel>(context).isVIP ? "避难所Premium生效中" : "避难所Premium已失效...";
+    String subtitle = "点此获取订阅";
+    if (Provider.of<MainDataModel>(context).isVIP) {
+      final remainingDays = getRemainingDays(Provider.of<MainDataModel>(context).property?.vipExpire ?? 0);
+      final token = Provider.of<MainDataModel>(context).property?.credit ?? 0;
+      subtitle = "订阅剩余 $remainingDays 天 | $token";
+    }
+
+
+    return BigUserCard(
+      // cardColor: Colors.red,
+      backgroundColor: cardBackgroundColor(context),
+      userName: userNameString,
+      userProfilePic: userProfilePic,
+      cardActionWidget: SettingsItem(
+        icons: Icons.edit,
+        iconStyle: IconStyle(
+          withBackground: true,
+          borderRadius: 50,
+          backgroundColor: cardBackgroundColor(context),
+        ),
+        title: title,
+        subtitle: subtitle,
+        onTap: () async {
+          Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        },
+      ),
+    );
+  }
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    getVersion();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,31 +129,28 @@ class SettingsPage extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           child: ListView(
             children: [
-              // User card
-              BigUserCard(
-                // cardColor: Colors.red,
-                backgroundColor: Theme.of(context).primaryColor,
-                userName: "Cirnobaka\nMoogo",
-                userProfilePic: AssetImage("assets/images/cirno_avatar.jpeg"),
-                cardActionWidget: SettingsItem(
-                  icons: Icons.edit,
-                  iconStyle: IconStyle(
-                    withBackground: true,
-                    borderRadius: 50,
-                    backgroundColor: Colors.yellow[600],
-                  ),
-                  title: "避难所Premium生效中",
-                  subtitle: "点此查看订阅详情",
-                  onTap: () {
-                    print("OK");
-                  },
-                ),
-              ),
+              getUserCard(context),
               SettingsGroup(
                 // backgroundColor: Theme.of(context).cardColor,
                 items: [
                   SettingsItem(
-                    onTap: () {},
+                    onTap: () {
+                      WoltModalSheet.show<void>(
+                        context: context,
+                        pageListBuilder: (modalSheetContext) {
+                          return [
+                            getColorPickerBottomSheet(
+                              modalSheetContext,
+                              Theme.of(context).colorScheme.primary,
+                              (scheme) {
+                                Provider.of<MainDataModel>(context, listen: false)
+                                    .setTheme(null, scheme);
+                              },
+                            ),
+                          ];
+                        },
+                      );
+                    },
                     icons: CupertinoIcons.pencil_outline,
                     iconStyle: IconStyle(),
                     title: '主题',
@@ -70,8 +182,11 @@ class SettingsPage extends StatelessWidget {
                     title: '夜间模式',
                     subtitle: "自动切换",
                     trailing: Switch.adaptive(
-                      value: false,
-                      onChanged: (value) {},
+                      value: Provider.of<MainDataModel>(context).isDarkMode,
+                      onChanged: (value) {
+                        Provider.of<MainDataModel>(context, listen: false)
+                            .toggleDarkMode();
+                      },
                     ),
                   ),
                 ],
@@ -91,22 +206,41 @@ class SettingsPage extends StatelessWidget {
               ),
               // You can add a settings title
               SettingsGroup(
-                settingsGroupTitle: "Account",
+                settingsGroupTitle: "关于",
                 items: [
                   SettingsItem(
-                    onTap: () {},
-                    icons: Icons.exit_to_app_rounded,
-                    title: "Sign Out",
+                    onTap: () {
+                      // copy group id to clipboard
+                      Clipboard.setData(ClipboardData(text: "689970313"));
+                      showToast(message: "已复制群号到剪贴板");
+                    },
+                    icons: Icons.group_rounded,
+                    title: "反馈群",
+                    subtitle: "QQ群: 689970313",
                   ),
                   SettingsItem(
                     onTap: () {},
-                    icons: CupertinoIcons.delete_solid,
-                    title: "Delete account",
-                    titleStyle: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    icons: Icons.construction_outlined,
+                    title: "版本号",
+                    subtitle: version,
                   ),
+                  SettingsItem(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: CirnoAuth.instance!.uuid));
+                      showToast(message: "已复制UUID到剪贴板");
+                    },
+                    icons: CupertinoIcons.device_phone_portrait,
+                    title: "UUID",
+                    subtitle: CirnoAuth.instance!.uuid,
+                  ),
+                  SettingsItem(
+                    onTap: () {
+                      launchUrl(Uri.parse("https://github.com/summerkirakira/Starcitizen-lite"), mode: LaunchMode.externalApplication);
+                    },
+                    icons: Icons.code_rounded,
+                    title: "开源地址",
+                    subtitle: "https://github.com/summerkirakira/Starcitizen-lite",
+                  )
                 ],
               ),
             ],

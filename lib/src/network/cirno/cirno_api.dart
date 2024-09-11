@@ -65,5 +65,9 @@ class CirnoApiClient {
     return RefugeVersionProperty.fromJson(response.data);
   }
 
+  String getSubscriptionUrl() {
+    return "${baseUrl}subscribe";
+  }
+
 
 }
