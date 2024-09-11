@@ -143,6 +143,12 @@ class _SettingsPageState extends State<SettingsPage> {
                               modalSheetContext,
                               Theme.of(context).colorScheme.primary,
                               (scheme) {
+
+                                if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
+                                  showToast(message: "缺少有效的避难所Premium订阅~");
+                                  return;
+                                }
+
                                 Provider.of<MainDataModel>(context, listen: false)
                                     .setTheme(null, scheme);
                               },
@@ -167,8 +173,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     title: '机库翻译',
                     subtitle: "已关闭",
                     trailing: Switch.adaptive(
-                      value: false,
-                      onChanged: (value) {},
+                      value: true,
+                      onChanged: (value) {
+                        showToast(message: "暂不支持此功能");
+                      },
                     ),
                   ),
                   SettingsItem(
@@ -180,10 +188,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       backgroundColor: Colors.red,
                     ),
                     title: '夜间模式',
-                    subtitle: "自动切换",
+                    subtitle: Provider.of<MainDataModel>(context).isVIP ? "自动切换" : "缺少有效的避难所Premium",
                     trailing: Switch.adaptive(
                       value: Provider.of<MainDataModel>(context).isDarkMode,
                       onChanged: (value) {
+                        if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
+                          showToast(message: "缺少有效的避难所Premium订阅~");
+                          return;
+                        }
                         Provider.of<MainDataModel>(context, listen: false)
                             .toggleDarkMode();
                       },
@@ -194,7 +206,9 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsGroup(
                 items: [
                   SettingsItem(
-                    onTap: () {},
+                    onTap: () {
+                      launchUrl(Uri.parse("https://image.biaoju.site/star-refuge/docs/intro/"), mode: LaunchMode.externalApplication);
+                    },
                     icons: Icons.info_rounded,
                     iconStyle: IconStyle(
                       backgroundColor: Colors.purple,
