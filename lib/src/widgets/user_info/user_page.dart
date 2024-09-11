@@ -452,15 +452,16 @@ class _UserInfoPageState extends State<UserInfoPage>
             UserSimpleInfo(),
             UserDetailInfo(),
             Divider(),
-            SettingsWidget()
+            if (!(model.currentUser!.email == "934869815@qq.com")) SettingsWidget()
           ],
         ), onRefresh: () async {
+              final currentUserHangarValue = model.currentUser!.hangarValue;
               final newUser = await parseNewUser(model.currentUser!.email, model.currentUser!.password, RsiApiClient().rsiDevice, model.currentUser!.rsiToken);
               if (newUser == null) {
                 showToast(message: "用户信息刷新失败");
                 return;
               }
-              model.updateCurrentUser(newUser);
+              model.updateCurrentUser(newUser.copyWith(hangarValue: currentUserHangarValue));
         });
       },
     );
