@@ -239,6 +239,7 @@ WoltModalSheetPage getEmailInputBottomSheet(
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
             Text('请输入RSI绑定邮箱的验证码',
                 style: TextStyle(fontSize: 15, color: Colors.grey)),
+            SizedBox(height: 60),
           ],
         )),
     trailingNavBarWidget: Container(
