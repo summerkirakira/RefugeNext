@@ -117,11 +117,11 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                 children: [
                   Row(
                     children: [
-                      Text('\$'),
+                      // Text('\$'),
                       Text('${originalCost ~/ 100}', style: TextStyle(fontSize: 40),)
                     ],
                   ),
-                  Text('原价'),
+                  Text('原价(\$)'),
                 ],
               ),
               VerticalDivider(),
@@ -130,11 +130,11 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                 children: [
                   Row(
                     children: [
-                      Text('\$', style: TextStyle(color: Colors.green)),
+                      // Text('\$', style: TextStyle(color: Colors.green)),
                       Text('${(totalCreditCost + totalHangarCost) ~/ 100}', style: TextStyle(fontSize: 40, color: Colors.green),)
                     ],
                   ),
-                  Text('现价', style: TextStyle(color: Colors.green)),
+                  Text('现价(\$)', style: TextStyle(color: Colors.green)),
                 ],
               ),
               VerticalDivider(),
@@ -143,11 +143,11 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                 children: [
                   Row(
                     children: [
-                      Text('\$', style: TextStyle(color: Colors.blue)),
+                      // Text('\$', style: TextStyle(color: Colors.blue)),
                       Text('${totalHangarCost ~/ 100}', style: TextStyle(fontSize: 40, color: Colors.blue),)
                     ],
                   ),
-                  Text('机库中', style: TextStyle(color: Colors.blue)),
+                  Text('已拥有(\$)', style: TextStyle(color: Colors.blue)),
                 ],
               ),
             ],
@@ -533,8 +533,8 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                               children: [
                                 Icon(Icons.arrow_forward, size: 30),
                                 Text(
-                                  '\$${upgradeStep.cost ~/ 100}',
-                                  style: const TextStyle(fontSize: 16),
+                                  '+\$${upgradeStep.cost ~/ 100}',
+                                  style: TextStyle(fontSize: 16, color: Theme.of(context).primaryColor.withOpacity(0.5)),
                                 ),
                               ],
                             ),

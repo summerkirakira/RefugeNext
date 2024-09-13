@@ -84,7 +84,7 @@ class ShipAlias {
     'chineseName': chineseName,
     'alias': alias,
     'skus': skus.map((sku) => sku.toJson()).toList(),
-    'upgradeId': upgradeId ?? '',
+    'upgrade_id': upgradeId,
   };
 
   // JSON 反序列化方法

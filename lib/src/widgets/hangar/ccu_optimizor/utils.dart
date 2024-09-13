@@ -10,9 +10,6 @@ import '../../../repo/ship_alias.dart';
 import '../../../repo/translation.dart';
 
 
-final bannedShips = [-1, 196, 216];
-
-
 // List<String> getValidateUpdateShips() {
 //   final shipAliasRepo = ShipAliasRepo();
 //   final ships = shipAliasRepo.getShipAliasesSync().where((e) => !bannedShips.contains(e.id)).toList();
@@ -55,7 +52,7 @@ class UpgradeSettings {
 List<ShipAlias> getValidateUpdateShips() {
   final shipAliasRepo = ShipAliasRepo();
   final ships = shipAliasRepo.getShipAliasesSync().where((e) =>
-  !bannedShips.contains(e.id)).toList();
+  e.upgradeId != null).toList();
   ships.sort((a, b) => a.getHighestSku().compareTo(b.getHighestSku()));
   for (var ship in ships) {
     ship.chineseName = TranslationRepo().getTranslationSync(ship.name);
