@@ -78,6 +78,7 @@ class CirnoApiClient {
 
   Future<ShipUpgradeResponse> getShipUpgradePath({required ShipUpgradeConfig config}) async {
     final data = config.toJson();
+    final testString = jsonEncode(data);
     final response = await basicPost(endpoint: 'v2/upgrade/path', data: data);
     return ShipUpgradeResponse.fromJson(response.data);
   }

@@ -1,3 +1,5 @@
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
+import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/cirno/upgrade_response.dart';
 import 'package:refuge_next/src/repo/hangar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +10,6 @@ import '../../../network/cirno/cirno_api.dart';
 import '../../../network/cirno/property/property.dart';
 import '../../../repo/ship_alias.dart';
 import '../../../repo/translation.dart';
-
 
 // List<String> getValidateUpdateShips() {
 //   final shipAliasRepo = ShipAliasRepo();
@@ -25,34 +26,32 @@ class UpgradeStep {
   final ShipAlias fromShip;
   final ShipAlias toShip;
 
-  UpgradeStep(this.fromProduct, this.toProduct, this.cost, this.tags, {required this.fromShip, required this.toShip});
+  UpgradeStep(this.fromProduct, this.toProduct, this.cost, this.tags,
+      {required this.fromShip, required this.toShip});
 }
-
 
 class BannedUpgrade {
   final int fromShipId;
   final int toShipId;
 
   BannedUpgrade(this.fromShipId, this.toShipId);
-
 }
-
 
 class UpgradeSettings {
   bool useBuyback;
   bool useHangar;
   bool useHistory;
 
-
-  UpgradeSettings({this.useBuyback = true, this.useHangar = true, this.useHistory = false});
-
+  UpgradeSettings(
+      {this.useBuyback = true, this.useHangar = true, this.useHistory = false});
 }
-
 
 List<ShipAlias> getValidateUpdateShips() {
   final shipAliasRepo = ShipAliasRepo();
-  final ships = shipAliasRepo.getShipAliasesSync().where((e) =>
-  e.upgradeId != null).toList();
+  final ships = shipAliasRepo
+      .getShipAliasesSync()
+      .where((e) => e.upgradeId != null)
+      .toList();
   ships.sort((a, b) => a.getHighestSku().compareTo(b.getHighestSku()));
   for (var ship in ships) {
     ship.chineseName = TranslationRepo().getTranslationSync(ship.name);
@@ -65,7 +64,8 @@ Future<UpgradeSettings> getUpgradeSettings() async {
   final useBuyback = prefs.getBool('vip.kirakira.use_buyback') ?? false;
   final useHangar = prefs.getBool('vip.kirakira.use_hangar') ?? false;
   final useHistory = prefs.getBool('vip.kirakira.use_history') ?? false;
-  return UpgradeSettings(useBuyback: useBuyback, useHangar: useHangar, useHistory: useHistory);
+  return UpgradeSettings(
+      useBuyback: useBuyback, useHangar: useHangar, useHistory: useHistory);
 }
 
 Future<void> saveUpgradeSettings(UpgradeSettings settings) async {
@@ -75,8 +75,8 @@ Future<void> saveUpgradeSettings(UpgradeSettings settings) async {
   await prefs.setBool('vip.kirakira.use_history', settings.useHistory);
 }
 
-
-Future<List<CCUItem>> getValidateHangarCCUItems(List<HangarItem> hangarItems) async {
+Future<List<CCUItem>> getValidateHangarCCUItems(
+    List<HangarItem> hangarItems) async {
   List<CCUItem> items = [];
 
   for (var item in hangarItems) {
@@ -85,9 +85,10 @@ Future<List<CCUItem>> getValidateHangarCCUItems(List<HangarItem> hangarItems) as
     }
 
     if (item.fromShip != null && item.toShip != null) {
-
-      final fromShip = Ship(id: item.fromShip!.id, value: item.fromShip!.getHighestSku());
-      final toShip = Ship(id: item.toShip!.id, value: item.toShip!.getHighestSku());
+      final fromShip =
+          Ship(id: item.fromShip!.id, value: item.fromShip!.getHighestSku());
+      final toShip =
+          Ship(id: item.toShip!.id, value: item.toShip!.getHighestSku());
 
       items.add(CCUItem(fromShip: fromShip, toShip: toShip, value: item.price));
     }
@@ -95,28 +96,30 @@ Future<List<CCUItem>> getValidateHangarCCUItems(List<HangarItem> hangarItems) as
   return items;
 }
 
-
-Future<ShipUpgradeConfig> getUpgradeConfig(UpgradeSettings settings, int fromShipId, int toShipId, List<HangarItem> hangarItems) async {
+Future<ShipUpgradeConfig> getUpgradeConfig(UpgradeSettings settings,
+    int fromShipId, int toShipId, List<HangarItem> hangarItems, List<int> bannedShips, List<int> mustHaveShips) async {
   final ccuItems = await getValidateHangarCCUItems(hangarItems);
 
   return ShipUpgradeConfig(
     fromShipId: fromShipId,
     toShipId: toShipId,
-    bannedShipList: [],
+    bannedShipList: bannedShips,
     bannedWbCcuList: [],
-    mustHaveShipList: [],
+    mustHaveShipList: mustHaveShips,
     useHistoryCcu: settings.useHistory,
     hangarCcuList: ccuItems,
     buybackCcuList: [],
   );
 }
 
-Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings, int fromShipId, int toShipId, List<HangarItem> hangarItems) async {
-
+Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings,
+    int fromShipId, int toShipId, List<HangarItem> hangarItems, List<int> bannedShips, List<int> mustHaveShips) async {
   final allShips = getValidateUpdateShips();
 
-  final config = await getUpgradeConfig(settings, fromShipId, toShipId, hangarItems);
-  final upgradeResult = await CirnoApiClient().getShipUpgradePath(config: config);
+  final config =
+      await getUpgradeConfig(settings, fromShipId, toShipId, hangarItems, bannedShips, mustHaveShips);
+  final upgradeResult =
+      await CirnoApiClient().getShipUpgradePath(config: config);
   final ccuItems = await getValidateHangarCCUItems(hangarItems);
 
   final steps = <UpgradeStep>[];
@@ -126,8 +129,10 @@ Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings, int fromS
   }
 
   for (var i = 0; i < upgradeResult.shipPath.length - 1; i++) {
-    final fromShip = allShips.firstWhere((e) => e.id == upgradeResult.shipPath[i]);
-    final toShip = allShips.firstWhere((e) => e.id == upgradeResult.shipPath[i + 1]);
+    final fromShip =
+        allShips.firstWhere((e) => e.id == upgradeResult.shipPath[i]);
+    final toShip =
+        allShips.firstWhere((e) => e.id == upgradeResult.shipPath[i + 1]);
 
     CCUItem? ccuItem;
     HistoryWbCcu? wbCcuItem;
@@ -160,7 +165,9 @@ Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings, int fromS
       tags.add('常规升级');
     }
 
-    steps.add(UpgradeStep(fromShip.chineseName!, toShip.chineseName!, cost, tags, fromShip: fromShip, toShip: toShip));
+    steps.add(UpgradeStep(
+        fromShip.chineseName!, toShip.chineseName!, cost, tags,
+        fromShip: fromShip, toShip: toShip));
   }
 
   final List<UpgradeStep> stackedSteps = [];
@@ -192,3 +199,42 @@ Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings, int fromS
 
   return stackedSteps;
 }
+
+CustomDropdownDecoration getUpgradeDropdownDecoration(bool isDarkMode) =>
+    CustomDropdownDecoration(
+      closedFillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+      expandedFillColor: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+      hintStyle: TextStyle(
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+      ),
+      headerStyle: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      closedSuffixIcon: Icon(
+        Icons.arrow_drop_down,
+        color: isDarkMode ? Colors.white70 : Colors.black54,
+      ),
+      expandedSuffixIcon: Icon(
+        Icons.arrow_drop_up,
+        color: isDarkMode ? Colors.white70 : Colors.black54,
+      ),
+      listItemStyle: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+        searchFieldDecoration: SearchFieldDecoration(
+          hintStyle: TextStyle(
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+          fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,
+            ),
+          ),
+        ),
+    );

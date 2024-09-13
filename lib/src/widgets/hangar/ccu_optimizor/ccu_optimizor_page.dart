@@ -11,7 +11,6 @@ import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../../../datasource/data_model.dart';
-import '../../../repo/ship_alias.dart';
 
 
 class ProductUpgradeWidget extends StatefulWidget {
@@ -21,7 +20,7 @@ class ProductUpgradeWidget extends StatefulWidget {
   _ProductUpgradeWidgetState createState() => _ProductUpgradeWidgetState();
 }
 
-class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
+class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with AutomaticKeepAliveClientMixin {
   String? _startProduct;
   String? _endProduct;
   List<UpgradeStep> _upgradePath = [];
@@ -31,7 +30,8 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
   final allShips = getValidateUpdateShips();
 
   // 已屏蔽的升级列表
-  List<String> _blockedUpgrades = ['Product B to Product C', 'Product D to Product E'];
+  List<UpgradeStep> _blockedUpgrades = [];
+  List<UpgradeStep> _mustHaveUpgrades = [];
 
   final List<String> _products = ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'];
 
@@ -49,8 +49,26 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
     final fromShip = allShips.firstWhere((element) => element.chineseName == _startProduct);
     final toShip = allShips.firstWhere((element) => element.chineseName == _endProduct);
 
+    if (fromShip.getHighestSku() >= toShip.getHighestSku()) {
+      showToast(message: '目标舰船价格必须高于起始舰船');
+      return;
+    }
+
+    List<int> bannedShips = [];
+    for (var upgrade in _blockedUpgrades) {
+      bannedShips.add(upgrade.fromShip.id);
+      bannedShips.add(upgrade.toShip.id);
+    }
+
+    List<int> mustHaveShips = [];
+    for (var upgrade in _mustHaveUpgrades) {
+      mustHaveShips.add(upgrade.fromShip.id);
+      mustHaveShips.add(upgrade.toShip.id);
+    }
+
+
     final hangarItems = Provider.of<MainDataModel>(context, listen: false).rawHangarItems;
-    final result = await updateUpgradeSteps(_upgradeSettings, fromShip.id, toShip.id, hangarItems);
+    final result = await updateUpgradeSteps(_upgradeSettings, fromShip.id, toShip.id, hangarItems, bannedShips, mustHaveShips);
 
     setState(() {
       _upgradePath = result;
@@ -76,6 +94,10 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
         ];
       },
     );
+  }
+
+  String getBannedText(UpgradeStep item) {
+    return '${item.fromProduct} 到 ${item.toProduct}';
   }
 
 
@@ -131,7 +153,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                   Row(
                     children: [
                       // Text('\$', style: TextStyle(color: Colors.green)),
-                      Text('${(totalCreditCost + totalHangarCost) ~/ 100}', style: TextStyle(fontSize: 40, color: Colors.green),)
+                      Text('${(totalCreditCost + totalHangarCost + totalWbCost) ~/ 100}', style: TextStyle(fontSize: 40, color: Colors.green),)
                     ],
                   ),
                   Text('现价(\$)', style: TextStyle(color: Colors.green)),
@@ -155,7 +177,6 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
         ],
       ),
     );
-
     // return
   }
 
@@ -262,7 +283,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                     itemCount: _blockedUpgrades.length,
                     itemBuilder: (context, index) {
                       return ListTile(
-                        title: Text(_blockedUpgrades[index]),
+                        title: Text(getBannedText(_blockedUpgrades[index])),
                         trailing: IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () {
@@ -332,7 +353,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
               onPressed: () {
                 if (fromProduct != null && toProduct != null) {
                   setState(() {
-                    _blockedUpgrades.add('$fromProduct to $toProduct');
+                    // _blockedUpgrades.add('$fromProduct to $toProduct');
                   });
                   Navigator.of(context).pop();
                   // 重新构建模态框以反映更改
@@ -350,8 +371,30 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
   }
 
   void _removeUpgradeStep(int index) {
+    _blockedUpgrades.add(_upgradePath[index]);
+    _calculateUpgradePath();
     setState(() {
-      _upgradePath.removeAt(index);
+
+    });
+  }
+
+  void _addMustHaveUpgradeStep(int index) {
+    bool isFound = false;
+    for (var upgrade in _mustHaveUpgrades) {
+      if (upgrade.fromProduct == _upgradePath[index].fromProduct && upgrade.toProduct == _upgradePath[index].toProduct) {
+        isFound = true;
+        break;
+      }
+    }
+    if (isFound) {
+      _mustHaveUpgrades = _mustHaveUpgrades.where((element) => element.fromProduct != _upgradePath[index].fromProduct || element.toProduct != _upgradePath[index].toProduct).toList();
+      _calculateUpgradePath();
+      return;
+    }
+    _mustHaveUpgrades.add(_upgradePath[index]);
+    _calculateUpgradePath();
+    setState(() {
+
     });
   }
 
@@ -364,7 +407,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
     return CustomScrollView(
       slivers: <Widget>[
         SliverAppBar(
-          expandedHeight: 180.0,
+          expandedHeight: 185.0,
           floating: false,
           pinned: false,
           flexibleSpace: FlexibleSpaceBar(
@@ -383,6 +426,11 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                       ),
                       Spacer(),
                       IconButton(
+                        icon: const Icon(Icons.save, color: Colors.white),
+                        onPressed: _openUpgradeSettings,
+                        tooltip: 'Upgrade Settings',
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.settings, color: Colors.white),
                         onPressed: _openUpgradeSettings,
                         tooltip: 'Upgrade Settings',
@@ -393,11 +441,14 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                   Theme(data: FlexColorScheme.light(
                       scheme: FlexScheme.blue).toTheme,
                       child: CustomDropdown<String>.search(
+                        decoration: getUpgradeDropdownDecoration(Theme.of(context).brightness == Brightness.dark),
                         hintText: '选择起始舰船',
                         searchHintText: '搜索舰船',
                         items: _fromShips,
                         initialItem: _startProduct,
                         onChanged: (value) {
+                          _blockedUpgrades = [];
+                          _mustHaveUpgrades = [];
                           setState(() {
                             _startProduct = value;
                           });
@@ -414,10 +465,13 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
                         items: _toShips,
                         initialItem: _endProduct,
                         onChanged: (value) {
+                          _blockedUpgrades = [];
+                          _mustHaveUpgrades = [];
                           setState(() {
                             _endProduct = value;
                           });
                         },
+                        decoration: getUpgradeDropdownDecoration(Theme.of(context).brightness == Brightness.dark),
                       ),
                   )
                 ],
@@ -556,20 +610,21 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
             ),
           ),
           Positioned(
-            bottom: 16,
-            right: 16,
+            bottom: 10,
+            right: 10,
             child: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => _removeUpgradeStep(index),
               tooltip: 'Remove Upgrade Step',
             ),
           ),
+          if (index !=0)
           Positioned(
-            bottom: 16,
+            bottom: 8,
             right: 50,
             child: IconButton(
-              icon: const Icon(Icons.push_pin_outlined),
-              onPressed: () => _removeUpgradeStep(index),
+              icon: getPushPinIcon(index),
+              onPressed: () => _addMustHaveUpgradeStep(index),
               tooltip: 'Remove Upgrade Step',
             ),
           ),
@@ -577,5 +632,24 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
       ),
     );
   }
+
+  Widget getPushPinIcon(int index) {
+    bool isFound = false;
+    for (var upgrade in _mustHaveUpgrades) {
+      if (upgrade.fromProduct == _upgradePath[index].fromProduct && upgrade.toProduct == _upgradePath[index].toProduct) {
+        isFound = true;
+        break;
+      }
+    }
+
+    if (isFound) {
+      return Icon(Icons.push_pin, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),);
+    } else {
+      return Icon(Icons.push_pin_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),);
+    }
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
