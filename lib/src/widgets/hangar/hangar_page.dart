@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/ccu_optimizor_page.dart';
 
 import '../../datasource/models/hangar.dart';
 import 'package:flutter/material.dart';
@@ -124,7 +125,8 @@ class _HangarPageState extends State<HangarPage> {
             ),
           ),
           BuybackPage(),
-        ], titles: ["机库", "回购"]),
+          ProductUpgradeWidget(),
+        ], titles: ["机库", "回购", "升级规划"]),
       ],
     );
   }

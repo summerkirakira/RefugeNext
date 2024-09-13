@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/cupertino.dart';
+import '../../datasource/models/cirno/upgrade_path.dart';
+import '../../datasource/models/cirno/upgrade_response.dart';
 import 'property/property.dart';
 import 'dart:convert';
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
@@ -67,6 +69,12 @@ class CirnoApiClient {
 
   String getSubscriptionUrl() {
     return "${baseUrl}subscribe";
+  }
+
+  Future<ShipUpgradeResponse> getShipUpgradePath({required ShipUpgradeConfig config}) async {
+    final data = config.toJson();
+    final response = await basicPost(endpoint: 'v2/upgrade/path', data: data);
+    return ShipUpgradeResponse.fromJson(response.data);
   }
 
 

@@ -53,7 +53,7 @@ class _HangarBuybackPageState extends State<HangarBuybackPage> {
         children: [
           Center(
             child: Container(
-              width: 120,
+              width: 180,
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

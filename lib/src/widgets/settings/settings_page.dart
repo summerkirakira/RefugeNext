@@ -207,7 +207,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 items: [
                   SettingsItem(
                     onTap: () {
-                      launchUrl(Uri.parse("https://image.biaoju.site/star-refuge/docs/intro/"), mode: LaunchMode.externalApplication);
+                      launchUrl(Uri.parse("https://image.biaoju.site/star-refuge/docs/intro/"), mode: LaunchMode.inAppBrowserView);
                     },
                     icons: Icons.info_rounded,
                     iconStyle: IconStyle(

@@ -90,4 +90,8 @@ class ShipAliasRepo {
     return null;
   }
 
+  List<ShipAlias> getShipAliasesSync() {
+    return _shipAliases;
+  }
+
 }
