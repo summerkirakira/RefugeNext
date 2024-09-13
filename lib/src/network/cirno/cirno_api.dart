@@ -57,6 +57,11 @@ class CirnoApiClient {
     return response;
   }
 
+  Future<Response> basicPostList({required String endpoint, required List<String> data}) async {
+    final response = await _dio.post("$baseUrl$endpoint", data: data, options: Options());
+    return response;
+  }
+
   Future<RefugeVersionProperty> getRefugeVersion(String version, String androidVersion, String systemModel) async {
     final data = {
       'version': version,
@@ -75,6 +80,11 @@ class CirnoApiClient {
     final data = config.toJson();
     final response = await basicPost(endpoint: 'v2/upgrade/path', data: data);
     return ShipUpgradeResponse.fromJson(response.data);
+  }
+
+  Future<void> uploadNotTranslatedTexts(List<String> texts) async {
+    final data = texts;
+    await basicPostList(endpoint: 'v2/translation/not-translated', data: data);
   }
 
 

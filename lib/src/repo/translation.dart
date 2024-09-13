@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../network/cirno/cirno_api.dart';
+
 
 class TranslationRepo {
 
@@ -13,6 +15,10 @@ class TranslationRepo {
   factory TranslationRepo() => _instance;
 
   Map<String, String> _translation = {};
+
+  List<String> _notTranslated = [];
+
+  int _postedLength = 0;
 
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -69,8 +75,21 @@ class TranslationRepo {
     List<String> translationList = [];
     for (var key in keyList) {
       translationList.add(_translation[key] ?? key);
+      if (_translation[key] == null && _translation.isNotEmpty) {
+        if (!_notTranslated.contains(key) && key.isNotEmpty) {
+          _notTranslated.add(key);
+          print("Missing translation for $key");
+        }
+      }
     }
     return translationList.join(" - ");
+  }
+
+  Future<void> postNotTranslated() async {
+    if (_notTranslated.isEmpty || _notTranslated.length == _postedLength) {
+      return;
+    }
+    await CirnoApiClient().uploadNotTranslatedTexts(_notTranslated);
   }
 
 }

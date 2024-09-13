@@ -28,6 +28,8 @@ _$BuybackItemImpl _$$BuybackItemImplFromJson(Map<String, dynamic> json) =>
       idList: (json['idList'] as List<dynamic>)
           .map((e) => (e as num).toInt())
           .toList(),
+      formShipUpgradeId: (json['formShipUpgradeId'] as num?)?.toInt(),
+      toShipUpgradeId: (json['toShipUpgradeId'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$BuybackItemImplToJson(_$BuybackItemImpl instance) =>
@@ -50,4 +52,6 @@ Map<String, dynamic> _$$BuybackItemImplToJson(_$BuybackItemImpl instance) =>
       'price': instance.price,
       'number': instance.number,
       'idList': instance.idList,
+      'formShipUpgradeId': instance.formShipUpgradeId,
+      'toShipUpgradeId': instance.toShipUpgradeId,
     };

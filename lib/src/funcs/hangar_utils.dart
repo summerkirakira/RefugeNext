@@ -142,6 +142,7 @@ List<String> splitShipName(String title) {
 }
 
 
+
 Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async {
   final shipAliasRepo = ShipAliasRepo();
   final List<HangarItem> newHangarItems = [];
@@ -153,12 +154,22 @@ Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async 
     int price = 0;
 
     if (hangarItem.isUpgrade && hangarItem.upgradeInfo!.matchItems!.isNotEmpty && hangarItem.upgradeInfo!.targetItems!.isNotEmpty) {
-      final shipNameList = [hangarItem.upgradeInfo!.matchItems!.first.name, hangarItem.upgradeInfo!.targetItems!.first.name];
-      if (shipNameList.length == 2) {
-        fromShip = await shipAliasRepo.getShipAlias(shipNameList[0]!);
-        toShip = await shipAliasRepo.getShipAlias(shipNameList[1]!);
+      final matchItemList = [hangarItem.upgradeInfo!.matchItems!.first, hangarItem.upgradeInfo!.targetItems!.first];
+      if (matchItemList.length == 2) {
+
+        final fromShipId = matchItemList[0].id?.toInt();
+        final toShipId = matchItemList[1].id?.toInt();
+
+        if (fromShipId != null && toShipId != null) {
+          fromShip = await shipAliasRepo.getShipAliasByUpgradeId(fromShipId);
+          toShip = await shipAliasRepo.getShipAliasByUpgradeId(toShipId);
+        }
+
+        fromShip ??= await shipAliasRepo.getShipAlias(matchItemList[0].name!);
+
+        toShip ??= await shipAliasRepo.getShipAlias(matchItemList[1].name!);
         if (fromShip != null && toShip != null) {
-          price += toShip.getHighestSku() - fromShip.getHighestSku();
+          price = toShip.getHighestSku() - fromShip.getHighestSku();
         }
       }
     }

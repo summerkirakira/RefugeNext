@@ -74,6 +74,32 @@ class ShipAliasRepo {
     return null;
   }
 
+  Future<ShipAlias?> getShipAliasByUpgradeId(int id) async {
+    if (_shipAliases.isEmpty) {
+      return null;
+    }
+    for (var shipAlias in _shipAliases) {
+      if (shipAlias.upgradeId == id) {
+        return shipAlias;
+      }
+    }
+
+    return null;
+  }
+
+  ShipAlias? getShipAliasByUpgradeIdSync(int id) {
+    if (_shipAliases.isEmpty) {
+      return null;
+    }
+    for (var shipAlias in _shipAliases) {
+      if (shipAlias.upgradeId == id) {
+        return shipAlias;
+      }
+    }
+
+    return null;
+  }
+
   ShipAlias? getShipAliasSync(String key) {
     if (_shipAliases.isEmpty) {
       return null;

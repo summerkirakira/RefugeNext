@@ -92,6 +92,10 @@ mixin _$BuybackItem {
   List<int> get idList => throw _privateConstructorUsedError;
   @JsonKey(name: 'idList')
   set idList(List<int> value) => throw _privateConstructorUsedError;
+  int? get formShipUpgradeId => throw _privateConstructorUsedError;
+  set formShipUpgradeId(int? value) => throw _privateConstructorUsedError;
+  int? get toShipUpgradeId => throw _privateConstructorUsedError;
+  set toShipUpgradeId(int? value) => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -123,7 +127,9 @@ abstract class $BuybackItemCopyWith<$Res> {
       @JsonKey(name: 'url') String? url,
       @JsonKey(name: 'price') int price,
       @JsonKey(name: 'number') int number,
-      @JsonKey(name: 'idList') List<int> idList});
+      @JsonKey(name: 'idList') List<int> idList,
+      int? formShipUpgradeId,
+      int? toShipUpgradeId});
 }
 
 /// @nodoc
@@ -157,6 +163,8 @@ class _$BuybackItemCopyWithImpl<$Res, $Val extends BuybackItem>
     Object? price = null,
     Object? number = null,
     Object? idList = null,
+    Object? formShipUpgradeId = freezed,
+    Object? toShipUpgradeId = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -231,6 +239,14 @@ class _$BuybackItemCopyWithImpl<$Res, $Val extends BuybackItem>
           ? _value.idList
           : idList // ignore: cast_nullable_to_non_nullable
               as List<int>,
+      formShipUpgradeId: freezed == formShipUpgradeId
+          ? _value.formShipUpgradeId
+          : formShipUpgradeId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      toShipUpgradeId: freezed == toShipUpgradeId
+          ? _value.toShipUpgradeId
+          : toShipUpgradeId // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -261,7 +277,9 @@ abstract class _$$BuybackItemImplCopyWith<$Res>
       @JsonKey(name: 'url') String? url,
       @JsonKey(name: 'price') int price,
       @JsonKey(name: 'number') int number,
-      @JsonKey(name: 'idList') List<int> idList});
+      @JsonKey(name: 'idList') List<int> idList,
+      int? formShipUpgradeId,
+      int? toShipUpgradeId});
 }
 
 /// @nodoc
@@ -293,6 +311,8 @@ class __$$BuybackItemImplCopyWithImpl<$Res>
     Object? price = null,
     Object? number = null,
     Object? idList = null,
+    Object? formShipUpgradeId = freezed,
+    Object? toShipUpgradeId = freezed,
   }) {
     return _then(_$BuybackItemImpl(
       id: null == id
@@ -367,6 +387,14 @@ class __$$BuybackItemImplCopyWithImpl<$Res>
           ? _value.idList
           : idList // ignore: cast_nullable_to_non_nullable
               as List<int>,
+      formShipUpgradeId: freezed == formShipUpgradeId
+          ? _value.formShipUpgradeId
+          : formShipUpgradeId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      toShipUpgradeId: freezed == toShipUpgradeId
+          ? _value.toShipUpgradeId
+          : toShipUpgradeId // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -392,7 +420,9 @@ class _$BuybackItemImpl implements _BuybackItem {
       @JsonKey(name: 'url') required this.url,
       @JsonKey(name: 'price') this.price = 0,
       @JsonKey(name: 'number') required this.number,
-      @JsonKey(name: 'idList') required this.idList});
+      @JsonKey(name: 'idList') required this.idList,
+      this.formShipUpgradeId,
+      this.toShipUpgradeId});
 
   factory _$BuybackItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$BuybackItemImplFromJson(json);
@@ -451,10 +481,14 @@ class _$BuybackItemImpl implements _BuybackItem {
   @override
   @JsonKey(name: 'idList')
   List<int> idList;
+  @override
+  int? formShipUpgradeId;
+  @override
+  int? toShipUpgradeId;
 
   @override
   String toString() {
-    return 'BuybackItem(id: $id, title: $title, image: $image, date: $date, contains: $contains, alsoContains: $alsoContains, insertTime: $insertTime, isUpgrade: $isUpgrade, formShipId: $formShipId, toShipId: $toShipId, toSkuId: $toSkuId, chinesName: $chinesName, chineseContains: $chineseContains, chineseAlsoContains: $chineseAlsoContains, url: $url, price: $price, number: $number, idList: $idList)';
+    return 'BuybackItem(id: $id, title: $title, image: $image, date: $date, contains: $contains, alsoContains: $alsoContains, insertTime: $insertTime, isUpgrade: $isUpgrade, formShipId: $formShipId, toShipId: $toShipId, toSkuId: $toSkuId, chinesName: $chinesName, chineseContains: $chineseContains, chineseAlsoContains: $chineseAlsoContains, url: $url, price: $price, number: $number, idList: $idList, formShipUpgradeId: $formShipUpgradeId, toShipUpgradeId: $toShipUpgradeId)';
   }
 
   @JsonKey(ignore: true)
@@ -490,7 +524,9 @@ abstract class _BuybackItem implements BuybackItem {
       @JsonKey(name: 'url') required String? url,
       @JsonKey(name: 'price') int price,
       @JsonKey(name: 'number') required int number,
-      @JsonKey(name: 'idList') required List<int> idList}) = _$BuybackItemImpl;
+      @JsonKey(name: 'idList') required List<int> idList,
+      int? formShipUpgradeId,
+      int? toShipUpgradeId}) = _$BuybackItemImpl;
 
   factory _BuybackItem.fromJson(Map<String, dynamic> json) =
       _$BuybackItemImpl.fromJson;
@@ -585,6 +621,12 @@ abstract class _BuybackItem implements BuybackItem {
   List<int> get idList;
   @JsonKey(name: 'idList')
   set idList(List<int> value);
+  @override
+  int? get formShipUpgradeId;
+  set formShipUpgradeId(int? value);
+  @override
+  int? get toShipUpgradeId;
+  set toShipUpgradeId(int? value);
   @override
   @JsonKey(ignore: true)
   _$$BuybackItemImplCopyWith<_$BuybackItemImpl> get copyWith =>

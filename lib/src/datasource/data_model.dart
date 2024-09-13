@@ -295,15 +295,17 @@ class MainDataModel extends ChangeNotifier {
   void readBuybackItems() {
     buybackRepo.readBuybackItems().then((value) {
       final stackedItems = stackBuybackItems(value);
-      _buybackItems = stackedItems;
-
+      calculateBuybackPrice(stackedItems).then((buybackValue) {
+        _buybackItems = buybackValue;
+        notifyListeners();
+      });
     });
   }
 
   Future<void> _updateBuybackItems() async {
     final items = await buybackRepo.refreshBuybackItems();
     final stackedItems = stackBuybackItems(items);
-    _buybackItems = stackedItems;
+    _buybackItems =  await calculateBuybackPrice(stackedItems);
 
     await buybackRepo.writeBuybackItems(items);
 

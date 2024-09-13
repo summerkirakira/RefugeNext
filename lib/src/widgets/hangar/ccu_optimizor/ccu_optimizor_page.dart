@@ -39,8 +39,6 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
 
   List<String> _toShips = [];
 
-  List<UpgradeStep> currentUpgradePath = [];
-
   Future<void> _calculateUpgradePath() async {
 
     if (_startProduct == null || _endProduct == null) {
@@ -82,13 +80,81 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
 
 
   Widget getTotalInfoWidget() {
-    int totalCost = 0;
 
-    for (var path in currentUpgradePath) {
-      totalCost += path.cost;
+    if (_upgradePath.isEmpty) {
+      return Container();
     }
 
-    return Container();
+    int totalHangarCost = 0;
+    int totalCreditCost = 0;
+    int totalWbCost = 0;
+    int originalCost = _upgradePath.last.toShip.getHighestSku() - _upgradePath.first.fromShip.getHighestSku();
+
+    for (var path in _upgradePath) {
+      if (path.tags.first == '机库中') {
+        totalHangarCost += path.cost;
+      } else if (path.tags.first == '历史WB') {
+        totalWbCost += path.cost;
+      } else {
+        totalCreditCost += path.cost;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        // top: 16,
+        bottom: 8,
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Text('\$'),
+                      Text('${originalCost ~/ 100}', style: TextStyle(fontSize: 40),)
+                    ],
+                  ),
+                  Text('原价'),
+                ],
+              ),
+              VerticalDivider(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Text('\$', style: TextStyle(color: Colors.green)),
+                      Text('${(totalCreditCost + totalHangarCost) ~/ 100}', style: TextStyle(fontSize: 40, color: Colors.green),)
+                    ],
+                  ),
+                  Text('现价', style: TextStyle(color: Colors.green)),
+                ],
+              ),
+              VerticalDivider(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Text('\$', style: TextStyle(color: Colors.blue)),
+                      Text('${totalHangarCost ~/ 100}', style: TextStyle(fontSize: 40, color: Colors.blue),)
+                    ],
+                  ),
+                  Text('机库中', style: TextStyle(color: Colors.blue)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
 
     // return
   }
@@ -362,13 +428,20 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: _calculateUpgradePath,
-              child: const Text('计算升级路径'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-              ),
-            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ElevatedButton(
+                  onPressed: _calculateUpgradePath,
+                  child: const Text('计算升级路径'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                getTotalInfoWidget(),
+              ],
+            )
           ),
         ),
         SliverList(

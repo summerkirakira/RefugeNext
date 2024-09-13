@@ -24,6 +24,8 @@ class BuybackItem with _$BuybackItem {
     @JsonKey(name: 'price') @Default(0) int price,
     @JsonKey(name: 'number') required int number,
     @JsonKey(name: 'idList') required List<int> idList,
+    int? formShipUpgradeId,
+    int? toShipUpgradeId,
   }) = _BuybackItem;
 
   factory BuybackItem.fromJson(Map<String, dynamic> json) =>
