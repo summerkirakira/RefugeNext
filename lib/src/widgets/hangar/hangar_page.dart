@@ -126,7 +126,7 @@ class _HangarPageState extends State<HangarPage> {
           ),
           BuybackPage(),
           ProductUpgradeWidget(),
-        ], titles: ["机库", "回购", "升级规划"]),
+        ], titles: ["机库", "回购", "升级"]),
       ],
     );
   }

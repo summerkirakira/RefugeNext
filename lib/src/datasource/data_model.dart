@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/buyback.dart';
 import 'package:refuge_next/src/datasource/models/upgradeInfo.dart';
+import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
 import './models/hangar.dart';
 import './models/user.dart';
 import '../repo/hangar.dart';
@@ -59,7 +60,9 @@ class MainDataModel extends ChangeNotifier {
 
   List<HangarItem> _hangarItems = [];
 
-  List<HangarItem> get hangarItems => processSearch(_hangarItems, searchProperty);
+  List<List<UpgradeStep>> _upgradeSteps = [];
+
+  List<HangarItem> get hangarItems => processSearch(_hangarItems, searchProperty, _upgradeSteps);
 
   List<HangarItem> get rawHangarItems => _hangarItems;
 
@@ -67,8 +70,8 @@ class MainDataModel extends ChangeNotifier {
 
   List<BuybackItem> get buybackItems => _buybackItems;
 
-
   List<UpgradeShipInfo> upgradeFromShip = [];
+
   List<UpgradeShipInfo> upgradeToShip = [];
 
   UpgradeShipInfo? _fromShip = null;
@@ -118,6 +121,15 @@ class MainDataModel extends ChangeNotifier {
   }
 
   bool get isDarkMode => ThemeManager().isDark;
+
+
+  Future<void> setUpdateStep(List<int> slots) async {
+    _upgradeSteps = [];
+    for (var slot in slots) {
+      final steps = await getStepsFromStorage(slot);
+      _upgradeSteps.add(steps);
+    }
+  }
 
   final hangarRepo = HangarRepo();
   final userRepo = UserRepo();
@@ -233,6 +245,7 @@ class MainDataModel extends ChangeNotifier {
 
   void clearSearch() {
     _searchProperty = null;
+    _upgradeSteps = [];
     notifyListeners();
   }
 
@@ -397,8 +410,6 @@ class MainDataModel extends ChangeNotifier {
 
     final translatedItems = await translateHangarItem(calculatedItems);
     _hangarItems = translatedItems;
-
-
     notifyListeners();
   }
 

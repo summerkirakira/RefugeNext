@@ -1,3 +1,6 @@
+import 'package:refuge_next/src/repo/ship_alias.dart';
+import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
+
 import '../datasource/models/searchProperty.dart';
 import '../datasource/models/hangar.dart';
 
@@ -183,6 +186,43 @@ bool isToShip(HangarItem item, List<String> toShips) {
   return false;
 }
 
+bool slotSearch(HangarItem item, List<List<UpgradeStep>> slots) {
+  if (slots.isEmpty) {
+    return true;
+  }
+
+  if (!item.isUpgrade) {
+    for (var subItem in item.items) {
+      if (subItem.kind == "Ship") {
+        final ship = ShipAliasRepo().getShipAliasSync(subItem.title);
+        if (ship != null) {
+          for (var slot in slots) {
+            if (slot.isNotEmpty) {
+              if (slot.first.fromShip.id == ship.id) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+    }
+  }
+
+  if (item.fromShip == null || item.toShip == null) {
+    return false;
+  }
+
+  for (var slot in slots) {
+    for (var step in slot) {
+      if (step.fromShip.id == item.fromShip!.id && step.toShip.id == item.toShip!.id && step.cost == item.price) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 
 bool isKeepItem(HangarItem item, SearchProperty searchKey) {
   return isSearchedType(item, searchKey.searchType)
@@ -195,11 +235,15 @@ bool isKeepItem(HangarItem item, SearchProperty searchKey) {
       && isToShip(item, searchKey.toShip);
 }
 
-List<HangarItem> processSearch(List<HangarItem> items, SearchProperty? searchKey) {
+List<HangarItem> processSearch(List<HangarItem> items, SearchProperty? searchKey, List<List<UpgradeStep>> slots) {
   if (searchKey == null) {
     return items;
   }
-  return items.where((item) {
+  final filteredItems = items.where((item) {
     return isKeepItem(item, searchKey);
+  }).toList();
+
+  return filteredItems.where((item) {
+    return slotSearch(item, slots);
   }).toList();
 }

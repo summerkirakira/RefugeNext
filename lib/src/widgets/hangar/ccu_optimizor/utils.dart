@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/cirno/upgrade_response.dart';
@@ -28,6 +30,33 @@ class UpgradeStep {
 
   UpgradeStep(this.fromProduct, this.toProduct, this.cost, this.tags,
       {required this.fromShip, required this.toShip});
+
+  String toJson() {
+    return jsonEncode({
+      'fromProduct': fromProduct,
+      'toProduct': toProduct,
+      'cost': cost,
+      'tags': tags,
+      'fromShip': fromShip.upgradeId,
+      'toShip': toShip.upgradeId,
+    });
+  }
+
+  factory UpgradeStep.fromJson(Map<String, dynamic> json) {
+
+    final fromShip = ShipAliasRepo().getShipAliasByUpgradeIdSync(json['fromShip']);
+    final toShip = ShipAliasRepo().getShipAliasByUpgradeIdSync(json['toShip']);
+
+    return UpgradeStep(
+      json['fromProduct'],
+      json['toProduct'],
+      json['cost'],
+      List<String>.from(json['tags']),
+      fromShip: fromShip!,
+      toShip: toShip!,
+    );
+  }
+
 }
 
 class BannedUpgrade {
@@ -238,3 +267,43 @@ CustomDropdownDecoration getUpgradeDropdownDecoration(bool isDarkMode) =>
           ),
         ),
     );
+
+Future<void> saveStepsToStorage(List<UpgradeStep> steps, int saveIndex) async {
+  final prefs = await SharedPreferences.getInstance();
+  final stepList = steps.map((e) => e.toJson()).toList();
+  await prefs.setString('vip.kirakira.steps[${saveIndex}]', jsonEncode(stepList));
+}
+
+Future<List<UpgradeStep>> getStepsFromStorage(int num) async {
+  final prefs = await SharedPreferences.getInstance();
+  final slot = prefs.getString('vip.kirakira.steps[${num}]');
+  if (slot == null) {
+    return [];
+  }
+  final stepsString = List<String>.from(jsonDecode(slot));
+  return stepsString.map((e) => jsonDecode(e)).map((e) => UpgradeStep.fromJson(e)).toList();
+}
+
+Future<List<String>> getSlotsFromStorage(int num) async {
+  final prefs = await SharedPreferences.getInstance();
+  List<String> slotList = [];
+  for (var i = 0; i < num; i++) {
+    final slot = prefs.getString('vip.kirakira.steps[${i}]');
+    if (slot == null) {
+      slotList.add('空');
+      continue;
+    }
+    final stepsString = List<String>.from(jsonDecode(slot));
+    int totalCost = 0;
+
+    final steps = stepsString.map((e) => jsonDecode(e)).toList();
+
+    for (var step in steps) {
+      totalCost += step['cost'] as int;
+    }
+    final fromShip = steps.first['fromProduct'] as String;
+    final toShip = steps.last['toProduct'] as String;
+    slotList.add('$fromShip -> $toShip: \$${totalCost ~/ 100}');
+  }
+  return slotList;
+}

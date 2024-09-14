@@ -7,6 +7,7 @@ class SearchProperty {
   List<String> fromShip;
   List<String> toShip;
   String? searchText;
+  List<int> selectedCCUSlots;
 
   SearchProperty({
     required this.searchType,
@@ -17,5 +18,6 @@ class SearchProperty {
     required this.fromShip,
     required this.toShip,
     required this.searchText,
+    required this.selectedCCUSlots,
   });
 }

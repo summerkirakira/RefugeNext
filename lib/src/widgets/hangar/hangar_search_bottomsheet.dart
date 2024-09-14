@@ -35,6 +35,14 @@ List<MultiSelectCard> getUpgradeToCards(List<HangarItem> items) {
   return cards;
 }
 
+List<MultiSelectCard> getCCUSlotCards(int num) {
+  List<MultiSelectCard> cards = [];
+  for (var i = 0; i < num; i++) {
+    cards.add(MultiSelectCard(value: "$i", label: "槽位${i + 1}"));
+  }
+  return cards;
+}
+
 
 WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
 
@@ -46,7 +54,8 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
       reclaimStatus: ["all"],
       fromShip: ["all"],
       toShip: ["all"],
-      searchText: null
+      searchText: null,
+      selectedCCUSlots: []
   );
 
 
@@ -258,6 +267,29 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
                 }
             ),
             const SizedBox(height: 20),
+            const Text("保存的CCU链",
+                style: TextStyle(
+                  fontSize: 15,
+                  // fontWeight: FontWeight.bold
+                )),
+            const SizedBox(height: 10),
+            MultiSelectContainer(
+                itemsDecoration: MultiSelectDecorations(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                suffix: tagSuffix,
+                items: getCCUSlotCards(10),
+                onChange: (allSelectedItems, selectedItem) {
+                  searchKey.selectedCCUSlots = [];
+                  for (var item in allSelectedItems) {
+                    searchKey.selectedCCUSlots.add(int.parse(item));
+                  }
+                }
+            ),
+            const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 20),
             const Text("起始舰船",
@@ -321,8 +353,9 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
             ),
-            onPressed: () {
+            onPressed: () async {
               searchKey.searchText = searchController.text;
+              await Provider.of<MainDataModel>(context, listen: false).setUpdateStep(searchKey.selectedCCUSlots);
               Provider.of<MainDataModel>(context, listen: false).updateSearchProperty(searchKey);
               Navigator.of(context).pop();
             },

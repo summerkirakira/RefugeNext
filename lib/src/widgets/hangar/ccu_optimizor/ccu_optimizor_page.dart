@@ -39,7 +39,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
 
   List<String> _toShips = [];
 
-  Future<void> _calculateUpgradePath() async {
+  Future<void> __calculateUpgradePath() async {
 
     if (_startProduct == null || _endProduct == null) {
       showToast(message: '请选择起始和目标舰船');
@@ -73,6 +73,17 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     setState(() {
       _upgradePath = result;
     });
+  }
+
+  Future<void> _calculateUpgradePath() async {
+    try {
+      await __calculateUpgradePath();
+    } catch (e) {
+      _blockedUpgrades = [];
+      _mustHaveUpgrades = [];
+      showToast(message: '升级路径计算失败QAQ');
+    }
+
   }
 
   @override
@@ -427,7 +438,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                       Spacer(),
                       IconButton(
                         icon: const Icon(Icons.save, color: Colors.white),
-                        onPressed: _openUpgradeSettings,
+                        onPressed: () => showSaveSlotSelector(context),
                         tooltip: 'Upgrade Settings',
                       ),
                       IconButton(
@@ -647,6 +658,60 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     } else {
       return Icon(Icons.push_pin_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),);
     }
+  }
+
+  Future<void> showSaveSlotSelector(BuildContext context) async {
+    final slots =  await getSlotsFromStorage(10);
+    WoltModalSheet.show<int>(
+      context: context,
+      pageListBuilder: (BuildContext modalContext) {
+        return [
+          WoltModalSheetPage(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            hasSabGradient: false,
+            pageTitle: const Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('选择保存槽位',
+                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))
+                  ],
+                )),
+            trailingNavBarWidget: Container(
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.2), // 设置背景颜色
+                shape: BoxShape.circle, // 设置形状为圆形
+              ),
+              child: IconButton(
+                padding: const EdgeInsets.all(5),
+                icon: const Icon(Icons.close, size: 22),
+                onPressed: Navigator.of(context).pop,
+              ),
+            ),
+            topBarTitle: Text('选择保存槽位', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            isTopBarLayerAlwaysVisible: false,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: List.generate(10, (index) {
+                  return ListTile(
+                    title: Text('槽位 ${index + 1} (${slots[index]})'),
+                    onTap: () {
+                      saveStepsToStorage(_upgradePath, index);
+                      showToast(message: '升级链保存成功~后续可在机库搜索菜单中进行筛选~');
+                      Navigator.of(modalContext).pop(index);
+                    },
+                    trailing: Icon(Icons.save),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ];
+      },
+    );
   }
 
   @override
