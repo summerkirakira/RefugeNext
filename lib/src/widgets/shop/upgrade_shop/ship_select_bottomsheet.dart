@@ -135,14 +135,14 @@ class ShipItem extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             if (ship.skus != null && ship.skus!.length > 1)
-                              Text(ship.name!,
+                              Text(ship.chineseName,
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     color: Colors.orange
                                   ))
                             else
-                              Text(ship.name!,
+                              Text(ship.chineseName,
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,

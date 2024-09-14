@@ -66,16 +66,24 @@ class TranslationRepo {
 
   Future<String> getTranslation(String key) async {
     final finalKey = key.replaceAll("\n", "").trim();
+    if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
+      if (!_notTranslated.contains(key) && key.isNotEmpty) {
+        _notTranslated.add(key);
+        print("Missing translation for $key");
+      }
+    }
+
     return _translation[finalKey] ?? finalKey;
   }
 
   String getTranslationSync(String key) {
+
     final finalKey = key.replaceAll("\n", "").trim();
     final keyList = finalKey.split(" - ");
     List<String> translationList = [];
     for (var key in keyList) {
       translationList.add(_translation[key] ?? key);
-      if (_translation[key] == null && _translation.isNotEmpty) {
+      if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
         if (!_notTranslated.contains(key) && key.isNotEmpty) {
           _notTranslated.add(key);
           print("Missing translation for $key");

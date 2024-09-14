@@ -145,7 +145,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               (scheme) {
 
                                 if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
-                                  showToast(message: "缺少有效的避难所Premium订阅~");
+                                  showVipAlert(context: context);
                                   return;
                                 }
 
@@ -193,7 +193,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       value: Provider.of<MainDataModel>(context).isDarkMode,
                       onChanged: (value) {
                         if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
-                          showToast(message: "缺少有效的避难所Premium订阅~");
+                          showVipAlert(context: context);
                           return;
                         }
                         Provider.of<MainDataModel>(context, listen: false)

@@ -193,7 +193,7 @@ class MainDataModel extends ChangeNotifier {
 
   List<UpgradeShipInfo> translateShipUpgrade(List<UpgradeShipInfo> ships) {
     return ships.map((ship) {
-      ship.name = translationRepo.getTranslationSync(ship.name!);
+      ship.chineseName = translationRepo.getTranslationSync(ship.name!);
       return ship;
     }).toList();
   }
@@ -411,6 +411,12 @@ class MainDataModel extends ChangeNotifier {
     final translatedItems = await translateHangarItem(calculatedItems);
     _hangarItems = translatedItems;
     notifyListeners();
+    try {
+      translationRepo.postNotTranslated();
+    } catch (e) {
+      print(e);
+    }
+
   }
 
   void updateSearchProperty(SearchProperty? newProperty) {

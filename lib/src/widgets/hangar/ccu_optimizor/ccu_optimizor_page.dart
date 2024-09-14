@@ -76,12 +76,19 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
   }
 
   Future<void> _calculateUpgradePath() async {
+
+    final isVip = Provider.of<MainDataModel>(context, listen: false).isVIP;
+    if (!isVip) {
+      showVipAlert(context: context, move: true);
+      return;
+    }
+
     try {
       await __calculateUpgradePath();
     } catch (e) {
       _blockedUpgrades = [];
       _mustHaveUpgrades = [];
-      showToast(message: '升级路径计算失败QAQ');
+      showToast(message: '升级路线计算失败QAQ');
     }
 
   }
@@ -498,7 +505,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
               children: [
                 ElevatedButton(
                   onPressed: _calculateUpgradePath,
-                  child: const Text('计算升级路径'),
+                  child: const Text('计算升级路线'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),

@@ -58,7 +58,7 @@ class CirnoApiClient {
   }
 
   Future<Response> basicPostList({required String endpoint, required List<String> data}) async {
-    final response = await _dio.post("$baseUrl$endpoint", data: data, options: Options());
+    final response = await _dio.post("$baseUrl$endpoint", data: jsonEncode(data), options: Options());
     return response;
   }
 
@@ -78,14 +78,15 @@ class CirnoApiClient {
 
   Future<ShipUpgradeResponse> getShipUpgradePath({required ShipUpgradeConfig config}) async {
     final data = config.toJson();
-    final testString = jsonEncode(data);
     final response = await basicPost(endpoint: 'v2/upgrade/path', data: data);
     return ShipUpgradeResponse.fromJson(response.data);
   }
 
   Future<void> uploadNotTranslatedTexts(List<String> texts) async {
-    final data = texts;
-    await basicPostList(endpoint: 'v2/translation/not-translated', data: data);
+    final data = {
+      'texts': texts,
+    };
+    await basicPost(endpoint: 'v2/addTranslation', data: data);
   }
 
 
