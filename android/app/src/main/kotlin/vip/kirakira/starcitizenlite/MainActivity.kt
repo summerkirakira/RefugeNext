@@ -1,4 +1,4 @@
-package vip.kirakira.refuge_next
+package vip.kirakira.starcitizenlite
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterFragmentActivity

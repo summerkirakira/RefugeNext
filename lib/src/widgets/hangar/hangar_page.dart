@@ -125,9 +125,16 @@ class _HangarPageState extends State<HangarPage> {
             ),
           ),
           BuybackPage(),
+          if (!(Provider.of<MainDataModel>(context).currentUser!.email == '934869815@qq.com'))
           ProductUpgradeWidget(),
-        ], titles: ["机库", "回购", "升级"]),
+        ], titles: getTitles()),
       ],
     );
+  }
+  List<String> getTitles() {
+    if (!(Provider.of<MainDataModel>(context).currentUser!.email == '934869815@qq.com'))
+      return ["机库", "回购", "升级"];
+    else
+      return ["机库", "回购"];
   }
 }

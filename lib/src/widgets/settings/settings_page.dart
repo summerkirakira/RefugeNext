@@ -249,11 +249,27 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SettingsItem(
                     onTap: () {
-                      launchUrl(Uri.parse("https://github.com/summerkirakira/Starcitizen-lite"), mode: LaunchMode.externalApplication);
+                      launchUrl(Uri.parse("https://github.com/summerkirakira/RefugeNext"), mode: LaunchMode.externalApplication);
                     },
                     icons: Icons.code_rounded,
                     title: "开源地址",
-                    subtitle: "https://github.com/summerkirakira/Starcitizen-lite",
+                    subtitle: "https://github.com/summerkirakira/RefugeNext",
+                  ),
+                  SettingsItem(
+                    onTap: () {
+                      launchUrl(Uri.parse("https://github.com/summerkirakira/RefugeNext/releases"), mode: LaunchMode.externalApplication);
+                    },
+                    icons: Icons.download_outlined,
+                    title: "最新版本",
+                    subtitle: "https://github.com/summerkirakira/RefugeNext/releases",
+                  ),
+                  SettingsItem(
+                    onTap: () {
+
+                    },
+                    icons: Icons.description_outlined,
+                    title: "开源协议",
+                    subtitle: "GNU AGPLv3",
                   )
                 ],
               ),

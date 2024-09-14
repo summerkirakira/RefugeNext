@@ -82,6 +82,7 @@ WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, BuildContext m
             final result = await authenticateWithBiometrics(reason: "请验证以回收物品");
             if (result == false) {
               showToast(message: "验证失败");
+              return;
             }
 
             final password = Provider.of<MainDataModel>(mainContext, listen: false).currentUser!.password;

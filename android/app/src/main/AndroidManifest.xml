@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <application
-        android:label="星河避难所Next"
+        android:label="星河避难所"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
