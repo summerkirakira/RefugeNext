@@ -104,7 +104,7 @@ Future<void> updateShipAlias(RefugeVersionProperty latestVersion) async {
 Future<void> setVip() async {
   final cirnoAuth = await CirnoAuth.getInstance();
   if (cirnoAuth.isInitialized) {
-    if (!cirnoAuth.property.isVip) {
+    if (!cirnoAuth.property!.isVip) {
       await ThemeManager.setTheme(false, 'blue');
     }
   }
@@ -118,8 +118,8 @@ Future<void> startup() async {
     await rsiApiClient.refreshCsrfToken();
     await cirnoAuth.initialize();
 
-    await updateShipAlias(cirnoAuth.property);
-    await updateTranslation(cirnoAuth.property);
+    await updateShipAlias(cirnoAuth.property!);
+    await updateTranslation(cirnoAuth.property!);
 
     await setCurrency();
 

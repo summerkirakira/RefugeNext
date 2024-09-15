@@ -63,7 +63,7 @@ class CirnoAuth {
 
   static CirnoAuth? _instance;
   late String _uuid;
-  late RefugeVersionProperty _property;
+  RefugeVersionProperty? _property;
   bool _initialized = false;
   List<Function> _afterInit = [];
 
@@ -106,7 +106,7 @@ class CirnoAuth {
 
   String get uuid => _uuid;
 
-  RefugeVersionProperty get property => _property;
+  RefugeVersionProperty? get property => _property;
 
   bool get isInitialized => _initialized;
 

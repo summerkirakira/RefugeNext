@@ -147,7 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> checkUpdate() async {
     final auth = await CirnoAuth.getInstance();
-    auth.addAfterInit(() => showUpdateDialog(context, auth.property));
+    auth.addAfterInit(() => showUpdateDialog(context, auth.property!));
   }
 
   @override
