@@ -49,8 +49,10 @@ Future<List<BuybackItem>> calculateBuybackPrice(List<BuybackItem> buybackItems) 
   final translationRepo = TranslationRepo();
 
   for (var buybackItem in buybackItems) {
-    ShipAlias? fromShip = await shipAliasRepo.getShipAliasByUpgradeId(buybackItem.formShipId);
-    ShipAlias? toShip = await shipAliasRepo.getShipAliasByUpgradeId(buybackItem.toShipId);
+    // ShipAlias? fromShip = await shipAliasRepo.getShipAliasByUpgradeId(buybackItem.formShipId);
+    // ShipAlias? toShip = await shipAliasRepo.getShipAliasByUpgradeId(buybackItem.toShipId);
+    ShipAlias? fromShip;
+    ShipAlias? toShip;
 
     final shipTitleList = getUpgradeNameList(buybackItem.title);
     if (shipTitleList.length == 2) {
