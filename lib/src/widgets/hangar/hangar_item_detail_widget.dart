@@ -1,4 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:refuge_next/src/network/cirno/property/property.dart';
+import 'package:refuge_next/src/repo/ship_alias.dart';
+import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import '../../datasource/models/hangar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -19,7 +22,87 @@ String priceString(int price) {
 }
 
 
+Widget getUpgradeFromWiget(ShipAlias? ship, bool isFromShip) {
+
+  if (ship == null) {
+    return Container();
+  }
+
+  String title = isFromShip ? '起始舰船: ' : '目标舰船: ';
+
+
+  return Row(
+    children: [
+      Text(title, style: const TextStyle(
+          fontSize: 14,
+      )),
+      Text(ship.chineseName!, style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold
+      )),
+      const SizedBox(width: 10),
+      Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
+        fontSize: 16,
+        color: Colors.green
+      )),
+    ],
+  );
+}
+
+
+Widget getUpgradeSubHangarItemWidget(HangarItem hangarItem) {
+
+  if (hangarItem.items.isEmpty) {
+    return Container();
+  }
+
+  final item = hangarItem.items.first;
+
+  return Row(
+    children: [
+      Container(
+        height: 80,
+        width: 120,
+        child: CachedNetworkImage(
+            imageUrl: item.image,
+            placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 30),
+            errorWidget: (context, url, error) => Icon(Icons.error),
+            imageBuilder: (context, imageProvider) => Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: const BorderRadius.all(Radius.circular(10))
+              ),
+            )
+        ),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+          child: Container(
+            height: 70,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                getUpgradeFromWiget(hangarItem.fromShip, true),
+                // Icon(Icons.keyboard_double_arrow_down_outlined),
+                SizedBox(height: 12),
+                getUpgradeFromWiget(hangarItem.toShip, false),
+              ],
+            ),
+          )
+      ),
+    ],
+  );
+}
+
+
 Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
+
+  final ship = ShipAliasRepo().getShipAliasSync(item.title);
+
   return Row(
     children: [
       Container(
@@ -56,6 +139,21 @@ Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
                     fontSize: 14,
                     color: Colors.grey
                 )),
+                const SizedBox(height: 5),
+                if (ship != null)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      // Text("价格: ", style: const TextStyle(
+                      //     fontSize: 16
+                      // )),
+                      Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 16
+                      ))
+                    ]
+                  )
               ],
             ),
           )
@@ -78,30 +176,45 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
       right: 50
     ),
     child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           children: [
-            Text('可融价值', style: const TextStyle(
-              fontSize: 18,
+            Text('${priceString(price)}', style: const TextStyle(
+              fontSize: 25,
               fontWeight: FontWeight.bold
             )),
             const SizedBox(height: 5),
-            Text("\$${priceString(price)}", style: const TextStyle(
-              fontSize: 16,
+            const Text("可融(\$)", style: const TextStyle(
+              fontSize: 14,
               color: Colors.grey
             ))
           ],
         ),
-        Spacer(),
         Column(
           children: [
-            Text('当前价值', style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold
+            Text('${priceString(currentPrice)}', style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor
             )),
             const SizedBox(height: 5),
-            Text("\$${priceString(currentPrice)}", style: const TextStyle(
-                fontSize: 16,
+            Text("当前(\$)", style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey
+            ))
+          ],
+        ),
+        Column(
+          children: [
+            Text('${priceString(currentPrice - price)}', style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.green
+            )),
+            const SizedBox(height: 5),
+            Text("节约(\$)", style: const TextStyle(
+                fontSize: 14,
                 color: Colors.grey
             ))
           ],
@@ -242,14 +355,30 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
               },
               child: const Column(
                   children: [
-                    Icon(Icons.share_outlined),
-                    Text('分享')
+                    Icon(Icons.arrow_upward_rounded),
+                    Text('升级')
                   ]
               ),
             ),
           ],
         ),
         Spacer(),
+        // Column(
+        //   children: [
+        //     GestureDetector(
+        //       onTap: () {
+        //         onShare();
+        //       },
+        //       child: const Column(
+        //           children: [
+        //             Icon(Icons.share_outlined),
+        //             Text('分享')
+        //           ]
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        // Spacer(),
         Column(
           children: [
             GestureDetector(
@@ -380,22 +509,45 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
           const Divider(),
           if (hangarItem.items.isNotEmpty)
             for (final subItem in hangarItem.items)
-              Padding(
-                padding: const EdgeInsets.only(
-                    top: 10
+              if (!hangarItem.isUpgrade)
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 10
+                  ),
+                  child: SubHangarItemWidget(context, subItem),
                 ),
-                child: SubHangarItemWidget(context, subItem),
-              ),
+              if (hangarItem.isUpgrade)
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 10
+                  ),
+                  child: getUpgradeSubHangarItemWidget(hangarItem),
+                ),
           const Divider(),
-          if (hangarItem.chineseAlsoContains!.isNotEmpty)
-            for(final alsoContain in hangarItem.chineseAlsoContains!.split("#"))
-              Padding(
-                padding: const EdgeInsets.only(
-                    top: 5
+          if (!hangarItem.isUpgrade)
+            if (hangarItem.chineseAlsoContains!.isNotEmpty)
+              for(final alsoContain in hangarItem.chineseAlsoContains!.split("#"))
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 5
+                  ),
+                  child: Text('${alsoContain.trim()}', style: const TextStyle(
+                    fontSize: 15,
+                  )),
                 ),
-                child: Text('${alsoContain.trim()}', style: const TextStyle(
-                  fontSize: 15,
-                )),
+          if (hangarItem.isUpgrade)
+            Text('升级包含', style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold
+            )),
+          if (hangarItem.isUpgrade)
+            Padding(
+              padding: const EdgeInsets.only(
+                  top: 5,
+              ),
+              child: Text(getUpgradeInfo(hangarItem), style: const TextStyle(
+                fontSize: 15,
+              )),
               ),
           const SizedBox(height: 100),
         ],
@@ -404,7 +556,15 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
   );
 }
 
-
+String getUpgradeInfo(HangarItem hangarItem) {
+  final List<String> upgradeInfo = [];
+  for (var info in hangarItem.upgradeInfo!.targetItems!) {
+    if (info.name != null) {
+      upgradeInfo.add(TranslationRepo().getTranslationSync(info.name!));
+    }
+  }
+  return upgradeInfo.join("\n");
+}
 
 
 WoltModalSheetPage getHangarItemDetailSheet(BuildContext modalSheetContext, HangarItem hangarItem) {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/ccu_optimizor_page.dart';
+import 'package:refuge_next/src/widgets/hangar/upgrade_from_choose_bottomsheet.dart';
 
 import '../../datasource/models/hangar.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,9 @@ class _HangarPageState extends State<HangarPage> {
       pageListBuilder: (modalSheetContext) {
         return [
           getHangarItemDetailSheet(modalSheetContext, hangarItem),
+          // singleSelectionPage(["anv", "sdasd", "asdasd"], (index) {
+          //   print(index);
+          // }),
           getReclaimPage(modalSheetContext, context,  hangarItem),
           getGiftPage(modalSheetContext, context,  hangarItem),
           getRecallPage(modalSheetContext, context, hangarItem)
