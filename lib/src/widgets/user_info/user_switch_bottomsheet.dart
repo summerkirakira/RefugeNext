@@ -70,7 +70,7 @@ WoltModalSheetPage getUserSwitchBottomSheet(BuildContext woltContext, BuildConte
                 Provider.of<MainDataModel>(context, listen: false).updateCurrentUser(user);
               },
             ),
-          SizedBox(height: 100),
+          SizedBox(height: 150),
         ]
       ),
     ),

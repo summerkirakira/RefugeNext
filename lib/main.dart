@@ -46,40 +46,6 @@ class RefugeApp extends StatelessWidget {
   }
 }
 
-
-// class RefugeApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return ChangeNotifierProvider<MainDataModel>(
-//       create: (context) => MainDataModel(),
-//       child: MaterialApp(
-//         title: '星河避难所',
-//         theme: Provider.of<MainDataModel>(context).getTheme(context),
-//         home:  LoaderOverlay(
-//           child: MyHomePage(),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-
-// class RefugeApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: '星河避难所',
-//       theme: FlexColorScheme.light(scheme: FlexScheme.hippieBlue).toTheme,
-//       home: ChangeNotifierProvider<MainDataModel>(
-//         create: (context) => MainDataModel(),
-//         child: LoaderOverlay(
-//           child: MyHomePage(),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();

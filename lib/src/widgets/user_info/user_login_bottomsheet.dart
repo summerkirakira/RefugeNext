@@ -1,3 +1,4 @@
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ WoltModalSheetPage getLoginBottomSheet(
 
   return WoltModalSheetPage(
     navBarHeight: 50,
+    enableDrag: false,
     pageTitle: const Padding(
         padding: EdgeInsets.only(left: 20),
         child: Column(
@@ -79,11 +81,12 @@ WoltModalSheetPage getLoginBottomSheet(
             if (passwordController.text.isEmpty) {
               return;
             }
-
+            context.loaderOverlay.show();
             loginFirstStep(
                     email: emailController.text,
                     password: passwordController.text)
                 .then((status) {
+              context.loaderOverlay.hide();
               cachedEmail = emailController.text;
               cachedPassword = passwordController.text;
               if (status.success) {
@@ -184,7 +187,7 @@ WoltModalSheetPage getCaptchaInputBottomSheet(
             if (captchaController.text.isEmpty) {
               return;
             }
-
+            context.loaderOverlay.show();
             try {
               loginFirstStep(
                       email: cachedEmail,
@@ -211,8 +214,9 @@ WoltModalSheetPage getCaptchaInputBottomSheet(
               });
             } catch (e) {
               showToast(message: e.toString());
+            } finally {
+              context.loaderOverlay.hide();
             }
-            ;
           },
           child: const Text('下一步',
               style: TextStyle(
