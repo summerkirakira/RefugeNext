@@ -443,26 +443,49 @@ class _UserInfoPageState extends State<UserInfoPage>
       builder: (context, model, child) {
         return model.currentUser == null
             ? const Center(child: Text('No user data'))
-            : RefreshIndicator(child: ListView(
-          // shrinkWrap: true,
-          // physics: NeverScrollableScrollPhysics(),
-          physics: BouncingScrollPhysics(),
-          children: [
-            TopBar(),
-            UserSimpleInfo(),
-            UserDetailInfo(),
-            Divider(),
-            if (!(model.currentUser!.email == "934869815@qq.com")) SettingsWidget()
-          ],
-        ), onRefresh: () async {
-              final currentUserHangarValue = model.currentUser!.hangarValue;
-              final newUser = await parseNewUser(model.currentUser!.email, model.currentUser!.password, RsiApiClient().rsiDevice, model.currentUser!.rsiToken);
-              if (newUser == null) {
-                showToast(message: "用户信息刷新失败");
-                return;
-              }
-              model.updateCurrentUser(newUser.copyWith(hangarValue: currentUserHangarValue));
-        });
+            : RefreshIndicator(
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              return SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      TopBar(),
+                      UserSimpleInfo(),
+                      UserDetailInfo(),
+                      Divider(),
+                      if (!(model.currentUser!.email == "934869815@qq.com"))
+                        SettingsWidget()
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          onRefresh: () async {
+            final currentUserHangarValue = model.currentUser!.hangarValue;
+            final currentValue = model.currentUser!.currentHangarValue;
+            final newUser = await parseNewUser(
+                model.currentUser!.email,
+                model.currentUser!.password,
+                RsiApiClient().rsiDevice,
+                model.currentUser!.rsiToken
+            );
+            if (newUser == null) {
+              showToast(message: "用户信息刷新失败");
+              return;
+            }
+            model.updateCurrentUser(newUser.copyWith(
+                hangarValue: currentUserHangarValue,
+                currentHangarValue: currentValue
+            ));
+          },
+        );
       },
     );
   }
