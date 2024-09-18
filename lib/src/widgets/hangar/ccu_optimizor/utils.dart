@@ -288,22 +288,27 @@ Future<List<String>> getSlotsFromStorage(int num) async {
   final prefs = await SharedPreferences.getInstance();
   List<String> slotList = [];
   for (var i = 0; i < num; i++) {
-    final slot = prefs.getString('vip.kirakira.steps[${i}]');
-    if (slot == null) {
+    try {
+      final slot = prefs.getString('vip.kirakira.steps[${i}]');
+      if (slot == null) {
+        slotList.add('空');
+        continue;
+      }
+      final stepsString = List<String>.from(jsonDecode(slot));
+      int totalCost = 0;
+
+      final steps = stepsString.map((e) => jsonDecode(e)).toList();
+
+      for (var step in steps) {
+        totalCost += step['cost'] as int;
+      }
+      final fromShip = steps.first['fromProduct'] as String;
+      final toShip = steps.last['toProduct'] as String;
+      slotList.add('$fromShip -> $toShip: \$${totalCost ~/ 100}');
+    } catch (e) {
       slotList.add('空');
-      continue;
     }
-    final stepsString = List<String>.from(jsonDecode(slot));
-    int totalCost = 0;
 
-    final steps = stepsString.map((e) => jsonDecode(e)).toList();
-
-    for (var step in steps) {
-      totalCost += step['cost'] as int;
-    }
-    final fromShip = steps.first['fromProduct'] as String;
-    final toShip = steps.last['toProduct'] as String;
-    slotList.add('$fromShip -> $toShip: \$${totalCost ~/ 100}');
   }
   return slotList;
 }

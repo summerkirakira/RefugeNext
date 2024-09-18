@@ -706,6 +706,12 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                   return ListTile(
                     title: Text('槽位 ${index + 1} (${slots[index]})'),
                     onTap: () {
+
+                      if (_upgradePath.isEmpty) {
+                        showToast(message: '当前升级链为空~');
+                        return;
+                      }
+
                       saveStepsToStorage(_upgradePath, index);
                       showToast(message: '升级链保存成功~后续可在机库搜索菜单中进行筛选~');
                       Navigator.of(modalContext).pop(index);
