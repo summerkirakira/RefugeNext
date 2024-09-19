@@ -74,9 +74,6 @@ class _MyHomePageState extends State<MyHomePage> {
       return Scaffold(
         body: Row(
           children: [
-            // ElevatedButton(onPressed: () => {
-            //   openRsiCartWebview(context: context)
-            // }, child: Text('test')),
             if (isWideScreen)
               MainNavigationRail(),
             Expanded(
