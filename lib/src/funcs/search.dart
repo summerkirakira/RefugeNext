@@ -1,6 +1,7 @@
 import 'package:refuge_next/src/repo/ship_alias.dart';
 import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
 
+import '../datasource/models/buyback.dart';
 import '../datasource/models/searchProperty.dart';
 import '../datasource/models/hangar.dart';
 
@@ -246,4 +247,80 @@ List<HangarItem> processSearch(List<HangarItem> items, SearchProperty? searchKey
   return filteredItems.where((item) {
     return slotSearch(item, slots);
   }).toList();
+}
+
+
+bool isContainSearchKeyBuyback(BuybackItem item, String? searchKey) {
+  if (searchKey == null) {
+    return true;
+  }
+  final key = searchKey.toLowerCase().trim();
+  if (key.isEmpty) {
+    return true;
+  }
+  if (item.title.toLowerCase().contains(key)) {
+    return true;
+  }
+  if (item.chinesName!.toLowerCase().contains(key)) {
+    return true;
+  }
+  if (item.alsoContains.toLowerCase().contains(key)) {
+    return true;
+  }
+  return false;
+}
+
+
+
+bool isSearchedTypeBuyback(BuybackItem item, List<String> searchType) {
+  if (searchType.isEmpty) {
+    return true;
+  }
+
+  for (var type in searchType) {
+    if (type == 'all') {
+      return true;
+    }
+    if (type == "upgrade" && item.isUpgrade) {
+      return true;
+    }
+    if (type == "ship") {
+      if (item.title.toLowerCase().contains("standalone ship")) {
+        return true;
+      }
+    }
+    if (type == "paint") {
+      if (item.title.toLowerCase().contains("skie") || item.title.toLowerCase().contains("saint")) {
+        return true;
+      }
+    }
+    if (type == "subscription") {
+      if (item.title.toLowerCase().contains("subscriber")) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+
+bool isKeepItemBuyback(BuybackItem item, SearchProperty searchKey) {
+  return isSearchedTypeBuyback(item, searchKey.searchType) &&
+      isContainSearchKeyBuyback(item, searchKey.searchText);
+}
+
+
+
+List<BuybackItem> processBuybackSearch(List<BuybackItem> items, SearchProperty? searchKey) {
+  if (searchKey == null) {
+    return items;
+  }
+
+  final filteredItems = items.where((item) {
+    return isKeepItemBuyback(item, searchKey);
+  }).toList();
+
+  return filteredItems;
 }

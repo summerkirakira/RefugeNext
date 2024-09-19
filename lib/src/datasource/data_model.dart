@@ -11,7 +11,7 @@ import '../funcs/hangar_utils.dart';
 import '../funcs/buyback_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/api_service.dart';
-import '../funcs/search.dart' show processSearch;
+import '../funcs/search.dart' show processBuybackSearch, processSearch;
 import './models/searchProperty.dart';
 import '../repo/buyback.dart';
 import '../repo/ship_upgrade.dart';
@@ -68,7 +68,7 @@ class MainDataModel extends ChangeNotifier {
 
   List<BuybackItem> _buybackItems = [];
 
-  List<BuybackItem> get buybackItems => _buybackItems;
+  List<BuybackItem> get buybackItems => processBuybackSearch(_buybackItems, searchProperty);
 
   List<UpgradeShipInfo> upgradeFromShip = [];
 

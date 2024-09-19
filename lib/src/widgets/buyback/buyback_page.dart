@@ -15,6 +15,46 @@ class _BuybackPageState extends State<BuybackPage> {
         child: Container(
           child: Column(
             children: [
+              if (Provider.of<MainDataModel>(context).isSearched)
+                SizedBox(
+                  height: 25,
+                  width: double.infinity,
+                  child: Container(
+                    width: double.infinity,
+                    color: Colors.red,
+                    child: Stack(
+                        children: [
+                          Center(
+                            child: Text(
+                              '回购筛选中',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                              right: 5,
+                              top: 3,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Provider.of<MainDataModel>(context, listen: false).clearSearch();
+                                },
+                                child: Text('取消',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              )
+                          ),
+                        ]
+                    ),
+                  ),
+                ),
               Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(0),
