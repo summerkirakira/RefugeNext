@@ -29,7 +29,7 @@ Widget getUpgradeFromWiget(ShipAlias? ship, bool isFromShip) {
     return Container();
   }
 
-  String title = isFromShip ? '起始舰船: ' : '目标舰船: ';
+  String title = isFromShip ? '从 ' : '到 ';
 
 
   return Row(

@@ -33,10 +33,19 @@ class PriceWidget extends StatelessWidget {
         Text('\$', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
         Text(
           priceString(price),
-          style: TextStyle(
+          style: const TextStyle(
               fontSize: 20
           ),
         ),
+        // SizedBox(width: 5),
+        // Text('\$', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+        // Text(
+        //   priceString(price),
+        //   style: TextStyle(
+        //       fontSize: 20,
+        //     color: Theme.of(context).primaryColor,
+        //   ),
+        // ),
       ],
     );
   }
@@ -49,9 +58,9 @@ class PriceWidget extends StatelessWidget {
           Text(
             '\$${priceString(currentPrice)}',
             style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).hintColor,
-              decoration: TextDecoration.lineThrough,
+              fontSize: 14,
+              color: Theme.of(context).primaryColor,
+              // decoration: TextDecoration.lineThrough,
             ),
           ),
           Text(
