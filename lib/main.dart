@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/widgets/utility/utility_page.dart';
 import 'package:refuge_next/src/widgets/webview/full_screen_webview.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'src/datasource/data_model.dart';
@@ -105,6 +106,8 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         return ShopPage();
       case 2:
+        return FeatureSelectionPage();
+      case 3:
         return UserInfoPage();
       default:
         return Text('Home Page');

@@ -17,7 +17,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
   @override
   void initState() {
     super.initState();
-    _controllers = List<AnimationController>.generate(3, (int index) {
+    _controllers = List<AnimationController>.generate(4, (int index) {
       return AnimationController(
         duration: const Duration(milliseconds: 300),
         vsync: this,
@@ -52,22 +52,29 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
         BottomNavigationBarItem(
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 2 ?
+              Icons.build_circle_rounded : Icons.build_circle_outlined),
+          label: '工具',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(
+              Provider.of<MainDataModel>(context).selectedPage == 3 ?
               Icons.account_circle_rounded : Icons.account_circle_outlined),
           label: '我的',
         ),
       ],
       currentIndex: context.watch<MainDataModel>().selectedPage,
       selectedItemColor: Theme.of(context).colorScheme.primary,
+      unselectedItemColor: Theme.of(context).colorScheme.onSurface,
       onTap: (int index) {
         context.read<MainDataModel>().updateSelectedPage(index);
 
-        for (var i = 0; i < _controllers.length; i++) {
-          if (i == index) {
-            _controllers[i].forward();
-          } else {
-            _controllers[i].reverse();
-          }
-        }
+        // for (var i = 0; i < _controllers.length; i++) {
+        //   if (i == index) {
+        //     _controllers[i].forward();
+        //   } else {
+        //     _controllers[i].reverse();
+        //   }
+        // }
 
 
       },

@@ -60,7 +60,7 @@ class _HangarPageState extends State<HangarPage> {
     return  Column(
       children: [
         HangarTopBar(),
-        HangarBuybackPage(children: [
+        HangarBuybackPage(titles: getTitles(), children: [
           Container(
             child: RefreshIndicator(
                 onRefresh: () async {
@@ -77,7 +77,7 @@ class _HangarPageState extends State<HangarPage> {
                           color: Colors.red,
                           child: Stack(
                               children: [
-                                Center(
+                                const Center(
                                   child: Text(
                                     '机库筛选中',
                                     style: TextStyle(
@@ -94,7 +94,7 @@ class _HangarPageState extends State<HangarPage> {
                                       onTap: () {
                                         Provider.of<MainDataModel>(context, listen: false).clearSearch();
                                       },
-                                      child: Text('取消',
+                                      child: const Text('取消',
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
@@ -128,7 +128,7 @@ class _HangarPageState extends State<HangarPage> {
           BuybackPage(),
           if (!(Provider.of<MainDataModel>(context).currentUser!.email == '934869815@qq.com'))
           ProductUpgradeWidget(),
-        ], titles: getTitles()),
+        ]),
       ],
     );
   }
