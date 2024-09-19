@@ -11,6 +11,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../widgets/general/screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../funcs/images.dart';
+import 'ccu_optimizor/hangar_util.dart';
 
 
 String priceString(int price) {
@@ -191,6 +192,7 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
             ))
           ],
         ),
+        const VerticalDivider(),
         Column(
           children: [
             Text('${priceString(currentPrice)}', style: TextStyle(
@@ -205,6 +207,7 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
             ))
           ],
         ),
+        const VerticalDivider(),
         Column(
           children: [
             Text('${priceString(currentPrice - price)}', style: TextStyle(
@@ -347,21 +350,42 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
           ],
         ),
         Spacer(),
-        Column(
-          children: [
-            GestureDetector(
-              onTap: () {
-                onShare();
-              },
-              child: const Column(
-                  children: [
-                    Icon(Icons.arrow_upward_rounded),
-                    Text('升级')
-                  ]
+        if(hangarItem.isUpgrade)
+          Column(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final upgradePage = await getChooseTargetBottomSheet(context, hangarItem);
+                  if (upgradePage == null) {
+                    return;
+                  }
+                  WoltModalSheet.of(context).addPage(upgradePage);
+                  WoltModalSheet.of(context).showAtIndex(4);
+                },
+                child: const Column(
+                    children: [
+                      Icon(Icons.keyboard_double_arrow_up_outlined),
+                      Text('升级')
+                    ]
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        if(!hangarItem.isUpgrade)
+          Column(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                },
+                child: const Column(
+                    children: [
+                      Icon(Icons.keyboard_double_arrow_up_outlined, color: Colors.grey),
+                      Text('升级', style: TextStyle(color: Colors.grey))
+                    ]
+                ),
+              ),
+            ],
+          ),
         Spacer(),
         // Column(
         //   children: [

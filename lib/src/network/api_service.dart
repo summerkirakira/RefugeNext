@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../datasource/models/hangar/upgrade_target_property.dart';
 import 'utils.dart';
 import '../datasource/models/login/login_property.dart';
 import 'dart:io';
@@ -222,6 +223,28 @@ class RsiApiClient {
 
   Future<void> setContextToken() async {
     final response = await basicPost(endpoint: 'api/ship-upgrades/setContextToken', data: {});
+  }
+
+  Future<UpgradeTargetResponse> getUpgradeTarget(int pledge_id) async {
+    final response = await basicPost(endpoint: 'api/account/chooseUpgradeTarget', data: {
+      "upgrade_id": pledge_id.toString(),
+    });
+    if (response.data['success'] == 1) {
+      return UpgradeTargetResponse.fromJson(response.data);
+    }
+    throw Exception("无法获取升级目标: ${response.data['code']}");
+  }
+
+  Future<void> applyUpgrade(int pledge_id, int upgrade_id, String currentPassword) async {
+    final response = await basicPost(endpoint: 'api/account/applyUpgrade', data: {
+      "upgrade_id": upgrade_id.toString(),
+      "pledge_id": pledge_id.toString(),
+      "current_password": currentPassword,
+    });
+    if (response.data['success'] == 1) {
+      return;
+    }
+    throw Exception("无法应用升级: ${response.data['code']}");
   }
   
 }

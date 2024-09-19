@@ -12,7 +12,7 @@ import '../../datasource/data_model.dart';
 
 WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, BuildContext mainContext, HangarItem hangarItem) {
 
-  String inputString = "";
+  String inputString = "1";
 
   return WoltModalSheetPage(
     navBarHeight: 60,
@@ -125,7 +125,8 @@ WoltModalSheetPage getReclaimPage(BuildContext modalSheetContext, BuildContext m
               color: Colors.grey
           )),
           const SizedBox(height: 20),
-          TextField(
+          TextFormField(
+            initialValue: inputString,
             onChanged: (value) {
               inputString = value;
             },

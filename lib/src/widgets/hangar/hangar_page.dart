@@ -35,9 +35,6 @@ class _HangarPageState extends State<HangarPage> {
       pageListBuilder: (modalSheetContext) {
         return [
           getHangarItemDetailSheet(modalSheetContext, hangarItem),
-          // singleSelectionPage(["anv", "sdasd", "asdasd"], (index) {
-          //   print(index);
-          // }),
           getReclaimPage(modalSheetContext, context,  hangarItem),
           getGiftPage(modalSheetContext, context,  hangarItem),
           getRecallPage(modalSheetContext, context, hangarItem)

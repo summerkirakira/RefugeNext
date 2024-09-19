@@ -305,6 +305,15 @@ class MainDataModel extends ChangeNotifier {
     });
   }
 
+  HangarItem? getHangarItemById(int id) {
+    for (var item in _hangarItems) {
+      if (item.id == id || item.idList.contains(id)) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   void readBuybackItems() {
     buybackRepo.readBuybackItems().then((value) {
       final stackedItems = stackBuybackItems(value);
