@@ -50,8 +50,7 @@ Widget getQuantityWidget(BuildContext context, LineItem item) {
 }
 
 Widget getUpgradeCartWidget(BuildContext context, LineItem item) {
-  return Card(
-    elevation: 0,
+  return Container(
     child: Stack(children: [
       Container(
           // height: 150,
@@ -116,7 +115,7 @@ Widget getUpgradeCartWidget(BuildContext context, LineItem item) {
                 await removeCartItem(item);
                 await refreshPage(context);
               },
-              icon: const Icon(Icons.close_rounded, color: Colors.black)))
+              icon: Icon(Icons.close_rounded, color: Theme.of(context).colorScheme.inverseSurface)))
     ]),
   );
 }
@@ -128,11 +127,9 @@ Widget getCatalogCartWidget(BuildContext context, LineItem item) {
       urlString = "https://www.robertsspaceindustries.com$urlString";
     }
   }
-  return Card(
-      elevation: 0,
+  return Container(
       child: Stack(children: [
         Container(
-            // height: 150,
             child: Column(children: [
           Container(
             height: 80,
@@ -182,7 +179,7 @@ Widget getCatalogCartWidget(BuildContext context, LineItem item) {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text("\$${item.unitPriceWithTax.amount / 100}",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.right),
               )
             ],
@@ -196,7 +193,7 @@ Widget getCatalogCartWidget(BuildContext context, LineItem item) {
                   await removeCartItem(item);
                   await refreshPage(context);
                 },
-                icon: Icon(Icons.close_rounded, color: Colors.black)))
+                icon: Icon(Icons.close_rounded, color: Theme.of(context).colorScheme.inverseSurface)))
       ]));
 }
 

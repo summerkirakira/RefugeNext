@@ -246,5 +246,10 @@ class RsiApiClient {
     }
     throw Exception("无法应用升级: ${response.data['code']}");
   }
+
+  Future<String> getPlayerInfoPage(String handle) async {
+    final response = await basicGet(endpoint: "citizens/$handle");
+    return response.data;
+  }
   
 }

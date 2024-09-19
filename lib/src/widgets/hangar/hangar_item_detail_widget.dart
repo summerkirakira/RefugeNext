@@ -597,23 +597,6 @@ WoltModalSheetPage getHangarItemDetailSheet(BuildContext modalSheetContext, Hang
 
   final detailPage = WoltModalSheetPage(
     navBarHeight: 1,
-    // topBarTitle: const Text('机库详情', style: TextStyle(
-    //   fontSize: 20,
-    //   fontWeight: FontWeight.bold
-    // )),
-    // isTopBarLayerAlwaysVisible: true,
-    // trailingNavBarWidget: Container(
-    //   height: 38,
-    //   decoration: BoxDecoration(
-    //     color: Colors.grey.withOpacity(0.2), // 设置背景颜色
-    //     shape: BoxShape.circle, // 设置形状为圆形
-    //   ),
-    //   child: IconButton(
-    //     padding: const EdgeInsets.all(5),
-    //     icon: const Icon(Icons.close, size: 22),
-    //     onPressed: Navigator.of(modalSheetContext).pop,
-    //   ),
-    // ),
 
     child: getMainPage(screenshotController, modalSheetContext, hangarItem),
     stickyActionBar: getActionIconList(

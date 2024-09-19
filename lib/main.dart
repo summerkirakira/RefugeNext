@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/widgets/utility/utility_page.dart';
-import 'package:refuge_next/src/widgets/webview/full_screen_webview.dart';
-import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'src/datasource/data_model.dart';
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
 import 'src/widgets/navigation/main_navigation_rail.dart';
 import 'src/funcs/initial.dart';
@@ -92,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
         bottomNavigationBar: isWideScreen ? null : MainNavigationBar(),
       );
     } else {
-      return Scaffold(
+      return const Scaffold(
         body: EmptyPage(),
       );
     }

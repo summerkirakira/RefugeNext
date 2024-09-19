@@ -34,10 +34,10 @@ class _TopBarState extends State<TopBar> {
                   children: [
                     Text(
                         Provider.of<MainDataModel>(context).currentUser!.handle,
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 24, fontWeight: FontWeight.bold)),
                     Text(Provider.of<MainDataModel>(context).currentUser!.name,
-                        style: TextStyle(fontSize: 18)),
+                        style: const TextStyle(fontSize: 18)),
 
                     GestureDetector(
                       onTap: () {
@@ -74,33 +74,13 @@ class _TopBarState extends State<TopBar> {
                             Provider.of<MainDataModel>(context)
                                 .currentUser!
                                 .profileImage),
-                        margin: EdgeInsets.only(),
+                        margin: const EdgeInsets.only(),
                         decoration: BoxDecoration(
                           shape: BoxShape.rectangle,
                           borderRadius: BorderRadius.circular(10),
                         )),
-                    // Positioned(
-                    //   left: 0,
-                    //   bottom: 0,
-                    //   child: Container(
-                    //     // padding: EdgeInsets.all(5),
-                    //     width: 30,
-                    //     height: 30,
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.grey.withOpacity(0.5),
-                    //       borderRadius: BorderRadius.circular(5),
-                    //     ),
-                    //     child: IconButton(
-                    //       onPressed: () {
-                    //       },
-                    //       icon: Icon(Icons.edit, size: 15,),
-                    //       color: Colors.white,
-                    //     ),
-                    //   ),
-                    // )
                   ]
                 )
-
               ],
             ),
           )
@@ -156,9 +136,9 @@ class _UserSimpleInfoState extends State<UserSimpleInfo> {
                           _formatPrice(Provider.of<MainDataModel>(context)
                               .currentUser!
                               .totalSpent),
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Text('消费额',
                           style: TextStyle(
                               fontSize: 15,
@@ -174,9 +154,9 @@ class _UserSimpleInfoState extends State<UserSimpleInfo> {
                           _formatPrice(Provider.of<MainDataModel>(context)
                               .currentUser!
                               .hangarValue),
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Text('机库价值',
                           style: TextStyle(
                               fontSize: 15,
@@ -277,8 +257,8 @@ class _OrganizationInfoState extends State<OrganizationInfo> {
                         .currentUser!
                         .organizationName!,
                     style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 5),
+                        const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 5),
                 Row(
                   children: List.generate(
                     5,
@@ -391,23 +371,6 @@ class SettingsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-    //     ListTile(
-    // contentPadding: EdgeInsets.all(0),
-    //       title: Padding(
-    //         padding: const EdgeInsets.only(left: 30, top: 0),
-    //         child: Row(
-    //           children: [
-    //             Icon(Icons.logout_outlined, color: Theme.of(context).iconTheme.color,),
-    //             SizedBox(width: 10),
-    //             Text('退出当前账号',
-    //                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-    //           ],
-    //         ),
-    //       ),
-    //       onTap: () {
-    //         // Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage()));
-    //       },
-    //     ),
         ListTile(
           contentPadding: EdgeInsets.all(0),
           title: Padding(
