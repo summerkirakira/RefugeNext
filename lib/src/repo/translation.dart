@@ -53,7 +53,7 @@ class TranslationRepo {
 
   Future<int> getTranslationVersion() async {
     final prefs = await SharedPreferences.getInstance();
-    return 0;
+    return prefs.getInt('vip.kirakira.translation.version') ?? 0;
   }
 
   Future<Map<String, String>> getTranslations() async {
