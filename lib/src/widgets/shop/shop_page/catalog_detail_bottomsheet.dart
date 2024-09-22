@@ -37,8 +37,8 @@ WoltModalSheetPage getCatalogItemDetailSheet(BuildContext modelSheetContext, Cat
               children: [
                 Text(catalogProperty.title, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                 SizedBox(height: 10,),
-                if (catalogProperty.excerpt != null)
-                  Text(catalogProperty.excerpt!, style: TextStyle(fontSize: 16)),
+                if (catalogProperty.chineseExcerpt != null)
+                  Text(catalogProperty.chineseExcerpt!, style: TextStyle(fontSize: 16)),
                 // Text('Price: \$${catalogProperty.nativePrice.amount / 100}', style: TextStyle(fontSize: 16)),
               ],
             ),

@@ -67,6 +67,7 @@ Future<void> showUpdateDialog(BuildContext context, RefugeVersionProperty proper
     cancelBtnText: "取消",
     onConfirmBtnTap: () {
       onConfirmClicked(property);
+      Navigator.of(context).pop();
     }
   );
 

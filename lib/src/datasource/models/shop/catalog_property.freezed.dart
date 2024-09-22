@@ -32,6 +32,8 @@ mixin _$CatalogProperty {
   set url(String value) => throw _privateConstructorUsedError;
   String? get excerpt => throw _privateConstructorUsedError;
   set excerpt(String? value) => throw _privateConstructorUsedError;
+  String? get chineseExcerpt => throw _privateConstructorUsedError;
+  set chineseExcerpt(String? value) => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError;
   set type(String value) => throw _privateConstructorUsedError;
   Media get media => throw _privateConstructorUsedError;
@@ -68,6 +70,7 @@ abstract class $CatalogPropertyCopyWith<$Res> {
       String subtitle,
       String url,
       String? excerpt,
+      String? chineseExcerpt,
       String type,
       Media media,
       Price price,
@@ -102,6 +105,7 @@ class _$CatalogPropertyCopyWithImpl<$Res, $Val extends CatalogProperty>
     Object? subtitle = null,
     Object? url = null,
     Object? excerpt = freezed,
+    Object? chineseExcerpt = freezed,
     Object? type = null,
     Object? media = null,
     Object? price = null,
@@ -135,6 +139,10 @@ class _$CatalogPropertyCopyWithImpl<$Res, $Val extends CatalogProperty>
       excerpt: freezed == excerpt
           ? _value.excerpt
           : excerpt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      chineseExcerpt: freezed == chineseExcerpt
+          ? _value.chineseExcerpt
+          : chineseExcerpt // ignore: cast_nullable_to_non_nullable
               as String?,
       type: null == type
           ? _value.type
@@ -219,6 +227,7 @@ abstract class _$$CatalogPropertyImplCopyWith<$Res>
       String subtitle,
       String url,
       String? excerpt,
+      String? chineseExcerpt,
       String type,
       Media media,
       Price price,
@@ -255,6 +264,7 @@ class __$$CatalogPropertyImplCopyWithImpl<$Res>
     Object? subtitle = null,
     Object? url = null,
     Object? excerpt = freezed,
+    Object? chineseExcerpt = freezed,
     Object? type = null,
     Object? media = null,
     Object? price = null,
@@ -288,6 +298,10 @@ class __$$CatalogPropertyImplCopyWithImpl<$Res>
       excerpt: freezed == excerpt
           ? _value.excerpt
           : excerpt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      chineseExcerpt: freezed == chineseExcerpt
+          ? _value.chineseExcerpt
+          : chineseExcerpt // ignore: cast_nullable_to_non_nullable
               as String?,
       type: null == type
           ? _value.type
@@ -335,6 +349,7 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
       required this.subtitle,
       required this.url,
       this.excerpt,
+      this.chineseExcerpt,
       required this.type,
       required this.media,
       required this.price,
@@ -360,6 +375,8 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
   @override
   String? excerpt;
   @override
+  String? chineseExcerpt;
+  @override
   String type;
   @override
   Media media;
@@ -378,7 +395,7 @@ class _$CatalogPropertyImpl implements _CatalogProperty {
 
   @override
   String toString() {
-    return 'CatalogProperty(id: $id, name: $name, title: $title, subtitle: $subtitle, url: $url, excerpt: $excerpt, type: $type, media: $media, price: $price, stock: $stock, nativePrice: $nativePrice, isWarbond: $isWarbond, isPackage: $isPackage, isVip: $isVip)';
+    return 'CatalogProperty(id: $id, name: $name, title: $title, subtitle: $subtitle, url: $url, excerpt: $excerpt, chineseExcerpt: $chineseExcerpt, type: $type, media: $media, price: $price, stock: $stock, nativePrice: $nativePrice, isWarbond: $isWarbond, isPackage: $isPackage, isVip: $isVip)';
   }
 
   @JsonKey(ignore: true)
@@ -404,6 +421,7 @@ abstract class _CatalogProperty implements CatalogProperty {
       required String subtitle,
       required String url,
       String? excerpt,
+      String? chineseExcerpt,
       required String type,
       required Media media,
       required Price price,
@@ -434,6 +452,9 @@ abstract class _CatalogProperty implements CatalogProperty {
   @override
   String? get excerpt;
   set excerpt(String? value);
+  @override
+  String? get chineseExcerpt;
+  set chineseExcerpt(String? value);
   @override
   String get type;
   set type(String value);

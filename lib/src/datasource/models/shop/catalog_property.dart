@@ -12,6 +12,7 @@ class CatalogProperty with _$CatalogProperty {
     required String subtitle,
     required String url,
     String? excerpt,
+    String? chineseExcerpt,
     required String type,
     required Media media,
     required Price price,

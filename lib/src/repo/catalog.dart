@@ -51,6 +51,10 @@ class CatalogRepo {
   List<CatalogProperty> translateCatalog(List<CatalogProperty> catalog) {
     return catalog.map((e) {
       e.title = translationRepo.getTranslationSync(e.title);
+      if (e.excerpt != null) {
+        e.chineseExcerpt = translationRepo.getTranslationSync(e.excerpt!);
+        final a = 1;
+      }
       return e;
     }).toList();
   }

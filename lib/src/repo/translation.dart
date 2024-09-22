@@ -53,7 +53,7 @@ class TranslationRepo {
 
   Future<int> getTranslationVersion() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('vip.kirakira.translation.version') ?? 0;
+    return 0;
   }
 
   Future<Map<String, String>> getTranslations() async {
@@ -65,7 +65,7 @@ class TranslationRepo {
   }
 
   Future<String> getTranslation(String key) async {
-    final finalKey = key.replaceAll("\n", "").trim();
+    final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
     if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
       if (!_notTranslated.contains(key) && key.isNotEmpty) {
         _notTranslated.add(key);
@@ -78,7 +78,7 @@ class TranslationRepo {
 
   String getTranslationSync(String key) {
 
-    final finalKey = key.replaceAll("\n", "").trim();
+    final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
     final keyList = finalKey.split(" - ");
     List<String> translationList = [];
     for (var key in keyList) {
