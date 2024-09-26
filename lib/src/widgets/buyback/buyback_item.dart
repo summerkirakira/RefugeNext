@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import '../../datasource/data_model.dart';
 import '../../datasource/models/buyback.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,6 +8,9 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 
 import 'package:intl/intl.dart';
+
+import '../../funcs/shop/buyback.dart';
+import '../shop/cart/cart.dart';
 
 String formatTimestamp(int timestamp, {String format = 'yyyy年MM月dd日'}) {
   // 创建 DateTime 对象
@@ -28,51 +32,89 @@ class BuybackItemImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        width: 100,
-        height: 100,
-        child: Stack(
-          children: [
-            CachedNetworkImage(
-                imageUrl: buybackItem.image,
-                placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 60),
-                errorWidget: (context, url, error) => Icon(Icons.error),
-                imageBuilder: (context, imageProvider) => Container(
-                  decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(5),
-                        bottomLeft: Radius.circular(5),
-                      )
-                  ),
-                )
+    return GestureDetector(
+      onTap: () {
+        final dialog = AlertDialog(
+          title: Text('回购确认'),
+          content: Text('确认回购 ${buybackItem.chinesName} 吗？'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+              },
+              child: const Text('关闭'),
             ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  if (buybackItem.isUpgrade) {
+                    await addUpgradeBuybackItemToCart(buybackItem);
+                  } else {
+                    await addBuybackPledgeToCart(buybackItem);
+                  }
 
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(5),
+                } catch (e) {
+                  showAlert(message: "回购失败: $e");
+                  Navigator.of(context).pop();
+                  return;
+                }
+                Navigator.of(context).pop();
+                showToast(message: '成功添加回购到购物车');
+                showCartBottomSheet(context);
+
+              },
+              child: const Text('确认'),
+            ),
+          ],
+        );
+        showDialog(context: context, builder: (context) => dialog);
+      },
+      child: Container(
+          width: 100,
+          height: 100,
+          child: Stack(
+            children: [
+              CachedNetworkImage(
+                  imageUrl: buybackItem.image,
+                  placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 60),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  imageBuilder: (context, imageProvider) => Container(
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(5),
+                          bottomLeft: Radius.circular(5),
+                        )
+                    ),
+                  )
+              ),
+
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(5),
+                    ),
                   ),
-                ),
-                child: Text(
-                  "x${buybackItem.number}",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
+                  child: Text(
+                    "x${buybackItem.number}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        )
+            ],
+          )
+      ),
     );
   }
 }

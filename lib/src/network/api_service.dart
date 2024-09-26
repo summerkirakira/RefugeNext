@@ -225,6 +225,24 @@ class RsiApiClient {
     final response = await basicPost(endpoint: 'api/ship-upgrades/setContextToken', data: {});
   }
 
+  Future<void> setBuybackTokenAuth({
+    required int fromShipId,
+    required int pledgeId,
+    required int toShipId,
+    required int toSkuId,
+  }) async {
+    final response = await basicPost(endpoint: 'api/ship-upgrades/setContextToken', data: {
+      "fromShipId": fromShipId,
+      "pledgeId": pledgeId,
+      "toShipId": toShipId,
+      "toSkuId": toSkuId,
+    });
+    if (response.data['success'] != 1) {
+      throw Exception("${response.data['code']}");
+    }
+}
+
+
   Future<UpgradeTargetResponse> getUpgradeTarget(int pledge_id) async {
     final response = await basicPost(endpoint: 'api/account/chooseUpgradeTarget', data: {
       "upgrade_id": pledge_id.toString(),
@@ -251,5 +269,28 @@ class RsiApiClient {
     final response = await basicGet(endpoint: "citizens/$handle");
     return response.data;
   }
-  
+
+  Future<void> setBuybackToken({
+    required int? fromShipId,
+    required int? pledgeId,
+    required int? toShipId,
+    required int? toSkuId,
+  }) async {
+    return await setBuybackTokenAuth(
+      fromShipId: fromShipId!,
+      pledgeId: pledgeId!,
+      toShipId: toShipId!,
+      toSkuId: toSkuId!,
+    );
+  }
+
+  Future<void> addBuybackPledge({required int pledgeId}) async {
+    final response = await basicPost(endpoint: 'api/store/buyBackPledge', data: {
+      "id": pledgeId,
+    });
+    if (response.data['success'] == 1) {
+      return;
+    }
+    throw Exception("${response.data['msg']} (${response.data['code']})");
+  }
 }

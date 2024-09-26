@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ Widget getUpgradeCartWidget(BuildContext context, LineItem item) {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    item.sku.subtitle,
+                      TranslationRepo().getTranslationSync(item.sku.subtitle),
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ])),
@@ -160,12 +161,12 @@ Widget getCatalogCartWidget(BuildContext context, LineItem item) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text(
-                      item.sku.title,
+                      TranslationRepo().getTranslationSync(item.sku.title),
                       style:
                           TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      item.sku.subtitle,
+                        TranslationRepo().getTranslationSync(item.sku.subtitle),
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ])),
