@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../datasource/data_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FullScreenWebView extends StatefulWidget {
   final String url;
@@ -54,6 +55,13 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
             });
           },
           onNavigationRequest: (NavigationRequest request) {
+
+            if (request.url.startsWith("https://hooks.stripe.com/redirect/authenticate")) {
+              final alipayUrl = Uri.parse(request.url);
+              launchUrl(alipayUrl, mode: LaunchMode.inAppBrowserView);
+              return NavigationDecision.prevent;
+            }
+
             _loadUrlWithHeaders(request.url);
             return NavigationDecision.prevent;
           },
