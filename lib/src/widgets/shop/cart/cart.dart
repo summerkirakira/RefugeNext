@@ -19,7 +19,7 @@ import 'package:refuge_next/src/funcs/validation.dart';
 Future<void> refreshPage(BuildContext context) async {
   final step1query = await Step1Query().execute();
   final creditQuery = await CreditQuery().execute();
-  final newPage = getCartBottomSheet(context, step1query, creditQuery);
+  final newPage = getCartBottomSheet(context, step1query, creditQuery, false);
   WoltModalSheet.of(context).replaceCurrentPage(newPage);
 }
 
@@ -307,19 +307,19 @@ Widget getEmptyCartWidget(BuildContext context) {
   );
 }
 
-Future<void> showCartBottomSheet(BuildContext context) async {
+Future<void> showCartBottomSheet(BuildContext context, {bool isBuyback = false}) async {
   final step1query = await Step1Query().execute();
   final creditQuery = await CreditQuery().execute();
 
   WoltModalSheet.show<void>(
       context: context,
       pageListBuilder: (modalSheetContext) {
-        return [getCartBottomSheet(modalSheetContext, step1query, creditQuery)];
+        return [getCartBottomSheet(modalSheetContext, step1query, creditQuery, isBuyback)];
       });
 }
 
 WoltModalSheetPage getCartBottomSheet(BuildContext context,
-    StoreData step1query, CreditQueryProperty creditQuery) {
+    StoreData step1query, CreditQueryProperty creditQuery, bool isBuyback) {
   setStep("CartLines");
   return WoltModalSheetPage(
     navBarHeight: 50,
@@ -392,10 +392,17 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
                 return;
               }
 
+              if (isBuyback) {
+                openRsiCartWebview(context: context, replace: true);
+                return;
+              }
+
               await communicator.onButtonPressed();
 
               // final steps = await getStepperQuery();
               // final finalStep = steps.store.cart.flow.steps.last;
+
+
 
               await gotoNextStep();
               await assignFirstAddress();

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import '../../datasource/data_model.dart';
 import '../../datasource/models/buyback.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -116,7 +119,15 @@ class BuybackItemWidget extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
                 showToast(message: '成功添加回购到购物车');
-                showCartBottomSheet(context);
+                // showCartBottomSheet(context);
+                if(!Platform.isIOS) {
+                  openRsiCartWebview(context: context, replace: false);
+                  return;
+                } else {
+                  showCartBottomSheet(context);
+                  return;
+                }
+
 
               },
               child: const Text('确认'),
