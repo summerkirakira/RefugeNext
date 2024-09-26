@@ -323,13 +323,27 @@ WoltModalSheetPage getCartBottomSheet(BuildContext context,
   setStep("CartLines");
   return WoltModalSheetPage(
     navBarHeight: 50,
-    pageTitle: const Padding(
+    pageTitle: Padding(
         padding: EdgeInsets.only(left: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('购物车',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                Text('购物车',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                Spacer(),
+                IconButton(icon: Icon(Icons.delete_forever_outlined, size: 24,), onPressed: () async {
+                    try {
+                      await clearCart();
+                      await refreshPage(context);
+                    } catch (e) {
+                      showToast(message: "清空购物车失败: $e");
+                    }
+                },),
+                SizedBox(width: 5),
+              ],
+            )
           ],
         )),
     trailingNavBarWidget: Container(
