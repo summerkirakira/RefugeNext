@@ -160,8 +160,7 @@ _$StockImpl _$$StockImplFromJson(Map<String, dynamic> json) => _$StockImpl(
       show: json['show'] as bool,
       available: json['available'] as bool,
       backOrder: json['backOrder'] as bool,
-      qty: (json['qty'] as num).toInt(),
-      backOrderQty: (json['backOrderQty'] as num).toInt(),
+      qty: (json['qty'] as num?)?.toInt(),
       level: json['level'] as String,
     );
 
@@ -172,7 +171,6 @@ Map<String, dynamic> _$$StockImplToJson(_$StockImpl instance) =>
       'available': instance.available,
       'backOrder': instance.backOrder,
       'qty': instance.qty,
-      'backOrderQty': instance.backOrderQty,
       'level': instance.level,
     };
 

@@ -1989,8 +1989,7 @@ mixin _$Stock {
   bool get show => throw _privateConstructorUsedError;
   bool get available => throw _privateConstructorUsedError;
   bool get backOrder => throw _privateConstructorUsedError;
-  int get qty => throw _privateConstructorUsedError;
-  int get backOrderQty => throw _privateConstructorUsedError;
+  int? get qty => throw _privateConstructorUsedError;
   String get level => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -2008,8 +2007,7 @@ abstract class $StockCopyWith<$Res> {
       bool show,
       bool available,
       bool backOrder,
-      int qty,
-      int backOrderQty,
+      int? qty,
       String level});
 }
 
@@ -2030,8 +2028,7 @@ class _$StockCopyWithImpl<$Res, $Val extends Stock>
     Object? show = null,
     Object? available = null,
     Object? backOrder = null,
-    Object? qty = null,
-    Object? backOrderQty = null,
+    Object? qty = freezed,
     Object? level = null,
   }) {
     return _then(_value.copyWith(
@@ -2051,14 +2048,10 @@ class _$StockCopyWithImpl<$Res, $Val extends Stock>
           ? _value.backOrder
           : backOrder // ignore: cast_nullable_to_non_nullable
               as bool,
-      qty: null == qty
+      qty: freezed == qty
           ? _value.qty
           : qty // ignore: cast_nullable_to_non_nullable
-              as int,
-      backOrderQty: null == backOrderQty
-          ? _value.backOrderQty
-          : backOrderQty // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       level: null == level
           ? _value.level
           : level // ignore: cast_nullable_to_non_nullable
@@ -2079,8 +2072,7 @@ abstract class _$$StockImplCopyWith<$Res> implements $StockCopyWith<$Res> {
       bool show,
       bool available,
       bool backOrder,
-      int qty,
-      int backOrderQty,
+      int? qty,
       String level});
 }
 
@@ -2099,8 +2091,7 @@ class __$$StockImplCopyWithImpl<$Res>
     Object? show = null,
     Object? available = null,
     Object? backOrder = null,
-    Object? qty = null,
-    Object? backOrderQty = null,
+    Object? qty = freezed,
     Object? level = null,
   }) {
     return _then(_$StockImpl(
@@ -2120,14 +2111,10 @@ class __$$StockImplCopyWithImpl<$Res>
           ? _value.backOrder
           : backOrder // ignore: cast_nullable_to_non_nullable
               as bool,
-      qty: null == qty
+      qty: freezed == qty
           ? _value.qty
           : qty // ignore: cast_nullable_to_non_nullable
-              as int,
-      backOrderQty: null == backOrderQty
-          ? _value.backOrderQty
-          : backOrderQty // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       level: null == level
           ? _value.level
           : level // ignore: cast_nullable_to_non_nullable
@@ -2145,7 +2132,6 @@ class _$StockImpl implements _Stock {
       required this.available,
       required this.backOrder,
       required this.qty,
-      required this.backOrderQty,
       required this.level});
 
   factory _$StockImpl.fromJson(Map<String, dynamic> json) =>
@@ -2160,15 +2146,13 @@ class _$StockImpl implements _Stock {
   @override
   final bool backOrder;
   @override
-  final int qty;
-  @override
-  final int backOrderQty;
+  final int? qty;
   @override
   final String level;
 
   @override
   String toString() {
-    return 'Stock(unlimited: $unlimited, show: $show, available: $available, backOrder: $backOrder, qty: $qty, backOrderQty: $backOrderQty, level: $level)';
+    return 'Stock(unlimited: $unlimited, show: $show, available: $available, backOrder: $backOrder, qty: $qty, level: $level)';
   }
 
   @override
@@ -2184,15 +2168,13 @@ class _$StockImpl implements _Stock {
             (identical(other.backOrder, backOrder) ||
                 other.backOrder == backOrder) &&
             (identical(other.qty, qty) || other.qty == qty) &&
-            (identical(other.backOrderQty, backOrderQty) ||
-                other.backOrderQty == backOrderQty) &&
             (identical(other.level, level) || other.level == level));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, unlimited, show, available,
-      backOrder, qty, backOrderQty, level);
+  int get hashCode => Object.hash(
+      runtimeType, unlimited, show, available, backOrder, qty, level);
 
   @JsonKey(ignore: true)
   @override
@@ -2214,8 +2196,7 @@ abstract class _Stock implements Stock {
       required final bool show,
       required final bool available,
       required final bool backOrder,
-      required final int qty,
-      required final int backOrderQty,
+      required final int? qty,
       required final String level}) = _$StockImpl;
 
   factory _Stock.fromJson(Map<String, dynamic> json) = _$StockImpl.fromJson;
@@ -2229,9 +2210,7 @@ abstract class _Stock implements Stock {
   @override
   bool get backOrder;
   @override
-  int get qty;
-  @override
-  int get backOrderQty;
+  int? get qty;
   @override
   String get level;
   @override

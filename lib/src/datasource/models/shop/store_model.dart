@@ -119,8 +119,7 @@ class Stock with _$Stock {
     required bool show,
     required bool available,
     required bool backOrder,
-    required int qty,
-    required int backOrderQty,
+    required int? qty,
     required String level,
   }) = _Stock;
 
