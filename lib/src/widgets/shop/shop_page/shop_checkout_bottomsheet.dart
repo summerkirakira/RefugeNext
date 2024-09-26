@@ -101,7 +101,12 @@ WoltModalSheetPage getCatalogCheckoutBottomSheet(BuildContext context, CatalogPr
               return;
             }
 
-            await addCatalogToCart(catalogProperty, number);
+            try {
+              await addCatalogToCart(catalogProperty, number);
+            } catch (e) {
+              showToast(message: "购买失败: $e");
+              return;
+            }
 
             Navigator.of(context).pop();
 

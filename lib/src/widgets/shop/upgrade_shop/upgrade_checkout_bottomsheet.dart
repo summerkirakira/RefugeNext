@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/network/graphql/shop/upgrade_add_to_cart.dart';
@@ -68,7 +69,12 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
           ),
           onPressed: () async {
             String token = await UpgradeAddToCart(skuId: toSku.id!, fromShipId: fromShip.id!).execute();
-            await ApplyUpgradeToken(upgradeToken: token).execute();
+            try {
+              await ApplyUpgradeToken(upgradeToken: token).execute();
+            } catch (e) {
+              showToast(message: "购买失败: $e");
+              return;
+            }
 
             Navigator.of(context).pop();
 
