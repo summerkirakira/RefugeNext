@@ -1,4 +1,5 @@
 import 'package:refuge_next/src/datasource/models/cirno/property.dart';
+import 'package:refuge_next/src/repo/hangar_log.dart';
 
 import '../network/api_service.dart';
 import '../repo/user.dart';
@@ -109,6 +110,10 @@ Future<void> startup() async {
     await setCurrency();
 
     await setVip();
+
+
+    // final repo = HangarLogRepo();
+    // await repo.refreshHangarLogs();
 
 
   } catch (e) {

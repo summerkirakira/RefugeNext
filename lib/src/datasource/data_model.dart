@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/buyback.dart';
 import 'package:refuge_next/src/datasource/models/upgradeInfo.dart';
 import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
+import '../repo/hangar_log.dart';
 import './models/hangar.dart';
 import './models/user.dart';
 import '../repo/hangar.dart';
@@ -30,6 +31,8 @@ import 'package:refuge_next/src/funcs/cirno_auth.dart' show CirnoAuth;
 import 'package:refuge_next/src/datasource/models/cirno/property.dart' show RefugeVersionProperty;
 import 'package:refuge_next/src/funcs/theme.dart' show ThemeManager, FlexSchemeHelper;
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+
+import 'models/hangar/hangar_log.dart';
 
 
 enum HangarItemType {
@@ -73,6 +76,17 @@ class MainDataModel extends ChangeNotifier {
   List<UpgradeShipInfo> upgradeFromShip = [];
 
   List<UpgradeShipInfo> upgradeToShip = [];
+
+  List<HangarLog> _hangarLogs = [];
+
+  List<HangarLog> get hangarLogs => _hangarLogs;
+
+  List<HangarLog> getHangarLogByTargetId(int? targetId) {
+    if (targetId == null) {
+      return _hangarLogs;
+    }
+    return _hangarLogs.where((element) => element.target == targetId.toString()).toList();
+  }
 
   UpgradeShipInfo? _fromShip = null;
   Skus? _toSku = null;
@@ -138,6 +152,7 @@ class MainDataModel extends ChangeNotifier {
   final catalogRepo = CatalogRepo();
   final translationRepo = TranslationRepo();
   final shipAliasRepo = ShipAliasRepo();
+  final hangarLogRepo = HangarLogRepo();
 
 
   RefugeVersionProperty? get property => CirnoAuth.instance?.property;
@@ -165,6 +180,8 @@ class MainDataModel extends ChangeNotifier {
     try {
       await initShipUpgrade();
       await filterShipUpgrade(null, null);
+      await readHangarLogs();
+      await refreshHangarLogs();
     } catch (e) {
       print(e);
     }
@@ -303,6 +320,16 @@ class MainDataModel extends ChangeNotifier {
       });
 
     });
+  }
+
+  Future<void> readHangarLogs() async {
+    _hangarLogs = await hangarLogRepo.readHangarLogs();
+    notifyListeners();
+  }
+
+  Future<void> refreshHangarLogs() async {
+    _hangarLogs = await hangarLogRepo.refreshHangarLogs();
+    notifyListeners();
   }
 
   HangarItem? getHangarItemById(int id) {

@@ -27,11 +27,12 @@ class HangarLogParser {
     for (var logEntry in logList) {
       final logText = logEntry.querySelector('p')?.text ?? '';
       final name = logEntry.querySelector('span')?.text ?? '';
-      final inputFormat = DateFormat('MMM dd yyyy, h:mm a', 'en_US');
-      final messagePart = logText.split('-');
-      final timeText = messagePart[0].trim();
+      final inputFormat = DateFormat('MMM d yyyy, h:mm a', 'en_US');
+      final messagePart = logText.split(' - ');
+      final messagePartEnd = messagePart.sublist(1).join(' - ').trim();
+      final timeText = messagePart[0].trim().replaceAll('am', 'AM').replaceAll('pm', 'PM');
       final time = inputFormat.parse(timeText);
-      final content = messagePart[1].trim().substring(name.length).trim();
+      final content = messagePartEnd.substring(name.length).trim();
 
       String type = 'UNKNOWN';
       int? price;
@@ -110,6 +111,9 @@ class HangarLogParser {
         target = match.group(1);
         reason = match.group(2);
       }
+
+      operator ??= "CIG";
+
 
       logListResult.add(
         HangarLog(
