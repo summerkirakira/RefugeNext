@@ -49,7 +49,7 @@ TimelineItemData convertSingleHangarLogToTimelineItemData(HangarLog log) {
 
   if (log.type == 'CREATED') {
     // title = '购买物品';
-    icon = Icons.add;
+    icon = Icons.airplanemode_active_outlined;
     iconBackgroundColor = Colors.deepOrangeAccent;
     description = "购买了 $itemName(#$targetItemId)";
   } else if (log.type == 'RECLAIMED') {
@@ -81,7 +81,10 @@ TimelineItemData convertSingleHangarLogToTimelineItemData(HangarLog log) {
     // title = '升级物品';
     icon = Icons.arrow_upward;
     iconBackgroundColor = Colors.orange;
-    description = "升级了 $itemName(#$targetItemId)";
+
+    final upgradeName = translationRepo.getTranslationSync(log.reason!);
+
+    description = "使用 $upgradeName(#${log.source})\n升级了:\n$itemName(#$targetItemId)";
   } else if (log.type == 'BUYBACK') {
     // title = '回购物品';
     icon = Icons.shopping_cart;

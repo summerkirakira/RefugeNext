@@ -62,7 +62,7 @@ class _HangarTopBarState extends State<HangarTopBar> {
                           getHangarLogBottomSheet(context, null)
                         ];
                       });
-                }, icon: const Icon(Icons.document_scanner_outlined)),
+                }, icon: const Icon(Icons.description_outlined)),
                 IconButton(
                     onPressed: () {
                       WoltModalSheet.show<void>(
