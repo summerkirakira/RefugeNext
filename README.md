@@ -28,7 +28,7 @@ A Star Citizen Android Application.
     + [x] 组件信息查询
     + [x] 快速查看机库价值/消费额/邀请点数
     + [x] 一键进入舰队页面
-    + [x] 商店、机库信息汉化(测试中)
+    + [x] 商店、机库信息汉化
 + 官网游戏相关
     + [x] 一键重置玩家角色(无视官网重置时间限制)
     + [x] 一键拷贝/重置PTU账号
@@ -43,23 +43,5 @@ A Star Citizen Android Application.
 + 其他功能&特性
     + [x] 教程查看
     + [x] 离线缓存
-
-### 实现截图
-
-<details>
-<summary>部分截图</summary>
-
-![](doc/image/main_page.jpg)
-![](doc/image/reset_character.jpg)
-![](doc/image/spectrum_view.jpg)
-![](doc/image/personal_drawer_box.jpg)
-![](doc/image/hanger_view.jpg)
-![](doc/image/hanger_detail.jpg)
-![](doc/image/buyback_view.jpg)
-![](doc/image/reclaim_page.jpg)
-![](doc/image/send_gift.jpg)
-![](doc/image/shop_view.jpg)
-![](doc/image/shop_detail.jpg)
-
-
-</details>
+    + [x] 语言切换(中/英)
+    + [x] 主题切换(浅色/深色)
