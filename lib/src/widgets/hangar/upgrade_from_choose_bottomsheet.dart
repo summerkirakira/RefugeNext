@@ -22,6 +22,20 @@ WoltModalSheetPage getUpgradeFromChooseBottomSheet(BuildContext context, HangarI
                 style: TextStyle(fontSize: 15, color: Colors.grey)),
           ],
         )),
+    leadingNavBarWidget: Container(
+      height: 38,
+      width: 38,
+      margin: const EdgeInsets.only(left: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.2), // 设置背景颜色
+        shape: BoxShape.circle, // 设置形状为圆形
+      ),
+      child: IconButton(
+        padding: const EdgeInsets.all(5),
+        icon: const Icon(Icons.arrow_back, size: 22),
+        onPressed: () => WoltModalSheet.of(context).showAtIndex(0),
+      ),
+    ),
     trailingNavBarWidget: Container(
       height: 38,
       decoration: BoxDecoration(

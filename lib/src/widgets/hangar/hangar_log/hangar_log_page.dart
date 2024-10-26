@@ -185,7 +185,13 @@ class _HangarLogPageState extends State<HangarLogPage> {
                 ),
               ),
             ),
-          )
+          ),
+        if (items.isEmpty)
+          const Center(
+            child: Text('暂无数据'),
+          ),
+        if (items.length < 5)
+          SizedBox(height: 400)
       ],
     );
   }
