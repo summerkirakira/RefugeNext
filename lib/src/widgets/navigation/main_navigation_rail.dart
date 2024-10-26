@@ -63,8 +63,8 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
           label: Text('商店'),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.account_circle_outlined),
-          selectedIcon: Icon(Icons.account_circle_rounded),
+          icon: Icon(Icons.build_circle_outlined),
+          selectedIcon: Icon(Icons.build_circle_rounded),
           label: Text('工具'),
         ),
         NavigationRailDestination(
