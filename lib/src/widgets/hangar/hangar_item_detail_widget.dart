@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:refuge_next/src/network/cirno/property/property.dart';
 import 'package:refuge_next/src/repo/ship_alias.dart';
 import 'package:refuge_next/src/repo/translation.dart';
+import 'package:refuge_next/src/widgets/hangar/hangar_log/hangar_log_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import '../../datasource/models/hangar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -201,7 +202,7 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
               color: Theme.of(context).primaryColor
             )),
             const SizedBox(height: 5),
-            Text("当前(\$)", style: const TextStyle(
+            const Text("当前(\$)", style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey
             ))
@@ -210,13 +211,13 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
         const VerticalDivider(),
         Column(
           children: [
-            Text('${priceString(currentPrice - price)}', style: TextStyle(
+            Text('${priceString(currentPrice - price)}', style: const TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.bold,
                 color: Colors.green
             )),
             const SizedBox(height: 5),
-            Text("节约(\$)", style: const TextStyle(
+            const Text("节约(\$)", style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey
             ))
@@ -235,10 +236,10 @@ Widget getReclaimButton(BuildContext context, HangarItem hangarItem) {
           onTap: () {
             WoltModalSheet.of(context).showAtIndex(1);
           },
-          child: Column(
+          child: const Column(
             children: [
-              const Icon(Icons.recycling),
-              const Text('回收')
+              Icon(Icons.recycling),
+              Text('回收')
             ]
           ),
         ),
@@ -251,10 +252,10 @@ Widget getReclaimButton(BuildContext context, HangarItem hangarItem) {
           onTap: () {
             // WoltModalSheet.of(context).showAtIndex(1);
           },
-          child: Column(
+          child: const Column(
               children: [
-                const Icon(Icons.recycling, color: Colors.grey),
-                const Text('回收', style: TextStyle(color: Colors.grey))
+                Icon(Icons.recycling, color: Colors.grey),
+                Text('回收', style: TextStyle(color: Colors.grey))
               ]
           ),
         ),
@@ -321,6 +322,9 @@ Widget getGiftButton(BuildContext context, HangarItem hangarItem) {
 
 
 Widget getActionIconList({ required BuildContext context, required HangarItem hangarItem, required Function onShare}) {
+
+  int lastPage = 3;
+
   return Padding(
     padding: const EdgeInsets.only(
       top: 0,
@@ -360,7 +364,8 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
                     return;
                   }
                   WoltModalSheet.of(context).addPage(upgradePage);
-                  WoltModalSheet.of(context).showAtIndex(4);
+                  lastPage += 1;
+                  WoltModalSheet.of(context).showAtIndex(lastPage);
                 },
                 child: const Column(
                     children: [
@@ -407,12 +412,15 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
           children: [
             GestureDetector(
               onTap: () {
-
+                final hangarLogPage = getHangarLogBottomSheet(context, hangarItem.id);
+                WoltModalSheet.of(context).addPage(hangarLogPage);
+                lastPage += 1;
+                WoltModalSheet.of(context).showAtIndex(lastPage);
               },
               child: const Column(
                   children: [
-                    Icon(Icons.description_outlined, color: Colors.grey),
-                    Text('日志', style: TextStyle(color: Colors.grey))
+                    Icon(Icons.description_outlined),
+                    Text('日志', style: TextStyle())
                   ]
               ),
             )
@@ -560,7 +568,7 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
                   )),
                 ),
           if (hangarItem.isUpgrade)
-            Text('升级包含', style: const TextStyle(
+            const Text('升级包含', style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold
             )),

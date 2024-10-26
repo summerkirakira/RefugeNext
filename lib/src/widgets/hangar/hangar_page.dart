@@ -57,6 +57,8 @@ class _HangarPageState extends State<HangarPage> {
   @override
   Widget build(BuildContext context) {
 
+    final items = Provider.of<MainDataModel>(context).hangarItems;
+
     return  Column(
       children: [
         HangarTopBar(),
@@ -109,13 +111,25 @@ class _HangarPageState extends State<HangarPage> {
                         ),
                       ),
                     Expanded(
-                      child:ListView.builder(
+                      child: ListView.builder(
                           padding: const EdgeInsets.all(0),
-                          physics: AlwaysScrollableScrollPhysics(),
-                          itemCount: Provider.of<MainDataModel>(context).hangarItems.length,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: items.isEmpty ? 1 : items.length,
                           itemBuilder: (context, index) {
+
+                            if (items.isEmpty) {
+                              return const Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Center(
+                                  child: Text('下拉刷新机库数据~',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              );
+                            }
+
                             return HangarItemWidget(
-                              hangarItem: Provider.of<MainDataModel>(context).hangarItems[index],
+                              hangarItem: items[index],
                               onTap: onTap,
                             );
                           }

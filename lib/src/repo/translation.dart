@@ -30,6 +30,45 @@ class TranslationRepo {
     return File('$path/translation.json');
   }
 
+  String getFormattedShipName(String shipName) {
+    var newShipName = shipName
+        .replaceAll("Banu", "")
+        .replaceAll("Drake", "")
+        .replaceAll("Crusader", "")
+        .replaceAll("Argo", "")
+        .replaceAll("Esperia", "")
+        .replaceAll("Upgrade", "")
+        .replaceAll("CNOU", "")
+        .replaceAll("AEGIS", "")
+        .replaceAll("Mercury Star Runner", "Mercury")
+        .replaceAll("ORIGIN 600i Exploration Module", "600i Explorer")
+        .replaceAll("ORIGIN 600i Touring Module", "600i Touring")
+        .replaceAll("RSI", "")
+        .replaceAll("Anvil", "")
+        .replaceAll("Retaliator Base", "Retaliator")
+        .replaceAll("Mole Carbon Edition", "Mole")
+        .replaceAll("Genesis Starliner", "Genesis")
+        .replaceAll("Hercules Starship", "")
+        .replaceAll("Warbond Subscribers Edition", "Warbond Edition")
+        .replaceAll("Subscribers Edition", "Standard Edition")
+        .trim();
+    return newShipName;
+  }
+
+
+  List<String> getFullUpgradeName(String upgradeTitle) {
+    List<String> nameList = [];
+    for (String shipName in upgradeTitle
+        .replaceAll("Upgrade - ", "")
+        .replaceAll(" Upgrade", "")
+        .split(" to ")) {
+      nameList.add(getFormattedShipName(shipName));
+    }
+    return nameList;
+  }
+
+
+
   Future<Map<String, String>> readTranslation() async {
     try {
       final file = await _localFile;
@@ -66,6 +105,7 @@ class TranslationRepo {
 
   Future<String> getTranslation(String key) async {
     final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
+
     if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
       if (!_notTranslated.contains(key) && key.isNotEmpty) {
         _notTranslated.add(key);
@@ -76,12 +116,34 @@ class TranslationRepo {
     return _translation[finalKey] ?? finalKey;
   }
 
+  String translateUpgradeName(String upgradeName) {
+    String shipName = upgradeName.replaceAll("Standard Edition", "").replaceAll("Warbond Edition", "").trim();
+    shipName = _translation[shipName] ?? shipName;
+    if (upgradeName.contains("Standard Edition")) {
+      return "$shipName 标准版";
+    } else if (upgradeName.contains("Warbond Edition")) {
+      return "$shipName 战争债券版";
+    } else {
+      return shipName;
+    }
+  }
+
   String getTranslationSync(String key) {
 
     final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
     final keyList = finalKey.split(" - ");
     List<String> translationList = [];
     for (var key in keyList) {
+      if (key.contains("Edition") && key.contains(" to ")) {
+        final subTranslationList = [];
+        final upgradeList = getFullUpgradeName(key);
+        for (var upgrade in upgradeList) {
+          subTranslationList.add(translateUpgradeName(upgrade));
+        }
+        translationList.add(subTranslationList.join(" 到 "));
+        continue;
+      }
+
       translationList.add(_translation[key] ?? key);
       if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
         if (!_notTranslated.contains(key) && key.isNotEmpty) {
