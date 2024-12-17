@@ -1,7 +1,9 @@
 import 'package:refuge_next/src/datasource/models/cirno/property.dart';
+import 'package:refuge_next/src/funcs/zip_downloader.dart';
 import 'package:refuge_next/src/repo/hangar_log.dart';
 
 import '../network/api_service.dart';
+import '../repo/ship_info.dart';
 import '../repo/user.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
@@ -106,18 +108,23 @@ Future<void> startup() async {
 
     await updateShipAlias(cirnoAuth.property!);
     await updateTranslation(cirnoAuth.property!);
-
     await setCurrency();
-
     await setVip();
 
 
     // final repo = HangarLogRepo();
     // await repo.refreshHangarLogs();
+    
+    // await downloadAndExtractFile(url: "https://image.biaoju.site/starcitizen/refuge_next/ship_info/ship_details.zip", extractPath: "ship_info/components");
+
 
 
   } catch (e) {
     print('Error during startup: $e');
   }
+
+  final shipInfoRepo = ShipInfoRepo();
+  final armors = await shipInfoRepo.getShips();
+  print(armors);
 
 }
