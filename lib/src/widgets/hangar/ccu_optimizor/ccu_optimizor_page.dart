@@ -88,7 +88,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     } catch (e) {
       _blockedUpgrades = [];
       _mustHaveUpgrades = [];
-      showToast(message: '升级路线计算失败QAQ');
+      showToast(message: '升级路线计算失败QAQ$e');
     }
 
   }
