@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:refuge_next/src/datasource/models/cirno/promote_property.dart';
 import '../../datasource/models/cirno/upgrade_path.dart';
 import '../../datasource/models/cirno/upgrade_response.dart';
 import 'property/property.dart';
@@ -70,6 +71,13 @@ class CirnoApiClient {
     };
     final response = await basicPost(endpoint: 'v2/version', data: data);
     return RefugeVersionProperty.fromJson(response.data);
+  }
+
+
+  Future<List<PromotionCode>> getAllPromotionCodes() async {
+    final response = await _dio.get("${baseUrl}promotion/all");
+    final data = response.data;
+    return List<PromotionCode>.from(data.map((e) => PromotionCode.fromJson(e)));
   }
 
   String getSubscriptionUrl() {

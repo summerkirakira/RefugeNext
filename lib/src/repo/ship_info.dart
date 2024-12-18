@@ -1,3 +1,4 @@
+import 'package:refuge_next/src/datasource/models/ship_info/manufacturer.dart';
 import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 
 import 'dart:io';
@@ -22,7 +23,7 @@ class ShipInfoRepo {
   List<FuelTank> _fuelTanks = [];
   List<MissileRack> _missileRacks = [];
   List<PowerPlant> _powerPlants = [];
-  List<PersonalStorage> personalStorages = [];
+  List<PersonalStorage> _personalStorages = [];
   List<QuantumDrive> _quantumDrives = [];
   List<SelfDestruct> _selfDestructs = [];
   List<Thruster> _thrusters = [];
@@ -30,6 +31,7 @@ class ShipInfoRepo {
   List<VehicleWeapon> _vehicleWeapons = [];
   List<VehicleAmmo> _vehicleAmmos = [];
   List<Skin> _skins = [];
+  List<Manufacturer> _manufacturers = [];
 
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -126,10 +128,63 @@ class ShipInfoRepo {
     return File('$path/skin.json');
   }
 
+  Future<File> get _manufacturerPath async {
+    final path = await _localPath;
+    return File('$path/manufacture.json');
+  }
+
 
   Future<int> getShipInfoVersion() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt('vip.kirakira.ship_info.version') ?? 0;
+  }
+
+
+  Future<List<Manufacturer>> readManufacturers() async {
+    try {
+      final file = await _manufacturerPath;
+      final contents = await file.readAsString();
+      final List<dynamic> json = jsonDecode(contents);
+      return json.map((e) => Manufacturer.fromJson(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<Manufacturer>> getManufacturers() async {
+    if (_manufacturers.isNotEmpty) {
+      return _manufacturers;
+    }
+    _manufacturers = await readManufacturers();
+    return _manufacturers;
+  }
+
+
+  Future<Manufacturer?> getManufacturerByReference(String ref) async {
+    if (_manufacturers.isEmpty) {
+      return null;
+    }
+    for (var manufacturer in _manufacturers) {
+      if (manufacturer.ref == ref) {
+        return manufacturer;
+      }
+    }
+
+    return null;
+  }
+
+
+  Manufacturer? getManufacturerByReferenceSync(String ref) {
+    if (_manufacturers.isEmpty) {
+      return null;
+    }
+    for (var manufacturer in _manufacturers) {
+      if (manufacturer.ref == ref) {
+        return manufacturer;
+      }
+    }
+
+    return null;
   }
 
 
@@ -421,18 +476,18 @@ class ShipInfoRepo {
   }
 
   Future<List<PersonalStorage>> getPersonalStorages() async {
-    if (personalStorages.isNotEmpty) {
-      return personalStorages;
+    if (_personalStorages.isNotEmpty) {
+      return _personalStorages;
     }
-    personalStorages = await readPersonalStorages();
-    return personalStorages;
+    _personalStorages = await readPersonalStorages();
+    return _personalStorages;
   }
 
   Future<PersonalStorage?> getPersonalStorageByReference(String ref) async {
-    if (personalStorages.isEmpty) {
+    if (_personalStorages.isEmpty) {
       return null;
     }
-    for (var personalStorage in personalStorages) {
+    for (var personalStorage in _personalStorages) {
       if (personalStorage.ref == ref) {
         return personalStorage;
       }
@@ -784,10 +839,10 @@ class ShipInfoRepo {
   }
 
   PersonalStorage? getPersonalStorageByReferenceSync(String ref) {
-    if (personalStorages.isEmpty) {
+    if (_personalStorages.isEmpty) {
       return null;
     }
-    for (var personalStorage in personalStorages) {
+    for (var personalStorage in _personalStorages) {
       if (personalStorage.ref == ref) {
         return personalStorage;
       }
@@ -991,6 +1046,7 @@ class ShipInfoRepo {
     await getVehicleWeapons();
     await getVehicleAmmos();
     await getSkins();
+    await getManufacturers();
     final shipStore = await readShipStore();
 
     final ships = shipStore.map((e) => convertShipStoreSync(e)).toList();
@@ -1006,6 +1062,10 @@ class ShipInfoRepo {
       return _ships;
     }
     _ships = await readShip();
+    return _ships;
+  }
+
+  List<Ship> getShipsSync() {
     return _ships;
   }
 

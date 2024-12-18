@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/buyback.dart';
+import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 import 'package:refuge_next/src/datasource/models/upgradeInfo.dart';
 import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
 import '../repo/hangar_log.dart';
+import '../repo/ship_info.dart';
 import './models/hangar.dart';
 import './models/user.dart';
 import '../repo/hangar.dart';
@@ -119,6 +121,15 @@ class MainDataModel extends ChangeNotifier {
   User? get currentUser => _currentUser;
   bool userInitFinished = false;
 
+  Ship? _currentShipInfo;
+
+  Ship? get currentShipInfo => _currentShipInfo;
+
+  void setCurrentShipInfo(Ship? ship) {
+    _currentShipInfo = ship;
+    notifyListeners();
+  }
+
   ThemeData getTheme(BuildContext context) {
     return ThemeManager.getTheme(context);
   }
@@ -153,6 +164,7 @@ class MainDataModel extends ChangeNotifier {
   final translationRepo = TranslationRepo();
   final shipAliasRepo = ShipAliasRepo();
   final hangarLogRepo = HangarLogRepo();
+  final shipInfoRepo = ShipInfoRepo();
 
 
   RefugeVersionProperty? get property => CirnoAuth.instance?.property;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/widgets/ship_info/ship_full_page.dart';
 import 'package:refuge_next/src/widgets/utility/player_search_bottomsheet.dart';
+import 'package:refuge_next/src/widgets/utility/promote_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/utility/utility_topbar.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 
@@ -13,11 +15,14 @@ class FeatureSelectionPage extends StatelessWidget {
     FeatureItem(icon: Icons.bolt_outlined, title: '组件查询', onTap: (context) {
       showToast(message: "该功能未实现~");
     }),
-    FeatureItem(icon: Icons.card_giftcard_outlined, title: '礼物兑换', onTap: (context) {
-      showToast(message: "该功能未实现~");
+    FeatureItem(icon: Icons.card_giftcard_outlined, title: '礼物兑换', onTap: (context) async {
+      final selectedOptions = await ModalSheetUtil.showUseCaseSelector(context);
     }),
     FeatureItem(icon: Icons.rocket_launch_outlined, title: '舰船一览', onTap: (context) {
-      showToast(message: "该功能未实现~");
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ShipFullPage()),
+      );
     }),
     FeatureItem(icon: Icons.category_outlined, title: '货运规划', onTap: (context) {
       showToast(message: "该功能未实现~");
