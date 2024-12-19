@@ -115,7 +115,7 @@ Future<void> startup() async {
     // final repo = HangarLogRepo();
     // await repo.refreshHangarLogs();
     
-    // await downloadAndExtractFile(url: "https://image.biaoju.site/starcitizen/refuge_next/ship_info/ship_details.zip", extractPath: "ship_info/components");
+    // await downloadAndExtractFile(url: "https://image.biaoju.site/starcitizen/refuge_next/ship_info/ship_details.0.0.2.zip", extractPath: "ship_info/components");
 
 
 

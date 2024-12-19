@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
-class ShieldListItem extends StatelessWidget {
+class MissileListItem extends StatelessWidget {
   final String name;
   final String manufacturer;
   final String energyCount;
-  final String shieldStrength;
+  final String damage;
   final int size;
-  final double fullyChargedTime;
+  final String speed;
 
-  const ShieldListItem({
+  const MissileListItem({
     Key? key,
     required this.name,
     required this.manufacturer,
     required this.energyCount,
-    required this.shieldStrength,
+    required this.damage,
     required this.size,
-    required this.fullyChargedTime,
+    required this.speed,
   }) : super(key: key);
 
   @override
@@ -99,7 +99,7 @@ class ShieldListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  shieldStrength.toString(),
+                  damage.toString(),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -109,7 +109,7 @@ class ShieldListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '完全回复时间',
+                      '速度',
                       style: TextStyle(
                         color: Colors.orange[300],
                         fontSize: 12,
@@ -117,7 +117,7 @@ class ShieldListItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${fullyChargedTime}',
+                      '${speed}',
                       style: TextStyle(
                         // color: Colors.orange[300],
                         fontSize: 12,
@@ -125,7 +125,7 @@ class ShieldListItem extends StatelessWidget {
                     ),
                     SizedBox(width: 2),
                     Text(
-                      's',
+                      'm/s',
                       style: TextStyle(
                         color: Colors.orange[300],
                         fontSize: 12,

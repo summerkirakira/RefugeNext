@@ -21,6 +21,7 @@ class Ship {
   List<FuelTank> fuelTanks;
   List<Hull> hulls;
   bool? isRealShip;
+  LifeSupport? lifeSupport;
   String? manufacturer;
   double mass;
   List<MissileRack> missileRacks;
@@ -30,6 +31,7 @@ class Ship {
   PersonalStorage? personalStorage;
   List<PowerPlant> powerPlants;
   QuantumDrive? qd;
+  Radar? radar;
   String ref;
   SelfDestruct? selfDestruct;
   List<Shield> shields;
@@ -41,6 +43,7 @@ class Ship {
   List<Turret> turrets;
   String? type;
   VehicleComponentParams vehicle;
+  int weaponFixedPool;
   WeaponRegenPool? weaponRegenPool;
   List<VehicleWeapon> weapons;
 
@@ -57,6 +60,7 @@ class Ship {
     required this.fuelTanks,
     required this.hulls,
     this.isRealShip,
+    required this.lifeSupport,
     this.manufacturer,
     required this.mass,
     required this.missileRacks,
@@ -66,6 +70,7 @@ class Ship {
     required this.personalStorage,
     required this.powerPlants,
     required this.qd,
+    required this.radar,
     required this.ref,
     required this.selfDestruct,
     required this.shields,
@@ -77,6 +82,7 @@ class Ship {
     required this.turrets,
     this.type,
     required this.vehicle,
+    required this.weaponFixedPool,
     required this.weaponRegenPool,
     required this.weapons,
   });
@@ -94,6 +100,7 @@ class Ship {
     fuelTanks: List<FuelTank>.from(json["fuel_tanks"].map((x) => FuelTank.fromJson(x))),
     hulls: List<Hull>.from(json["hulls"].map((x) => Hull.fromJson(x))),
     isRealShip: json["is_real_ship"],
+    lifeSupport: json["life_support"] == null ? null : LifeSupport.fromJson(json["life_support"]),
     manufacturer: json["manufacturer"],
     mass: json["mass"]?.toDouble(),
     missileRacks: List<MissileRack>.from(json["missile_racks"].map((x) => MissileRack.fromJson(x))),
@@ -103,6 +110,7 @@ class Ship {
     personalStorage: json["personal_storage"] == null ? null : PersonalStorage.fromJson(json["personal_storage"]),
     powerPlants: List<PowerPlant>.from(json["power_plants"].map((x) => PowerPlant.fromJson(x))),
     qd: json["qd"] == null ? null : QuantumDrive.fromJson(json["qd"]),
+    radar: json["radar"] == null ? null : Radar.fromJson(json["radar"]),
     ref: json["ref"],
     selfDestruct: json["self_destruct"] == null ? null : SelfDestruct.fromJson(json["self_destruct"]),
     shields: List<Shield>.from(json["shields"].map((x) => Shield.fromJson(x))),
@@ -114,6 +122,7 @@ class Ship {
     turrets: List<Turret>.from(json["turrets"].map((x) => Turret.fromJson(x))),
     type: json["type"],
     vehicle: VehicleComponentParams.fromJson(json["vehicle"]),
+    weaponFixedPool: json["weapon_fixed_pool"],
     weaponRegenPool: json["weapon_regen_pool"] == null ? null : WeaponRegenPool.fromJson(json["weapon_regen_pool"]),
     weapons: List<VehicleWeapon>.from(json["weapons"].map((x) => VehicleWeapon.fromJson(x))),
   );
@@ -131,6 +140,7 @@ class Ship {
     "fuel_tanks": List<dynamic>.from(fuelTanks.map((x) => x.toJson())),
     "hulls": List<dynamic>.from(hulls.map((x) => x.toJson())),
     "is_real_ship": isRealShip,
+    "life_support": lifeSupport?.toJson(),
     "manufacturer": manufacturer,
     "mass": mass,
     "missile_racks": List<dynamic>.from(missileRacks.map((x) => x.toJson())),
@@ -140,6 +150,7 @@ class Ship {
     "personal_storage": personalStorage?.toJson(),
     "power_plants": List<dynamic>.from(powerPlants.map((x) => x.toJson())),
     "qd": qd?.toJson(),
+    "radar": radar?.toJson(),
     "ref": ref,
     "self_destruct": selfDestruct?.toJson(),
     "shields": List<dynamic>.from(shields.map((x) => x.toJson())),
@@ -151,6 +162,7 @@ class Ship {
     "turrets": List<dynamic>.from(turrets.map((x) => x.toJson())),
     "type": type,
     "vehicle": vehicle.toJson(),
+    "weapon_fixed_pool": weaponFixedPool,
     "weapon_regen_pool": weaponRegenPool?.toJson(),
     "weapons": List<dynamic>.from(weapons.map((x) => x.toJson())),
   };
@@ -757,6 +769,7 @@ class Cooler {
   String? path;
   EntityComponentPowerConnection power;
   String ref;
+  ResourceConnection resourceConnection;
   List<ShopInfo> shopInfo;
   int size;
   String? type;
@@ -774,6 +787,7 @@ class Cooler {
     this.path,
     required this.power,
     required this.ref,
+    required this.resourceConnection,
     required this.shopInfo,
     required this.size,
     this.type,
@@ -792,6 +806,7 @@ class Cooler {
     path: json["path"],
     power: EntityComponentPowerConnection.fromJson(json["power"]),
     ref: json["ref"],
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
     shopInfo: List<ShopInfo>.from(json["shop_info"].map((x) => ShopInfo.fromJson(x))),
     size: json["size"],
     type: json["type"],
@@ -810,6 +825,7 @@ class Cooler {
     "path": path,
     "power": power.toJson(),
     "ref": ref,
+    "resource_connection": resourceConnection.toJson(),
     "shop_info": List<dynamic>.from(shopInfo.map((x) => x.toJson())),
     "size": size,
     "type": type,
@@ -1096,6 +1112,26 @@ class EntityComponentPowerConnection {
   };
 }
 
+class ResourceConnection {
+  double minimumConsumptionFraction;
+  double standardResourceUnits;
+
+  ResourceConnection({
+    required this.minimumConsumptionFraction,
+    required this.standardResourceUnits,
+  });
+
+  factory ResourceConnection.fromJson(Map<String, dynamic> json) => ResourceConnection(
+    minimumConsumptionFraction: json["minimumConsumptionFraction"]?.toDouble(),
+    standardResourceUnits: json["standardResourceUnits"]?.toDouble(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "minimumConsumptionFraction": minimumConsumptionFraction,
+    "standardResourceUnits": standardResourceUnits,
+  };
+}
+
 class ShopInfo {
   int basePrice;
   String? chineseLocation;
@@ -1340,6 +1376,58 @@ class Hull {
   };
 }
 
+class LifeSupport {
+  String? chineseDescription;
+  String? chineseName;
+  String? description;
+  String? manufacturer;
+  String name;
+  String? path;
+  String ref;
+  ResourceConnection resourceConnection;
+  int size;
+  String? type;
+
+  LifeSupport({
+    this.chineseDescription,
+    required this.chineseName,
+    this.description,
+    this.manufacturer,
+    required this.name,
+    this.path,
+    required this.ref,
+    required this.resourceConnection,
+    required this.size,
+    this.type,
+  });
+
+  factory LifeSupport.fromJson(Map<String, dynamic> json) => LifeSupport(
+    chineseDescription: json["chinese_description"],
+    chineseName: json["chinese_name"],
+    description: json["description"],
+    manufacturer: json["manufacturer"],
+    name: json["name"],
+    path: json["path"],
+    ref: json["ref"],
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
+    size: json["size"],
+    type: json["type"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "chinese_description": chineseDescription,
+    "chinese_name": chineseName,
+    "description": description,
+    "manufacturer": manufacturer,
+    "name": name,
+    "path": path,
+    "ref": ref,
+    "resource_connection": resourceConnection.toJson(),
+    "size": size,
+    "type": type,
+  };
+}
+
 class MissileRack {
   String? chineseDescription;
   String? chineseName;
@@ -1576,6 +1664,7 @@ class PowerPlant {
   String? path;
   EntityComponentPowerConnection power;
   String ref;
+  ResourceConnection resourceConnection;
   List<ShopInfo> shopInfo;
   int size;
   String? type;
@@ -1592,6 +1681,7 @@ class PowerPlant {
     this.path,
     required this.power,
     required this.ref,
+    required this.resourceConnection,
     required this.shopInfo,
     required this.size,
     this.type,
@@ -1609,6 +1699,7 @@ class PowerPlant {
     path: json["path"],
     power: EntityComponentPowerConnection.fromJson(json["power"]),
     ref: json["ref"],
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
     shopInfo: List<ShopInfo>.from(json["shop_info"].map((x) => ShopInfo.fromJson(x))),
     size: json["size"],
     type: json["type"],
@@ -1626,6 +1717,7 @@ class PowerPlant {
     "path": path,
     "power": power.toJson(),
     "ref": ref,
+    "resource_connection": resourceConnection.toJson(),
     "shop_info": List<dynamic>.from(shopInfo.map((x) => x.toJson())),
     "size": size,
     "type": type,
@@ -1645,6 +1737,7 @@ class QuantumDrive {
   String? path;
   EntityComponentPowerConnection power;
   String ref;
+  ResourceConnection resourceConnection;
   List<ShopInfo> shopInfo;
   int size;
   String? type;
@@ -1662,6 +1755,7 @@ class QuantumDrive {
     this.path,
     required this.power,
     required this.ref,
+    required this.resourceConnection,
     required this.shopInfo,
     required this.size,
     this.type,
@@ -1680,6 +1774,7 @@ class QuantumDrive {
     path: json["path"],
     power: EntityComponentPowerConnection.fromJson(json["power"]),
     ref: json["ref"],
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
     shopInfo: List<ShopInfo>.from(json["shop_info"].map((x) => ShopInfo.fromJson(x))),
     size: json["size"],
     type: json["type"],
@@ -1698,6 +1793,7 @@ class QuantumDrive {
     "path": path,
     "power": power.toJson(),
     "ref": ref,
+    "resource_connection": resourceConnection.toJson(),
     "shop_info": List<dynamic>.from(shopInfo.map((x) => x.toJson())),
     "size": size,
     "type": type,
@@ -1992,6 +2088,58 @@ class SplineJumpParams {
   };
 }
 
+class Radar {
+  String? chineseDescription;
+  String? chineseName;
+  String? description;
+  String? manufacturer;
+  String name;
+  String? path;
+  String ref;
+  ResourceConnection resourceConnection;
+  int size;
+  String? type;
+
+  Radar({
+    this.chineseDescription,
+    required this.chineseName,
+    this.description,
+    this.manufacturer,
+    required this.name,
+    this.path,
+    required this.ref,
+    required this.resourceConnection,
+    required this.size,
+    this.type,
+  });
+
+  factory Radar.fromJson(Map<String, dynamic> json) => Radar(
+    chineseDescription: json["chinese_description"],
+    chineseName: json["chinese_name"],
+    description: json["description"],
+    manufacturer: json["manufacturer"],
+    name: json["name"],
+    path: json["path"],
+    ref: json["ref"],
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
+    size: json["size"],
+    type: json["type"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "chinese_description": chineseDescription,
+    "chinese_name": chineseName,
+    "description": description,
+    "manufacturer": manufacturer,
+    "name": name,
+    "path": path,
+    "ref": ref,
+    "resource_connection": resourceConnection.toJson(),
+    "size": size,
+    "type": type,
+  };
+}
+
 class SelfDestruct {
   String? chineseDescription;
   String? chineseName;
@@ -2093,6 +2241,7 @@ class Shield {
   double regenDelay;
   double resistanceMax;
   double resistanceMin;
+  ResourceConnection resourceConnection;
   List<ShopInfo> shipInfo;
   int size;
   String? type;
@@ -2118,6 +2267,7 @@ class Shield {
     required this.regenDelay,
     required this.resistanceMax,
     required this.resistanceMin,
+    required this.resourceConnection,
     required this.shipInfo,
     required this.size,
     this.type,
@@ -2144,6 +2294,7 @@ class Shield {
     regenDelay: json["regen_delay"]?.toDouble(),
     resistanceMax: json["resistance_max"]?.toDouble(),
     resistanceMin: json["resistance_min"]?.toDouble(),
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
     shipInfo: List<ShopInfo>.from(json["ship_info"].map((x) => ShopInfo.fromJson(x))),
     size: json["size"],
     type: json["type"],
@@ -2170,6 +2321,7 @@ class Shield {
     "regen_delay": regenDelay,
     "resistance_max": resistanceMax,
     "resistance_min": resistanceMin,
+    "resource_connection": resourceConnection.toJson(),
     "ship_info": List<dynamic>.from(shipInfo.map((x) => x.toJson())),
     "size": size,
     "type": type,
@@ -2561,6 +2713,7 @@ class VehicleWeapon {
   String? path;
   List<Port> ports;
   String ref;
+  ResourceConnection resourceConnection;
   List<ShopInfo> shopInfo;
   int size;
   String? type;
@@ -2582,6 +2735,7 @@ class VehicleWeapon {
     this.path,
     required this.ports,
     required this.ref,
+    required this.resourceConnection,
     required this.shopInfo,
     required this.size,
     this.type,
@@ -2604,6 +2758,7 @@ class VehicleWeapon {
     path: json["path"],
     ports: List<Port>.from(json["ports"].map((x) => Port.fromJson(x))),
     ref: json["ref"],
+    resourceConnection: ResourceConnection.fromJson(json["resource_connection"]),
     shopInfo: List<ShopInfo>.from(json["shop_info"].map((x) => ShopInfo.fromJson(x))),
     size: json["size"],
     type: json["type"],
@@ -2626,6 +2781,7 @@ class VehicleWeapon {
     "path": path,
     "ports": List<dynamic>.from(ports.map((x) => x.toJson())),
     "ref": ref,
+    "resource_connection": resourceConnection.toJson(),
     "shop_info": List<dynamic>.from(shopInfo.map((x) => x.toJson())),
     "size": size,
     "type": type,
@@ -2984,6 +3140,11 @@ class HeatInfo {
   };
 }
 
+
+ShipStore shipStoreFromJson(String str) => ShipStore.fromJson(json.decode(str));
+
+String shipStoreToJson(ShipStore data) => json.encode(data.toJson());
+
 class ShipStore {
   ItemRef armor;
   List<ItemRef> cargos;
@@ -2997,6 +3158,7 @@ class ShipStore {
   List<ItemRef> fuelTanks;
   List<Hull> hulls;
   bool? isRealShip;
+  ItemRef? lifeSupport;
   String? manufacturer;
   double mass;
   List<ItemRefWithLoadout> missileRacks;
@@ -3006,6 +3168,7 @@ class ShipStore {
   ItemRef? personalStorage;
   List<ItemRef> powerPlants;
   ItemRef? qd;
+  ItemRef? radar;
   String ref;
   ItemRef? selfDestruct;
   List<ItemRef> shields;
@@ -3017,6 +3180,7 @@ class ShipStore {
   List<ItemRefWithLoadout> turrets;
   String? type;
   VehicleComponentParams vehicle;
+  int weaponFixedPool;
   ItemRef? weaponRegenPool;
   List<ItemRef> weapons;
 
@@ -3033,6 +3197,7 @@ class ShipStore {
     required this.fuelTanks,
     required this.hulls,
     this.isRealShip,
+    required this.lifeSupport,
     this.manufacturer,
     required this.mass,
     required this.missileRacks,
@@ -3042,6 +3207,7 @@ class ShipStore {
     required this.personalStorage,
     required this.powerPlants,
     required this.qd,
+    required this.radar,
     required this.ref,
     required this.selfDestruct,
     required this.shields,
@@ -3053,6 +3219,7 @@ class ShipStore {
     required this.turrets,
     this.type,
     required this.vehicle,
+    required this.weaponFixedPool,
     required this.weaponRegenPool,
     required this.weapons,
   });
@@ -3070,6 +3237,7 @@ class ShipStore {
     fuelTanks: List<ItemRef>.from(json["fuel_tanks"].map((x) => ItemRef.fromJson(x))),
     hulls: List<Hull>.from(json["hulls"].map((x) => Hull.fromJson(x))),
     isRealShip: json["is_real_ship"],
+    lifeSupport: json["life_support"] == null ? null : ItemRef.fromJson(json["life_support"]),
     manufacturer: json["manufacturer"],
     mass: json["mass"]?.toDouble(),
     missileRacks: List<ItemRefWithLoadout>.from(json["missile_racks"].map((x) => ItemRefWithLoadout.fromJson(x))),
@@ -3079,6 +3247,7 @@ class ShipStore {
     personalStorage: json["personal_storage"] == null ? null : ItemRef.fromJson(json["personal_storage"]),
     powerPlants: List<ItemRef>.from(json["power_plants"].map((x) => ItemRef.fromJson(x))),
     qd: json["qd"] == null ? null : ItemRef.fromJson(json["qd"]),
+    radar: json["radar"] == null ? null : ItemRef.fromJson(json["radar"]),
     ref: json["ref"],
     selfDestruct: json["self_destruct"] == null ? null : ItemRef.fromJson(json["self_destruct"]),
     shields: List<ItemRef>.from(json["shields"].map((x) => ItemRef.fromJson(x))),
@@ -3090,6 +3259,7 @@ class ShipStore {
     turrets: List<ItemRefWithLoadout>.from(json["turrets"].map((x) => ItemRefWithLoadout.fromJson(x))),
     type: json["type"],
     vehicle: VehicleComponentParams.fromJson(json["vehicle"]),
+    weaponFixedPool: json["weapon_fixed_pool"],
     weaponRegenPool: json["weapon_regen_pool"] == null ? null : ItemRef.fromJson(json["weapon_regen_pool"]),
     weapons: List<ItemRef>.from(json["weapons"].map((x) => ItemRef.fromJson(x))),
   );
@@ -3107,6 +3277,7 @@ class ShipStore {
     "fuel_tanks": List<dynamic>.from(fuelTanks.map((x) => x.toJson())),
     "hulls": List<dynamic>.from(hulls.map((x) => x.toJson())),
     "is_real_ship": isRealShip,
+    "life_support": lifeSupport?.toJson(),
     "manufacturer": manufacturer,
     "mass": mass,
     "missile_racks": List<dynamic>.from(missileRacks.map((x) => x.toJson())),
@@ -3116,6 +3287,7 @@ class ShipStore {
     "personal_storage": personalStorage?.toJson(),
     "power_plants": List<dynamic>.from(powerPlants.map((x) => x.toJson())),
     "qd": qd?.toJson(),
+    "radar": radar?.toJson(),
     "ref": ref,
     "self_destruct": selfDestruct?.toJson(),
     "shields": List<dynamic>.from(shields.map((x) => x.toJson())),
@@ -3127,6 +3299,7 @@ class ShipStore {
     "turrets": List<dynamic>.from(turrets.map((x) => x.toJson())),
     "type": type,
     "vehicle": vehicle.toJson(),
+    "weapon_fixed_pool": weaponFixedPool,
     "weapon_regen_pool": weaponRegenPool?.toJson(),
     "weapons": List<dynamic>.from(weapons.map((x) => x.toJson())),
   };

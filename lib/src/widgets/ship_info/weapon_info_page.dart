@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
@@ -318,6 +320,160 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
     );
   }
 
+  Widget _buildRadarBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '雷达',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            getRadarWidget(ship.radar!),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTurretBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '炮塔',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            for(int i = 0; i < ship.turrets.length; i++)
+              getTurretWidget(ship.turrets[i]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMissileRackBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '导弹',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            for(int i = 0; i < ship.missileRacks.length; i++)
+              getMissileRackWidget(ship.missileRacks[i]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPowerPlantBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '发电机',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            for(int i = 0; i < ship.powerPlants.length; i++)
+              getPowerPlantWidget(ship.powerPlants[i]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLifeSupportBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '生命支持',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            getLifeSupportWidget(ship.lifeSupport!)
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShieldBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '护盾',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            for(int i = 0; i < ship.shields.length; i++)
+              getShieldWidget(ship.shields[i]),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -329,7 +485,15 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildEnergyDistributeBlock(),
+            _buildTurretBlock(),
+            _buildMissileRackBlock(),
+            _buildShieldBlock(),
             _buildCoolerBlock(),
+            if (ship.lifeSupport != null)
+              _buildLifeSupportBlock(),
+            if (ship.radar != null)
+              _buildRadarBlock(),
+            _buildPowerPlantBlock(),
           ],
         ),
       );

@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 
-class ShieldListItem extends StatelessWidget {
+class LifeSupportListItem extends StatelessWidget {
   final String name;
   final String manufacturer;
   final String energyCount;
-  final String shieldStrength;
+  // final String coolingValue;
   final int size;
-  final double fullyChargedTime;
 
-  const ShieldListItem({
+  const LifeSupportListItem({
     Key? key,
     required this.name,
     required this.manufacturer,
     required this.energyCount,
-    required this.shieldStrength,
+    // required this.coolingValue,
     required this.size,
-    required this.fullyChargedTime,
   }) : super(key: key);
 
   @override
@@ -95,47 +93,25 @@ class ShieldListItem extends StatelessWidget {
             ),
 
             // 右侧部分：制冷效率
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  shieldStrength.toString(),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '完全回复时间',
-                      style: TextStyle(
-                        color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${fullyChargedTime}',
-                      style: TextStyle(
-                        // color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                    SizedBox(width: 2),
-                    Text(
-                      's',
-                      style: TextStyle(
-                        color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-
-              ],
-            ),
+            // Column(
+            //   crossAxisAlignment: CrossAxisAlignment.end,
+            //   children: [
+            //     Text(
+            //       coolingValue.toString(),
+            //       style: const TextStyle(
+            //         fontSize: 24,
+            //         fontWeight: FontWeight.bold,
+            //       ),
+            //     ),
+            //     Text(
+            //       '冷却效率',
+            //       style: TextStyle(
+            //         color: Colors.orange[300],
+            //         fontSize: 12,
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),

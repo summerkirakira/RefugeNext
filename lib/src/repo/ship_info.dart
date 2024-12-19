@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:refuge_next/src/datasource/models/ship_info/manufacturer.dart';
+import 'package:refuge_next/src/datasource/models/ship_info/missile.dart';
 import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 
 import 'dart:io';
@@ -32,6 +35,10 @@ class ShipInfoRepo {
   List<VehicleAmmo> _vehicleAmmos = [];
   List<Skin> _skins = [];
   List<Manufacturer> _manufacturers = [];
+  List<LifeSupport> _lifeSupports = [];
+  List<Radar> _radars = [];
+  List<Missile> _missiles = [];
+
 
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -133,6 +140,21 @@ class ShipInfoRepo {
     return File('$path/manufacture.json');
   }
 
+  Future<File> get _lifeSupportPath async {
+    final path = await _localPath;
+    return File('$path/life_support.json');
+  }
+
+  Future<File> get _radarPath async {
+    final path = await _localPath;
+    return File('$path/radar.json');
+  }
+
+  Future<File> get _missilePath async {
+    final path = await _localPath;
+    return File('$path/missile.json');
+  }
+
 
   Future<int> getShipInfoVersion() async {
     final prefs = await SharedPreferences.getInstance();
@@ -181,6 +203,104 @@ class ShipInfoRepo {
     for (var manufacturer in _manufacturers) {
       if (manufacturer.ref == ref) {
         return manufacturer;
+      }
+    }
+
+    return null;
+  }
+
+
+  Future<List<LifeSupport>> readLifeSupports() async {
+    try {
+      final file = await _lifeSupportPath;
+      final contents = await file.readAsString();
+      final List<dynamic> json = jsonDecode(contents);
+      return json.map((e) => LifeSupport.fromJson(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+
+  Future<List<LifeSupport>> getLifeSupports() async {
+    if (_lifeSupports.isNotEmpty) {
+      return _lifeSupports;
+    }
+    _lifeSupports = await readLifeSupports();
+    return _lifeSupports;
+  }
+
+
+  Future<LifeSupport?> getLifeSupportByReference(String ref) async {
+    if (_lifeSupports.isEmpty) {
+      return null;
+    }
+    for (var lifeSupport in _lifeSupports) {
+      if (lifeSupport.ref == ref) {
+        return lifeSupport;
+      }
+    }
+
+    return null;
+  }
+
+
+  LifeSupport? getLifeSupportByReferenceSync(String ref) {
+    if (_lifeSupports.isEmpty) {
+      return null;
+    }
+    for (var lifeSupport in _lifeSupports) {
+      if (lifeSupport.ref == ref) {
+        return lifeSupport;
+      }
+    }
+
+    return null;
+  }
+
+
+  Future<List<Radar>> readRadars() async {
+    try {
+      final file = await _radarPath;
+      final contents = await file.readAsString();
+      final List<dynamic> json = jsonDecode(contents);
+      return json.map((e) => Radar.fromJson(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+
+  Future<List<Radar>> getRadars() async {
+    if (_radars.isNotEmpty) {
+      return _radars;
+    }
+    _radars = await readRadars();
+    return _radars;
+  }
+
+
+  Future<Radar?> getRadarByReference(String ref) async {
+    if (_radars.isEmpty) {
+      return null;
+    }
+    for (var radar in _radars) {
+      if (radar.ref == ref) {
+        return radar;
+      }
+    }
+
+    return null;
+  }
+
+
+  Radar? getRadarByReferenceSync(String ref) {
+    if (_radars.isEmpty) {
+      return null;
+    }
+    for (var radar in _radars) {
+      if (radar.ref == ref) {
+        return radar;
       }
     }
 
@@ -265,6 +385,40 @@ class ShipInfoRepo {
     for (var cargoGrid in _cargoGrids) {
       if (cargoGrid.ref == ref) {
         return cargoGrid;
+      }
+    }
+
+    return null;
+  }
+
+
+  Future<List<Missile>> readMissiles() async {
+    try {
+      final file = await _missilePath;
+      final contents = await file.readAsString();
+      final List<dynamic> json = jsonDecode(contents);
+      return json.map((e) => Missile.fromJson(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+
+  Future<List<Missile>> getMissiles() async {
+    if (_missiles.isNotEmpty) {
+      return _missiles;
+    }
+    _missiles = await readMissiles();
+    return _missiles;
+  }
+
+  Missile? getMissileByReferenceSync(String ref) {
+    if (_missiles.isEmpty) {
+      return null;
+    }
+    for (var missile in _missiles) {
+      if (missile.ref == ref) {
+        return missile;
       }
     }
 
@@ -967,7 +1121,6 @@ class ShipInfoRepo {
     }
   }
 
-
   Ship? convertShipStoreSync(ShipStore shipStore) {
     final armor = getArmorByReferenceSync(shipStore.armor.ref);
     final shields = shipStore.shields.map((e) => getShieldByReferenceSync(e.ref)!).toList();
@@ -985,6 +1138,19 @@ class ShipInfoRepo {
     final turrets = shipStore.turrets.map((e) => getTurretByReferenceSync(e.ref)!).toList();
     final vehicleWeapons = shipStore.weapons.map((e) => getVehicleWeaponByReferenceSync(e.ref)!).toList();
     final paints = shipStore.paints.map((e) => getSkinByReferenceSync(e.ref)!).toList();
+    final lifeSupport = shipStore.lifeSupport != null ? getLifeSupportByReferenceSync(shipStore.lifeSupport!.ref) : null;
+    final radar = shipStore.radar != null ? getRadarByReferenceSync(shipStore.radar!.ref) : null;
+
+    final clonedTurrets = turrets.map((e) => Turret.fromJson(e.toJson())).toList();
+    final clonedMissileRacks = missileRacks.map((e) => MissileRack.fromJson(e.toJson())).toList();
+
+    for (var i=0; i<clonedTurrets.length; i++) {
+      clonedTurrets[i].loadout = shipStore.turrets[i].loadout;
+    }
+
+    for (var i=0; i<clonedMissileRacks.length; i++) {
+      clonedMissileRacks[i].loadout = shipStore.missileRacks[i].loadout;
+    }
 
     if (armor == null) {
       return null;
@@ -999,13 +1165,13 @@ class ShipInfoRepo {
       coolers: coolers,
       fuelIntakes: fuelIntakes,
       fuelTanks: fuelTanks,
-      missileRacks: missileRacks,
+      missileRacks: clonedMissileRacks,
       powerPlants: powerPlants,
       personalStorage: personalStorage,
       qd: quantumDrive,
       selfDestruct: selfDestruct,
       thrusts: thrusters,
-      turrets: turrets,
+      turrets: clonedTurrets,
       weapons: vehicleWeapons,
       ref: shipStore.ref,
       name: shipStore.name,
@@ -1022,6 +1188,9 @@ class ShipInfoRepo {
       weaponRegenPool: null,
       vehicle: shipStore.vehicle,
       shipNameBinding: shipStore.shipNameBinding,
+      lifeSupport: lifeSupport,
+      radar: radar,
+      weaponFixedPool: shipStore.weaponFixedPool
     );
 
   }
@@ -1036,6 +1205,7 @@ class ShipInfoRepo {
     await getCoolers();
     await getFuelIntakes();
     await getFuelTanks();
+    await getMissiles();
     await getMissileRacks();
     await getPowerPlants();
     await getPersonalStorages();
@@ -1047,6 +1217,9 @@ class ShipInfoRepo {
     await getVehicleAmmos();
     await getSkins();
     await getManufacturers();
+    await getLifeSupports();
+    await getRadars();
+
     final shipStore = await readShipStore();
 
     final ships = shipStore.map((e) => convertShipStoreSync(e)).toList();
@@ -1082,7 +1255,6 @@ class ShipInfoRepo {
     return null;
   }
 
-
   Future<Ship?> getShipByAliasId(int id) async {
     if (_ships.isEmpty) {
       return null;
@@ -1098,7 +1270,4 @@ class ShipInfoRepo {
 
     return null;
   }
-
-
-
 }

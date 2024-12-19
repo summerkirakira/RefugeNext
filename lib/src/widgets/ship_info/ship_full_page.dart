@@ -22,7 +22,7 @@ class _ShipFullPageState extends State<ShipFullPage> {
 
     final shipInfoRepo = ShipInfoRepo();
 
-    Provider.of<MainDataModel>(context).setCurrentShipInfo(shipInfoRepo.getShipsSync()[78]);
+    Provider.of<MainDataModel>(context).setCurrentShipInfo(shipInfoRepo.getShipsSync()[249]);
 
     return Scaffold(
       body: Expanded(

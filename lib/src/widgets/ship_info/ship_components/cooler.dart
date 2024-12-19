@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class CoolerListItem extends StatelessWidget {
   final String name;
   final String manufacturer;
-  final int energyCount;
-  final double coolingValue;
+  final String energyCount;
+  final String coolingValue;
   final int size;
 
   const CoolerListItem({

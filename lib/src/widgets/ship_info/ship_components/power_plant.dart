@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 
-class ShieldListItem extends StatelessWidget {
+class PowerPlantListItem extends StatelessWidget {
   final String name;
   final String manufacturer;
   final String energyCount;
-  final String shieldStrength;
+  final String powerGen;
   final int size;
-  final double fullyChargedTime;
 
-  const ShieldListItem({
+  const PowerPlantListItem({
     Key? key,
     required this.name,
     required this.manufacturer,
     required this.energyCount,
-    required this.shieldStrength,
+    required this.powerGen,
     required this.size,
-    required this.fullyChargedTime,
   }) : super(key: key);
 
   @override
@@ -99,41 +97,19 @@ class ShieldListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  shieldStrength.toString(),
+                  powerGen.toString(),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '完全回复时间',
-                      style: TextStyle(
-                        color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${fullyChargedTime}',
-                      style: TextStyle(
-                        // color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                    SizedBox(width: 2),
-                    Text(
-                      's',
-                      style: TextStyle(
-                        color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '发电量',
+                  style: TextStyle(
+                    color: Colors.orange[300],
+                    fontSize: 12,
+                  ),
                 ),
-
               ],
             ),
           ],
