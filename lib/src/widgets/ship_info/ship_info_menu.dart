@@ -53,7 +53,7 @@ class _ShipInfoMenuState extends State<ShipInfoMenu> {
         children: [
           Center(
             child: Container(
-              width: 240,
+              width: 180,
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

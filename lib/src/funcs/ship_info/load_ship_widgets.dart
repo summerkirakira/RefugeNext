@@ -4,6 +4,7 @@ import 'package:refuge_next/src/widgets/ship_info/ship_components/cooler.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_components/life_support.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_components/missile.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_components/power_plant.dart';
+import 'package:refuge_next/src/widgets/ship_info/ship_components/qd.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_components/radar.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_components/shield.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_components/turret.dart';
@@ -49,9 +50,9 @@ CoolerListItem getCoolerWidget(Cooler cooler) {
 
   final name = cooler.chineseName ?? cooler.name;
   final coolingMass = cooler.heat.mass;
-  final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(cooler.manufacturer!)!;
+  final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(cooler.manufacturer!);
   final size = cooler.size;
-  final manufacturerName = manufacturer.chineseName ?? manufacturer.name;
+  final manufacturerName = manufacturer != null ? manufacturer.chineseName ?? manufacturer.name : '未知制造商';
 
 
   return CoolerListItem(
@@ -104,9 +105,9 @@ PowerPlantListItem getPowerPlantWidget(PowerPlant powerPlant) {
     final shipInfoRepo = ShipInfoRepo();
 
     final name = powerPlant.chineseName ?? powerPlant.name;
-    final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(powerPlant.manufacturer!)!;
+    final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(powerPlant.manufacturer!);
     final size = powerPlant.size;
-    final manufacturerName = manufacturer.chineseName ?? manufacturer.name;
+    final manufacturerName = manufacturer != null ? manufacturer.chineseName ?? manufacturer.name : '未知制造商';
 
     return PowerPlantListItem(
       name: name,
@@ -178,17 +179,22 @@ MissileListItem getMissileWidget(Missile missile) {
     final size = missile.size;
     final manufacturerName = manufacturer != null ? manufacturer.chineseName ?? manufacturer.name : '未知制造商';
 
+    final damage = missile.damage.damageBiochemical
+        + missile.damage.damageEnergy
+        + missile.damage.damageDistortion
+        + missile.damage.damageThermal
+        + missile.damage.damagePhysical
+        + missile.damage.damageStun;
+
     return MissileListItem(
       name: name,
       manufacturer: manufacturerName,
       size: size,
       energyCount: "0",
-      damage: "20000",
-      speed: "1000",
+      damage: damage.toInt().toString(),
+      speed: missile.speed.toInt().toString(),
     );
 }
-
-
 
 
 Widget getTurretWidget(Turret turret) {
@@ -265,4 +271,51 @@ Widget getMissileRackWidget(MissileRack missileRack) {
           )
       ],
     );
+}
+
+
+QuantumDriveListItem getQuantumDriveWidget(QuantumDrive quantumDrive) {
+    final shipInfoRepo = ShipInfoRepo();
+
+    final name = quantumDrive.chineseName ?? quantumDrive.name;
+    final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(quantumDrive.manufacturer!);
+    final size = quantumDrive.size;
+    final manufacturerName = manufacturer != null ? manufacturer.chineseName ?? manufacturer.name : '未知制造商';
+
+    return QuantumDriveListItem(
+      name: name,
+      manufacturer: manufacturerName,
+      size: size,
+      energyCount: formatNumber(quantumDrive.resourceConnection.standardResourceUnits),
+    );
+}
+
+
+List<int> _getEnergyBricks(ResourceConnection resourceConnection) {
+  final energyCount = resourceConnection.standardResourceUnits;
+  if (resourceConnection.minimumConsumptionFraction == 0) {
+    return List.filled(energyCount.toInt(), 1);
+  }
+  if (resourceConnection.minimumConsumptionFraction == 1) {
+    return [energyCount.toInt()];
+  }
+  final fraction = resourceConnection.minimumConsumptionFraction > 0.5 ? 1 - resourceConnection.minimumConsumptionFraction : resourceConnection.minimumConsumptionFraction;
+  final firstBrickCount = (energyCount * fraction).toInt();
+  final secondBrickCount = energyCount - firstBrickCount;
+  List<int> bricks = [];
+  for (int i = 0; i < firstBrickCount; i++) {
+    bricks.add(1);
+  }
+
+  bricks.add(secondBrickCount.toInt());
+  return bricks;
+}
+
+List<int> getEnergyBricks(List<ResourceConnection> resourceConnections) {
+  final List<int> bricks = [];
+  for (final resourceConnection in resourceConnections) {
+    bricks.addAll(_getEnergyBricks(resourceConnection));
+  }
+  bricks.sort();
+  return bricks;
 }

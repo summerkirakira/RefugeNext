@@ -51,6 +51,7 @@ class AdaptiveBlocks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(
         blocks.length,
             (index) => Expanded(
@@ -129,12 +130,15 @@ class AdaptiveBlocks extends StatelessWidget {
   }
 }
 
-Image _buildIcon(String icon_name, Color color, {double size = 20}) {
-  return Image.asset(
-    'assets/icons/$icon_name.png',
-    color: color,
-    width: size,
-    height: size,
+Widget _buildIcon(String icon_name, {Color color = Colors.lightBlueAccent, double size = 20}) {
+  return Padding(
+    padding: EdgeInsets.only(top: 4),
+    child: Image.asset(
+      'assets/icons/$icon_name.png',
+      color: color,
+      width: size,
+      height: size,
+    ),
   );
 }
 
@@ -145,13 +149,14 @@ class ShipInfoWeaponPage extends StatefulWidget {
 }
 
 class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
-  late List<AdaptiveBlock> blocks;
+  List<AdaptiveBlock> blocks = [];
   late Ship ship;
+  final singleBlockHeight = 20.0;
 
   @override
   void initState() {
     super.initState();
-    _initBlocks();
+    // _initBlocks();
   }
 
   void applyBlocks(List<AdaptiveBlock> newBlocks) {
@@ -166,7 +171,7 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
         SizedBox(height: 4),
         Row(
           children: [
-            _buildIcon("shield", Colors.orange),
+            _buildIcon("shield"),
             SizedBox(height: 8),
             Text(
               '能量',
@@ -209,59 +214,203 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
         ],
         bottomWidget: _buildEnergyBottomWidget(),
       ),
-      AdaptiveBlock(
-        height: 200,
-        backgroundColor: Colors.grey[200],
-        subBlockSpacing: 8,
-        subBlocks: [
-          SubBlock(
-            height: 60,
-            color: Colors.purple,
-            onTap: () => _handleTap(1, 0),
-            tooltip: '方块 2-1',
-          ),
-          SubBlock(
-            height: 80,
-            color: Colors.red,
-            onTap: () => _handleTap(1, 1),
-            tooltip: '方块 2-2',
-          ),
-        ],
-      ),
-      AdaptiveBlock(
-        height: 200,
-        backgroundColor: Colors.grey[200],
-        subBlockSpacing: 8,
-        subBlocks: [
-          SubBlock(
-            height: 100,
-            color: Colors.teal,
-            onTap: () => _handleTap(2, 0),
-            tooltip: '方块 3-1',
-          ),
-        ],
-      ),
-      AdaptiveBlock(
-        height: 200,
-        backgroundColor: Colors.grey[200],
-        subBlockSpacing: 8,
-        subBlocks: [
-          SubBlock(
-            height: 45,
-            color: Colors.cyan,
-            onTap: () => _handleTap(3, 0),
-            tooltip: '方块 4-1',
-          ),
-          SubBlock(
-            height: 45,
-            color: Colors.amber,
-            onTap: () => _handleTap(3, 1),
-            tooltip: '方块 4-2',
-          ),
-        ],
-      ),
     ];
   }
+
+  AdaptiveBlock _getWeaponEnergyBlock() {
+    final subBlocks = <SubBlock>[];
+    for (var i = 0; i < ship.weaponFixedPool; i++) {
+      subBlocks.add(SubBlock(
+        height: singleBlockHeight,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '武器 ${i + 1}',
+      ));
+    }
+    return AdaptiveBlock(
+      height: singleBlockHeight * ship.weaponFixedPool + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("bullets"),
+    );
+  }
+
+  AdaptiveBlock _getFlightEnergyBlock() {
+    final subBlocks = <SubBlock>[];
+    for (var i = 0; i < ship.weaponFixedPool; i++) {
+      subBlocks.add(SubBlock(
+        height: singleBlockHeight,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '飞行 ${i + 1}',
+      ));
+    }
+    return AdaptiveBlock(
+      height: singleBlockHeight * ship.weaponFixedPool + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("speedometer"),
+    );
+  }
+
+  AdaptiveBlock _getShieldEnergyBlock() {
+    final subBlocks = <SubBlock>[];
+    final connections = ship.shields.map((shield) => shield.resourceConnection).toList();
+    final brickList = getEnergyBricks(connections);
+
+    for (var i = 0; i < brickList.length; i++) {
+      subBlocks.add(SubBlock(
+        height: singleBlockHeight * brickList[i] + (brickList[i] - 1) * 4,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '护盾 ${i + 1}',
+      ));
+    }
+
+    final totalSize = brickList.fold(0, (prev, element) => prev + element);
+
+    return AdaptiveBlock(
+      height: singleBlockHeight * totalSize + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("shield"),
+    );
+  }
+
+  AdaptiveBlock _getQuantumDriveEnergyBlock() {
+    final subBlocks = <SubBlock>[];
+    final connections = ship.qd!.resourceConnection;
+    final brickList = getEnergyBricks([connections]);
+
+    for (var i = 0; i < brickList.length; i++) {
+      subBlocks.add(SubBlock(
+        height: singleBlockHeight * brickList[i] + (brickList[i] - 1) * 4,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '量子驱动器 ${i + 1}',
+      ));
+    }
+
+    final totalSize = brickList.fold(0, (prev, element) => prev + element);
+
+    return AdaptiveBlock(
+      height: totalSize * singleBlockHeight + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("atomic"),
+    );
+  }
+
+  AdaptiveBlock _getRadarEnergyBlock() {
+    final subBlocks = <SubBlock>[];
+    // final connections = ship.radar!.resourceConnection;
+    final brickList = [ship.radar!.size];
+
+    for (var i = 0; i < brickList.length; i++) {
+      final height = singleBlockHeight * brickList[i] + (brickList[i] - 1) * 4;
+      subBlocks.add(SubBlock(
+        height: height > 0 ? height : 0,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '雷达 ${i + 1}',
+      ));
+    }
+
+    final totalSize = brickList.fold(0, (prev, element) => prev + element);
+
+    return AdaptiveBlock(
+      height: totalSize * singleBlockHeight + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("antenna-signal"),
+    );
+  }
+
+  AdaptiveBlock _getLifeSupportEnergyBlock() {
+    final subBlocks = <SubBlock>[];
+    final connections = ship.lifeSupport!.resourceConnection;
+    final brickList = getEnergyBricks([connections]);
+
+    for (var i = 0; i < brickList.length; i++) {
+      final height = singleBlockHeight * brickList[i] + (brickList[i] - 1) * 4;
+      subBlocks.add(SubBlock(
+        height: height > 0 ? height : 0,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '生命支持 ${i + 1}',
+      ));
+    }
+
+    final totalSize = brickList.fold(0, (prev, element) => prev + element);
+
+    return AdaptiveBlock(
+      height: singleBlockHeight * totalSize + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("hospital-sign"),
+    );
+  }
+
+  AdaptiveBlock _getSingleCoolerEnergyBlock(Cooler cooler) {
+    final subBlocks = <SubBlock>[];
+    final connections = cooler.resourceConnection;
+    final brickList = getEnergyBricks([connections]);
+
+    for (var i = 0; i < brickList.length; i++) {
+      final height = singleBlockHeight * brickList[i] + (brickList[i] - 1) * 4;
+      subBlocks.add(SubBlock(
+        height: height > 0 ? height : 0,
+        color: Colors.green,
+        onTap: () => _handleTap(0, i),
+        tooltip: '冷却器 ${i + 1}',
+      ));
+    }
+
+    final totalSize = brickList.fold(0, (prev, element) => prev + element);
+
+    return AdaptiveBlock(
+      height: singleBlockHeight * totalSize + 100,
+      backgroundColor: Colors.grey[200],
+      subBlockSpacing: 4,
+      subBlocks: subBlocks,
+      bottomWidget: _buildIcon("fan"),
+    );
+  }
+
+  List<AdaptiveBlock> _getCoolerEnergyBlocks() {
+    final blocks = <AdaptiveBlock>[];
+    for (var i = 0; i < ship.coolers.length; i++) {
+      blocks.add(_getSingleCoolerEnergyBlock(ship.coolers[i]));
+    }
+    return blocks;
+  }
+
+
+  List<AdaptiveBlock> generateEnergyDistributeBlocks() {
+
+    final blocks = [_getWeaponEnergyBlock()];
+    blocks.add(_getFlightEnergyBlock());
+    blocks.add(_getShieldEnergyBlock());
+    if (ship.qd != null) {
+      blocks.add(_getQuantumDriveEnergyBlock());
+    }
+    if (ship.radar != null) {
+      blocks.add(_getRadarEnergyBlock());
+    }
+    if (ship.lifeSupport != null) {
+      blocks.add(_getLifeSupportEnergyBlock());
+    }
+    blocks.addAll(_getCoolerEnergyBlocks());
+
+    return blocks;
+  }
+
 
   void _handleTap(int blockIndex, int subBlockIndex) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -371,6 +520,32 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
     );
   }
 
+  Widget _buildWeaponBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '武器',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            for(int i = 0; i < ship.weapons.length; i++)
+              getWeaponWidget(ship.weapons[i]),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMissileRackBlock() {
     return Card(
       child: Padding(
@@ -474,10 +649,36 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
     );
   }
 
+  Widget _buildQuantumDriveBlock() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8, top: 8),
+                child: Text(
+                  '量子驱动器',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+            ),
+            SizedBox(height: 16),
+            getQuantumDriveWidget(ship.qd!),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
     ship = Provider.of<MainDataModel>(context).currentShipInfo!;
+    blocks = generateEnergyDistributeBlocks();
 
     return Padding(
         padding: EdgeInsets.all(16),
@@ -486,6 +687,8 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
           children: [
             _buildEnergyDistributeBlock(),
             _buildTurretBlock(),
+            if (ship.weapons.isNotEmpty)
+              _buildWeaponBlock(),
             _buildMissileRackBlock(),
             _buildShieldBlock(),
             _buildCoolerBlock(),
@@ -493,6 +696,8 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
               _buildLifeSupportBlock(),
             if (ship.radar != null)
               _buildRadarBlock(),
+            if (ship.qd != null)
+              _buildQuantumDriveBlock(),
             _buildPowerPlantBlock(),
           ],
         ),

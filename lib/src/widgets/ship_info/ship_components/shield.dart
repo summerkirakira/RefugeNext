@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../datasource/data_model.dart';
 
 class ShieldListItem extends StatelessWidget {
   final String name;
@@ -23,7 +26,7 @@ class ShieldListItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Provider.of<MainDataModel>(context).isDarkMode ? Colors.grey[800] : Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -109,28 +112,28 @@ class ShieldListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '完全回复时间',
+                      '护盾强度',
                       style: TextStyle(
                         color: Colors.orange[300],
                         fontSize: 12,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${fullyChargedTime}',
-                      style: TextStyle(
-                        // color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
-                    SizedBox(width: 2),
-                    Text(
-                      's',
-                      style: TextStyle(
-                        color: Colors.orange[300],
-                        fontSize: 12,
-                      ),
-                    ),
+                    // const SizedBox(width: 4),
+                    // Text(
+                    //   '${fullyChargedTime}',
+                    //   style: TextStyle(
+                    //     // color: Colors.orange[300],
+                    //     fontSize: 12,
+                    //   ),
+                    // ),
+                    // SizedBox(width: 2),
+                    // Text(
+                    //   's',
+                    //   style: TextStyle(
+                    //     color: Colors.orange[300],
+                    //     fontSize: 12,
+                    //   ),
+                    // ),
                   ],
                 ),
 

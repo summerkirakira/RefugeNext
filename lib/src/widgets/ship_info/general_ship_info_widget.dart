@@ -175,7 +175,7 @@ class _GeneralShipInfoWidgetState extends State<GeneralShipInfoWidget> {
                         trailing: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text("$scmSpeed", style: valueTextStylesBold),
+                            Text("${scmSpeed?.toInt()}", style: valueTextStylesBold),
                             Text(" m/s", style: valueTextStyles)
                           ],
                         )),
@@ -204,7 +204,7 @@ class _GeneralShipInfoWidgetState extends State<GeneralShipInfoWidget> {
                         trailing: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text("$navMaxSpeed", style: valueTextStylesBold),
+                            Text("${navMaxSpeed?.toInt()}", style: valueTextStylesBold),
                             Text(" m/s", style: valueTextStyles)
                           ],
                         )),

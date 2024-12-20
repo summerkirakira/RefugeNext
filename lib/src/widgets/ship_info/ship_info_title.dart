@@ -23,35 +23,48 @@ class _ShipInfoTitleState extends State<ShipInfoTitle> {
     final shipThumbnail = currentShipInfo.shipNameBinding?.shipPicName;
 
 
-    final shipPicUrl ="https://image.biaoju.site/starcitizen/refuge_next/ship_info/ship_thumb/$shipThumbnail.thumb.png";
+    final shipPicUrl ="https://image.biaoju.site/refuge/data/ship_render/$shipThumbnail.thumb.png";
 
 
     return Container(
       padding: EdgeInsets.all(16),
       child: Expanded(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Column(
+            Expanded(
+              child: Row(
+                children: [
+                  Spacer(),
+                  CachedNetworkImage(
+                    imageUrl: shipPicUrl,
+                    width: 240,
+                    height: 120,
+                    placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                  )
+                ],
+              ),
+            ),
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20),
-                Text(chineseName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                Text(englishName, style: TextStyle(fontSize: 16, color: Colors.grey)),
-                // Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 200,
+                      ),
+                      child: Text(chineseName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    ),
+                    Text(englishName, style: TextStyle(fontSize: 16, color: Colors.grey)),
+                    // Spacer(),
+                  ],
+                ),
+                // Text('船舶信息', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               ],
-            ),
-            Spacer(),
-            AdvancedAvatar(
-                name: 'Hangar',
-                size: 120,
-                image: CachedNetworkImageProvider(shipPicUrl),
-                margin: EdgeInsets.only(),
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(10),
-                )),
-            // Text('船舶信息', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            )
           ],
         ),
       ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../datasource/data_model.dart';
 
 class LifeSupportListItem extends StatelessWidget {
   final String name;
@@ -21,7 +24,7 @@ class LifeSupportListItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Provider.of<MainDataModel>(context).isDarkMode ? Colors.grey[800] : Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(

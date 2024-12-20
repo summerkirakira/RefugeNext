@@ -3,19 +3,19 @@ import 'package:provider/provider.dart';
 
 import '../../../datasource/data_model.dart';
 
-class PowerPlantListItem extends StatelessWidget {
+class QuantumDriveListItem extends StatelessWidget {
   final String name;
   final String manufacturer;
   final String energyCount;
-  final String powerGen;
+  // final String coolingValue;
   final int size;
 
-  const PowerPlantListItem({
+  const QuantumDriveListItem({
     Key? key,
     required this.name,
     required this.manufacturer,
     required this.energyCount,
-    required this.powerGen,
+    // required this.coolingValue,
     required this.size,
   }) : super(key: key);
 
@@ -96,25 +96,25 @@ class PowerPlantListItem extends StatelessWidget {
             ),
 
             // 右侧部分：制冷效率
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  powerGen.toString(),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '发电量',
-                  style: TextStyle(
-                    color: Colors.orange[300],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+            // Column(
+            //   crossAxisAlignment: CrossAxisAlignment.end,
+            //   children: [
+            //     Text(
+            //       coolingValue.toString(),
+            //       style: const TextStyle(
+            //         fontSize: 24,
+            //         fontWeight: FontWeight.bold,
+            //       ),
+            //     ),
+            //     Text(
+            //       '冷却效率',
+            //       style: TextStyle(
+            //         color: Colors.orange[300],
+            //         fontSize: 12,
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),
