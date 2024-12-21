@@ -123,8 +123,4 @@ Future<void> startup() async {
     print('Error during startup: $e');
   }
 
-  final shipInfoRepo = ShipInfoRepo();
-  final armors = await shipInfoRepo.getShips();
-  print(armors);
-
 }

@@ -190,6 +190,7 @@ class MainDataModel extends ChangeNotifier {
     readBuybackItems();
     readCatalogs();
     try {
+      await shipInfoRepo.getShips();
       await initShipUpgrade();
       await filterShipUpgrade(null, null);
       await readHangarLogs();

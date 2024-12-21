@@ -69,9 +69,9 @@ ShieldListItem getShieldWidget(Shield shield) {
   final shipInfoRepo = ShipInfoRepo();
 
   final name = shield.chineseName ?? shield.name;
-  final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(shield.manufacturer!)!;
+  final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(shield.manufacturer!);
   final size = shield.size;
-  final manufacturerName = manufacturer.chineseName ?? manufacturer.name;
+  final manufacturerName = manufacturer != null ? manufacturer.chineseName ?? manufacturer.name : '未知制造商';
 
   return ShieldListItem(
     name: name,

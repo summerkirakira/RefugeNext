@@ -689,7 +689,8 @@ class _ShipInfoWeaponPageState extends State<ShipInfoWeaponPage> {
             _buildTurretBlock(),
             if (ship.weapons.isNotEmpty)
               _buildWeaponBlock(),
-            _buildMissileRackBlock(),
+            if (ship.missileRacks.isNotEmpty)
+              _buildMissileRackBlock(),
             _buildShieldBlock(),
             _buildCoolerBlock(),
             if (ship.lifeSupport != null)

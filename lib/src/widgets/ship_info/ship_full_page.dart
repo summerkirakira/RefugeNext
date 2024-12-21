@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/widgets/ship_info/cargo_page.dart';
 import 'package:refuge_next/src/widgets/ship_info/general_ship_info_widget.dart';
+import 'package:refuge_next/src/widgets/ship_info/paints_info_page.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_menu.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart';
 import 'package:refuge_next/src/widgets/ship_info/weapon_info_page.dart';
@@ -18,38 +19,49 @@ class ShipFullPage extends StatefulWidget {
 }
 
 class _ShipFullPageState extends State<ShipFullPage> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    final shipInfoRepo = ShipInfoRepo();
-
-    Provider.of<MainDataModel>(context).setCurrentShipInfo(shipInfoRepo.getShipsSync()[399]);
+    if (Provider.of<MainDataModel>(context).currentShipInfo == null){
+      final shipInfoRepo = ShipInfoRepo();
+      Provider.of<MainDataModel>(context).setCurrentShipInfo(shipInfoRepo.getShipsSync()[20]);
+    }
 
     return Scaffold(
       body: SafeArea(
-        child: Expanded(
-          // padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              ShipInfoTitle(),
-              ShipInfoMenu(children: [
-                SingleChildScrollView(
-                  physics: BouncingScrollPhysics(),
-                  child: GeneralShipInfoWidget(),
-                ),
-                SingleChildScrollView(
-                  physics: BouncingScrollPhysics(),
-                  child: ShipInfoWeaponPage(),
-                ),
-                CargoPage()
-              ], titles: [
-                '总览',
-                '武装',
-                '运输',
-              ]),
-              // GeneralShipInfoWidget(),
-            ],
-          ),
+        child: Column(
+          children: [
+            ShipInfoTitle(),
+            ShipInfoMenu(children: [
+              SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: GeneralShipInfoWidget(),
+              ),
+              SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: ShipInfoWeaponPage(),
+              ),
+              CargoPage(),
+              SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: PaintInfoPage(),
+              )
+            ], titles: [
+              '总览',
+              '武装',
+              '运输',
+              '涂装'
+            ]),
+            // GeneralShipInfoWidget(),
+          ],
         ),
       )
     );

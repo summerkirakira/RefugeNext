@@ -53,6 +53,14 @@ class _CargoPageState extends State<CargoPage> {
   late Ship ship;
 
   Widget _buildCargoInfoCard(List<CargoGrid> cargoGrids) {
+
+    if (cargoGrids.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Text("没有货仓信息"),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.only(bottom: 12),
@@ -93,13 +101,16 @@ class _CargoPageState extends State<CargoPage> {
   @override
   Widget build(BuildContext context) {
     ship = Provider.of<MainDataModel>(context).currentShipInfo!;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _buildCargoInfoCard(ship.cargos),
-        ],
-      )
+    return SingleChildScrollView(
+      physics: BouncingScrollPhysics(),
+      child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildCargoInfoCard(ship.cargos),
+            ],
+          )
+      ),
     );
   }
 }
