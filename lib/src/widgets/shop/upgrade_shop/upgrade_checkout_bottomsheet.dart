@@ -13,6 +13,9 @@ import '../cart/cart.dart';
 
 
 WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeShipInfo fromShip, UpgradeShipInfo toShip, Skus toSku, BuildContext rootContext) {
+
+  String numberString = '';
+
   return WoltModalSheetPage(
     navBarHeight: 50,
     pageTitle: const Padding(
@@ -47,11 +50,14 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
           Text("从 ${fromShip.name} 升级到 ${toShip.name}"),
           Text("升级版本: ${toSku.title}"),
           SizedBox(height: 20),
-          const TextField(
+          TextField(
             decoration: InputDecoration(
               // hintText: '购买数量',
               labelText: '购买数量',
             ),
+            onChanged: (value) {
+              numberString = value;
+            },
           ),
 
           const SizedBox(height: 200),
@@ -68,6 +74,22 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
             backgroundColor: Theme.of(context).primaryColor,
           ),
           onPressed: () async {
+
+            int? number = int.tryParse(numberString);
+            if (number == null) {
+              showToast(message: "请输入正确的购买数量");
+              return;
+            }
+            if (number > 5) {
+              showToast(message: "购买数量不能大于5");
+              return;
+            }
+            if (number <= 0) {
+              showToast(message: "购买数量不能小于1");
+              return;
+            }
+
+
             String token = await UpgradeAddToCart(skuId: toSku.id!, fromShipId: fromShip.id!).execute();
             try {
               await ApplyUpgradeToken(upgradeToken: token).execute();

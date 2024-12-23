@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:refuge_next/src/network/cirno/property/property.dart';
 import 'package:refuge_next/src/repo/ship_alias.dart';
+import 'package:refuge_next/src/repo/ship_info.dart';
 import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/widgets/hangar/hangar_log/hangar_log_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
+import '../../datasource/data_model.dart';
 import '../../datasource/models/hangar.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +15,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../widgets/general/screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../funcs/images.dart';
+import '../ship_info/ship_full_page.dart';
 import 'ccu_optimizor/hangar_util.dart';
 
 
@@ -23,8 +27,23 @@ String priceString(int price) {
   }
 }
 
+Future<void> jumpToShipInfoPage(BuildContext context, ShipAlias ship) async {
+  ShipInfoRepo shipInfoRepo = ShipInfoRepo();
 
-Widget getUpgradeFromWiget(ShipAlias? ship, bool isFromShip) {
+  final shipInfo = await shipInfoRepo.getShipByAliasId(ship.id);
+
+  if (shipInfo == null) {
+    return;
+  }
+  Provider.of<MainDataModel>(context, listen: false).setCurrentShipInfo(shipInfo);
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const ShipFullPage()),
+  );
+}
+
+
+Widget getUpgradeFromWiget(BuildContext context, ShipAlias? ship, bool isFromShip) {
 
   if (ship == null) {
     return Container();
@@ -38,10 +57,15 @@ Widget getUpgradeFromWiget(ShipAlias? ship, bool isFromShip) {
       Text(title, style: const TextStyle(
           fontSize: 14,
       )),
-      Text(ship.chineseName!, style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold
-      )),
+      GestureDetector(
+        onTap: () async {
+          await jumpToShipInfoPage(context, ship);
+        },
+        child: Text(ship.chineseName!, style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold
+        )),
+      ),
       const SizedBox(width: 10),
       Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
         fontSize: 16,
@@ -52,7 +76,7 @@ Widget getUpgradeFromWiget(ShipAlias? ship, bool isFromShip) {
 }
 
 
-Widget getUpgradeSubHangarItemWidget(HangarItem hangarItem) {
+Widget getUpgradeSubHangarItemWidget(BuildContext context, HangarItem hangarItem) {
 
   if (hangarItem.items.isEmpty) {
     return Container();
@@ -88,10 +112,10 @@ Widget getUpgradeSubHangarItemWidget(HangarItem hangarItem) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                getUpgradeFromWiget(hangarItem.fromShip, true),
+                getUpgradeFromWiget(context, hangarItem.fromShip, true),
                 // Icon(Icons.keyboard_double_arrow_down_outlined),
                 SizedBox(height: 12),
-                getUpgradeFromWiget(hangarItem.toShip, false),
+                getUpgradeFromWiget(context, hangarItem.toShip, false),
               ],
             ),
           )
@@ -105,62 +129,69 @@ Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
 
   final ship = ShipAliasRepo().getShipAliasSync(item.title);
 
-  return Row(
-    children: [
-      Container(
-        height: 80,
-        width: 120,
-        child: CachedNetworkImage(
-            imageUrl: item.image,
-            placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 30),
-            errorWidget: (context, url, error) => Icon(Icons.error),
-            imageBuilder: (context, imageProvider) => Container(
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: const BorderRadius.all(Radius.circular(10))
+  return GestureDetector(
+    child: Row(
+      children: [
+        Container(
+          height: 80,
+          width: 120,
+          child: CachedNetworkImage(
+              imageUrl: item.image,
+              placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 30),
+              errorWidget: (context, url, error) => Icon(Icons.error),
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(10))
+                ),
+              )
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+            child: Container(
+              height: 70,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.chineseTitle!, style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold
+                  )),
+                  const SizedBox(height: 5),
+                  Text(item.chineseSubtitle!, style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey
+                  )),
+                  const SizedBox(height: 5),
+                  if (ship != null)
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          // Text("价格: ", style: const TextStyle(
+                          //     fontSize: 16
+                          // )),
+                          Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 16
+                          ))
+                        ]
+                    )
+                ],
               ),
             )
         ),
-      ),
-      const SizedBox(width: 10),
-      Expanded(
-          child: Container(
-            height: 70,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.chineseTitle!, style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold
-                )),
-                const SizedBox(height: 5),
-                Text(item.chineseSubtitle!, style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey
-                )),
-                const SizedBox(height: 5),
-                if (ship != null)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      // Text("价格: ", style: const TextStyle(
-                      //     fontSize: 16
-                      // )),
-                      Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 16
-                      ))
-                    ]
-                  )
-              ],
-            ),
-          )
-      ),
-    ],
+      ],
+    ),
+    onTap: () async {
+      if (ship != null) {
+        await jumpToShipInfoPage(context, ship);
+      }
+    },
   );
 }
 
@@ -553,7 +584,7 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
                   padding: const EdgeInsets.only(
                       top: 10
                   ),
-                  child: getUpgradeSubHangarItemWidget(hangarItem),
+                  child: getUpgradeSubHangarItemWidget(context, hangarItem),
                 ),
           const Divider(),
           if (!hangarItem.isUpgrade)

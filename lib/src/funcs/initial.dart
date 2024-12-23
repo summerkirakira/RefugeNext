@@ -89,6 +89,16 @@ Future<void> updateShipAlias(RefugeVersionProperty latestVersion) async {
   await shipAliasRepo.writeShipAliases(shipAliases, latestVersion.shipAliasVersionCode);
 }
 
+Future<void> updateShipInfo(RefugeVersionProperty latestVersion) async {
+  final shipInfoRepo = ShipInfoRepo();
+  final version = await shipInfoRepo.getShipInfoVersion();
+  if (version >= latestVersion.shipInfoVersionCode) {
+    return;
+  }
+  await downloadAndExtractFile(url: latestVersion.shipInfoUrl, extractPath: "ship_info/components");
+  await shipInfoRepo.writeShipInfoVersion(latestVersion.shipInfoVersionCode);
+}
+
 Future<void> setVip() async {
   final cirnoAuth = await CirnoAuth.getInstance();
   if (cirnoAuth.isInitialized) {
@@ -108,6 +118,8 @@ Future<void> startup() async {
 
     await updateShipAlias(cirnoAuth.property!);
     await updateTranslation(cirnoAuth.property!);
+    await updateShipInfo(cirnoAuth.property!);
+
     await setCurrency();
     await setVip();
 

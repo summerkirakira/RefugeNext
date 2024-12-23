@@ -39,6 +39,8 @@ class RefugeVersionProperty {
   final int credit;
   final String appUrl;
   final String updateContent;
+  final int shipInfoVersionCode;
+  final String shipInfoUrl;
 
   RefugeVersionProperty({
     required this.versionCode,
@@ -52,6 +54,8 @@ class RefugeVersionProperty {
     required this.credit,
     required this.appUrl,
     required this.updateContent,
+    required this.shipInfoVersionCode,
+    required this.shipInfoUrl,
   });
 
   factory RefugeVersionProperty.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,8 @@ class RefugeVersionProperty {
       credit: json['credit'] as int,
       appUrl: json['appUrl'] as String,
       updateContent: json['updateContent'] as String,
+      shipInfoVersionCode: json['shipInfoVersionCode'] as int,
+      shipInfoUrl: json['shipInfoUrl'] as String,
     );
   }
 
@@ -83,6 +89,8 @@ class RefugeVersionProperty {
       'credit': credit,
       'appUrl': appUrl,
       'updateContent': updateContent,
+      'shipInfoVersionCode': shipInfoVersionCode,
+      'shipInfoUrl': shipInfoUrl,
     };
   }
 }

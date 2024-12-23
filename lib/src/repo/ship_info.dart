@@ -161,6 +161,11 @@ class ShipInfoRepo {
     return prefs.getInt('vip.kirakira.ship_info.version') ?? 0;
   }
 
+  Future<void> writeShipInfoVersion(int version) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('vip.kirakira.ship_info.version', version);
+  }
+
 
   Future<List<Manufacturer>> readManufacturers() async {
     try {

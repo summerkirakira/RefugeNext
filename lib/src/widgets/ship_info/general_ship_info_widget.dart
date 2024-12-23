@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/ship_info/load_ship_info.dart';
 import 'package:refuge_next/src/repo/ship_info.dart';
+import 'package:refuge_next/src/widgets/ship_info/shop_loacation_card.dart';
 
 import '../../datasource/data_model.dart';
 
@@ -250,24 +251,24 @@ class _GeneralShipInfoWidgetState extends State<GeneralShipInfoWidget> {
                             Text(" kg", style: valueTextStyles)
                           ],
                         )),
-                    ShipSimpleInfoItem(
-                        title: "氢燃料",
-                        trailing: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text("$fuel", style: valueTextStylesBold),
-                            Text(" l", style: valueTextStyles)
-                          ],
-                        )),
-                    ShipSimpleInfoItem(
-                        title: "量子燃料",
-                        trailing: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text("$qtFuel", style: valueTextStylesBold),
-                            Text(" l", style: valueTextStyles)
-                          ],
-                        )),
+                    // ShipSimpleInfoItem(
+                    //     title: "氢燃料",
+                    //     trailing: Row(
+                    //       crossAxisAlignment: CrossAxisAlignment.end,
+                    //       children: [
+                    //         Text("$fuel", style: valueTextStylesBold),
+                    //         Text(" l", style: valueTextStyles)
+                    //       ],
+                    //     )),
+                    // ShipSimpleInfoItem(
+                    //     title: "量子燃料",
+                    //     trailing: Row(
+                    //       crossAxisAlignment: CrossAxisAlignment.end,
+                    //       children: [
+                    //         Text("$qtFuel", style: valueTextStylesBold),
+                    //         Text(" l", style: valueTextStyles)
+                    //       ],
+                    //     )),
                     ShipSimpleInfoItem(
                         title: "燃料提取",
                         trailing: Row(
@@ -297,6 +298,31 @@ class _GeneralShipInfoWidgetState extends State<GeneralShipInfoWidget> {
                             Text(" dmg", style: valueTextStyles)
                           ],
                         )),
+                  ],
+                ),
+              ),
+            ),
+            if (selectedShipInfo.shopInfo.isNotEmpty)
+              Card(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                        padding: EdgeInsets.only(left: 16, top:16),
+                      child: Text("购买地点",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                    ),
+                    // SizedBox(height: 10),
+                   for (var shopInfo in selectedShipInfo.shopInfo) ...[
+                     ShipSimpleInfoItem(
+                        title: shopInfo.chineseLocation ?? shopInfo.location,
+                        trailing: Text(shopInfo.chineseName ?? shopInfo.name,
+                            style: valueTextStylesBold),
+                      ),
+                     ]
                   ],
                 ),
               ),

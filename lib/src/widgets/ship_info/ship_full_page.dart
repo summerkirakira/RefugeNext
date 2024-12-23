@@ -19,51 +19,86 @@ class ShipFullPage extends StatefulWidget {
 }
 
 class _ShipFullPageState extends State<ShipFullPage> {
+  final ShipInfoRepo _shipInfoRepo = ShipInfoRepo();
+  bool _isLoading = true;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    _initializeShipInfo();
+  }
 
+  Future<void> _initializeShipInfo() async {
+    // 使用 addPostFrameCallback 确保 context 可用
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final dataModel = Provider.of<MainDataModel>(context, listen: false);
+
+      // 如果已经有当前船只信息，不需要继续初始化
+      if (dataModel.currentShipInfo != null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // 检查是否有本地数据
+      if (_shipInfoRepo.getShipsSync().isEmpty) {
+        // 没有本地数据，需要获取
+        await _shipInfoRepo.getShips();
+      }
+
+      // 获取第一艘船的信息
+      final ships = _shipInfoRepo.getShipsSync();
+      if (ships.isNotEmpty) {
+        dataModel.setCurrentShipInfo(ships[0]);
+      }
+
+      setState(() => _isLoading = false);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-
-    if (Provider.of<MainDataModel>(context).currentShipInfo == null){
-      final shipInfoRepo = ShipInfoRepo();
-      Provider.of<MainDataModel>(context).setCurrentShipInfo(shipInfoRepo.getShipsSync()[20]);
+    // 如果正在加载，显示加载指示器
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
+    // 检查当前是否有船只信息
+    final currentShip = Provider.of<MainDataModel>(context).currentShipInfo;
+    if (currentShip == null) {
+      return const Scaffold(
+        body: Center(child: Text('No ship information available')),
+      );
+    }
+
+    // 主界面
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            ShipInfoTitle(),
-            ShipInfoMenu(children: [
-              SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
-                child: GeneralShipInfoWidget(),
-              ),
-              SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
-                child: ShipInfoWeaponPage(),
-              ),
-              CargoPage(),
-              SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
-                child: PaintInfoPage(),
-              )
-            ], titles: [
-              '总览',
-              '武装',
-              '运输',
-              '涂装'
-            ]),
-            // GeneralShipInfoWidget(),
+            const ShipInfoTitle(),
+            ShipInfoMenu(
+              children: [
+                SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: GeneralShipInfoWidget(),
+                ),
+                SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ShipInfoWeaponPage(),
+                ),
+                CargoPage(),
+                SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: PaintInfoPage(),
+                )
+              ],
+              titles: const ['总览', '武装', '运输', '涂装'],
+            ),
           ],
         ),
-      )
+      ),
     );
   }
 }

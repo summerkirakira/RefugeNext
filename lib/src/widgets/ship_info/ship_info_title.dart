@@ -10,6 +10,126 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../datasource/models/ship_info/ship.dart';
 
 
+class ShipPriceDisplay extends StatelessWidget {
+  final int? usdPrice; // 以分为单位
+  final int? auecPrice;
+
+  const ShipPriceDisplay({
+    super.key,
+    this.usdPrice,
+    this.auecPrice,
+  });
+
+  String _formatAuecPrice(int price) {
+    if (price >= 1000000) {
+      return '${(price / 1000000).toStringAsFixed(1)}M';
+    } else if (price >= 1000) {
+      return '${(price / 1000).toStringAsFixed(1)}K';
+    }
+    return price.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end, // 改为底边对齐
+      children: [
+        if (usdPrice != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end, // 改为底边对齐
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4), // 添加底部间距使标签对齐更美观
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'USD',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange.shade700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '\$',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.orange.shade700,
+                ),
+              ),
+              Text(
+                '${(usdPrice! / 100).toInt()}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade700,
+                  height: 1,
+                ),
+              ),
+            ],
+          ),
+
+        if (usdPrice != null && auecPrice != null)
+          const SizedBox(width: 16),
+
+        if (auecPrice != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end, // 改为底边对齐
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4), // 添加底部间距使标签对齐更美观
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'aUEC',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatAuecPrice(auecPrice!),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade700,
+                  height: 1,
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
 void showShipSelector(BuildContext context) {
   final shipInfoRepo = ShipInfoRepo();
   final dataModel = Provider.of<MainDataModel>(context, listen: false);
@@ -205,6 +325,19 @@ class _ShipInfoTitleState extends State<ShipInfoTitle> {
 
     final shipPicUrl ="https://image.biaoju.site/refuge/data/ship_render/$shipThumbnail.thumb.png";
 
+    List<Sku>? shipSkus = currentShipInfo.shipAlias?.skus;
+
+    // get highest sku
+    Sku? highestSku;
+    if (shipSkus != null) {
+      highestSku = shipSkus.reduce((curr, next) => curr.price > next.price ? curr : next);
+    }
+
+    int? highestAuecPrice;
+    if (currentShipInfo != null && currentShipInfo.shopInfo.isNotEmpty) {
+      highestAuecPrice = currentShipInfo.shopInfo.reduce((curr, next) => curr.price > next.price ? curr : next).price;
+    }
+
     return Container(
       padding: EdgeInsets.all(16),
       child: Stack(
@@ -214,8 +347,8 @@ class _ShipInfoTitleState extends State<ShipInfoTitle> {
               Spacer(),
               CachedNetworkImage(
                 imageUrl: shipPicUrl,
-                width: 240,
-                height: 120,
+                width: 220,
+                height: 110,
                 placeholder: (context, url) => Center(child: CircularProgressIndicator()),
                 errorWidget: (context, url, error) => Icon(Icons.error),
               )
@@ -243,7 +376,17 @@ class _ShipInfoTitleState extends State<ShipInfoTitle> {
                       )
                     ],
                   ),
+
+
                   // Spacer(),
+                  if (highestSku != null || highestAuecPrice != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: ShipPriceDisplay(
+                        usdPrice: highestSku?.price,
+                        auecPrice: highestAuecPrice,
+                      ),
+                    ),
                 ],
               ),
               // Text('船舶信息', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
