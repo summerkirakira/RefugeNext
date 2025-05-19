@@ -51,7 +51,7 @@ dependencies:
   flutter_advanced_avatar: ^1.5.0
   wolt_modal_sheet: ^0.7.0
   syncfusion_flutter_sliders: ^26.1.40
-  local_auth: ^2.2.0
+  local_auth: ^2.3.0
   shared_preferences: 2.0.15
   flutter_keyboard_visibility: ^6.0.0
   share_plus: ^9.0.0
