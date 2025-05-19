@@ -4,6 +4,13 @@ import '../../datasource/data_model.dart';
 import 'buyback_item.dart';
 
 class BuybackPage extends StatefulWidget {
+  final Key? refreshKey;
+
+  const BuybackPage({
+    Key? key,
+    this.refreshKey,
+  }) : super(key: key);
+
   @override
   _BuybackPageState createState() => _BuybackPageState();
 }
@@ -12,6 +19,7 @@ class _BuybackPageState extends State<BuybackPage> {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
+        key: widget.refreshKey,
         child: Container(
           child: Column(
             children: [
