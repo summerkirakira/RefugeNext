@@ -10,7 +10,12 @@ import 'upgrade_shop/upgrade_ship_widget.dart';
 import 'package:badges/badges.dart' as badges;
 
 class ShopTopBar extends StatefulWidget {
-  const ShopTopBar({Key? key}) : super(key: key);
+  final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
+  
+  const ShopTopBar({
+    Key? key,
+    this.refreshKeys,
+  }) : super(key: key);
 
   @override
   _ShopTopBarState createState() => _ShopTopBarState();
@@ -54,6 +59,17 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   )),
               const Text('商店', style: TextStyle(fontSize: 24)),
               const Spacer(),
+              if (widget.refreshKeys != null)
+                IconButton(
+                  onPressed: () {
+                    final activePageIndex = context.read<MainDataModel>().activePageIndex;
+                    if (activePageIndex >= 100 && activePageIndex < 110) {
+                      final index = activePageIndex - 100;
+                      widget.refreshKeys?[index].currentState?.show();
+                    }
+                  },
+                  icon: const Icon(Icons.refresh),
+                ),
               GestureDetector(
                 onTap: () async {
                   await onPressUpgrade(context);
