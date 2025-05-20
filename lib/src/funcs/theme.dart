@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -127,13 +129,22 @@ class ThemeManager {
   static ThemeData getTheme(BuildContext context) {
 
     if (!_instance.isInitialized) {
-      return FlexColorScheme.light(scheme: FlexScheme.material).toTheme;
+      return FlexColorScheme.light(
+        scheme: FlexScheme.material,
+        fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
+      ).toTheme;
     }
 
     if (_instance.isDark) {
-      return FlexColorScheme.dark(scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme)).toTheme;
+      return FlexColorScheme.dark(
+        scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme),
+        fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
+      ).toTheme;
     } else {
-      return FlexColorScheme.light(scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme)).toTheme;
+      return FlexColorScheme.light(
+        scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme),
+        fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
+      ).toTheme;
     }
   }
 
