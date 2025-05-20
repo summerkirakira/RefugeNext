@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -65,12 +66,16 @@ jobs:
           security import certificate.p12 -k build.keychain -P "${{ secrets.CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           
-          # 配置并构建
+          # 设置 Xcode 项目的签名配置
+          plutil -replace "CODE_SIGN_IDENTITY" -string "${{ secrets.CERTIFICATE_NAME }}" macos/Runner.xcodeproj/project.pbxproj
+          plutil -replace "DEVELOPMENT_TEAM" -string "${{ secrets.TEAM_ID }}" macos/Runner.xcodeproj/project.pbxproj
+          
+          # 构建
           flutter config --enable-macos-desktop
           flutter build macos --release
           
-          # 对应用进行签名
-          codesign --force --deep --sign "${{ secrets.CERTIFICATE_NAME }}" build/macos/Build/Products/Release/星河避难所.app
+          # 验证签名
+          codesign -dvv build/macos/Build/Products/Release/星河避难所.app
           
           # 打包
           cd build/macos/Build/Products/Release
