@@ -1,0 +1,92 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            output_path: build/app/outputs/flutter-apk/app-release.apk
+            asset_name: refuge-android.apk
+          - os: macos-latest
+            output_path: build/macos/Build/Products/Release/星河避难所.app
+            asset_name: refuge-macos.zip
+          - os: windows-latest
+            output_path: build/windows/runner/Release
+            asset_name: refuge-windows.zip
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Build Android
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # 创建 key.properties 文件
+          echo "storeFile=keystore.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          
+          # 解码并保存 keystore 文件
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+          
+          # 构建发布版 APK
+          flutter build apk --release
+
+      - name: Build macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          # 导入证书
+          echo "${{ secrets.MACOS_CERTIFICATE }}" | base64 --decode > certificate.p12
+          
+          # 创建钥匙串
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          
+          # 导入证书到钥匙串
+          security import certificate.p12 -k build.keychain -P "${{ secrets.CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          
+          # 配置并构建
+          flutter config --enable-macos-desktop
+          flutter build macos --release
+          
+          # 对应用进行签名
+          codesign --force --deep --sign "${{ secrets.CERTIFICATE_NAME }}" build/macos/Build/Products/Release/星河避难所.app
+          
+          # 打包
+          cd build/macos/Build/Products/Release
+          zip -r refuge-macos.zip 星河避难所.app/
+
+      - name: Build Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows --release
+          powershell Compress-Archive build/windows/x64/runner/Release refuge-windows.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ matrix.asset_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
