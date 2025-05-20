@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload Release Asset
         if: matrix.os != 'ubuntu-latest'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.output_path }}
