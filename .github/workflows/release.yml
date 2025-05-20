@@ -14,13 +14,13 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            output_path: build/app/outputs/flutter-apk/app-release.apk
-            asset_name: refuge-android.apk
+            output_path: build/app/outputs/flutter-apk/refuge-android.apk
+            asset_name: app-release.apk
           - os: macos-latest
-            output_path: build/macos/Build/Products/Release/星河避难所.app
+            output_path: build/macos/Build/Products/Release/refuge-macos.zip
             asset_name: refuge-macos.zip
           - os: windows-latest
-            output_path: build/windows/x64/runner/Release
+            output_path: build/windows/x64/runner/refuge-windows.zip
             asset_name: refuge-windows.zip
 
     steps:
@@ -49,6 +49,7 @@ jobs:
           
           # 构建发布版 APK
           flutter build apk --release
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/refuge-android.apk
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
@@ -70,7 +71,7 @@ jobs:
         run: |
           flutter config --enable-windows-desktop
           flutter build windows --release
-          powershell Compress-Archive build/windows/x64/runner/Release refuge-windows.zip
+          powershell Compress-Archive build/windows/x64/runner/Release build/windows/x64/runner/refuge-windows.zip
 
       - name: Get Changelog
         if: matrix.os == 'ubuntu-latest'
