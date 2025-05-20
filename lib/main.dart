@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/funcs/request_star.dart';
 import 'package:refuge_next/src/widgets/utility/utility_page.dart';
 import 'src/datasource/data_model.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
@@ -121,6 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkUpdate();
+      showStarDialog(context);
     });
   }
 
