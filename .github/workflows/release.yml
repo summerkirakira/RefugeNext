@@ -20,7 +20,7 @@ jobs:
             output_path: build/macos/Build/Products/Release/星河避难所.app
             asset_name: refuge-macos.zip
           - os: windows-latest
-            output_path: build/windows/runner/Release
+            output_path: build/windows/x64/runner/Release
             asset_name: refuge-windows.zip
 
     steps:
