@@ -89,25 +89,42 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
 
-    return BigUserCard(
-      // cardColor: Colors.red,
-      backgroundColor: cardBackgroundColor(context),
-      userName: userNameString,
-      userProfilePic: userProfilePic,
-      cardActionWidget: SettingsItem(
-        icons: Icons.edit,
-        iconStyle: IconStyle(
-          withBackground: true,
-          borderRadius: 50,
+    return Stack(
+      children: [
+        BigUserCard(
+          // cardColor: Colors.red,
           backgroundColor: cardBackgroundColor(context),
+          userName: userNameString,
+          userProfilePic: userProfilePic,
+          cardActionWidget: SettingsItem(
+            icons: Icons.edit,
+            iconStyle: IconStyle(
+              withBackground: true,
+              borderRadius: 50,
+              backgroundColor: cardBackgroundColor(context),
+            ),
+            title: title,
+            subtitle: subtitle,
+            onTap: () async {
+              Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            },
+          ),
         ),
-        title: title,
-        subtitle: subtitle,
-        onTap: () async {
-          Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        },
-      ),
+        if (Theme.of(context).platform == TargetPlatform.macOS || 
+            Theme.of(context).platform == TargetPlatform.windows || 
+            Theme.of(context).platform == TargetPlatform.linux)
+          Positioned(
+            left: 0,
+            top: 0,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+      ],
     );
   }
 
@@ -217,7 +234,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: "更了解避难所",
                   ),
                 ],
-              ),
+              ), 
               // You can add a settings title
               SettingsGroup(
                 settingsGroupTitle: "关于",

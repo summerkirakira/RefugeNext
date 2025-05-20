@@ -342,6 +342,19 @@ class _ShipInfoTitleState extends State<ShipInfoTitle> {
       padding: EdgeInsets.all(16),
       child: Stack(
         children: [
+          if (Theme.of(context).platform == TargetPlatform.macOS || 
+              Theme.of(context).platform == TargetPlatform.windows || 
+              Theme.of(context).platform == TargetPlatform.linux)
+            Positioned(
+              left: 0,
+              top: 0,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
           Row(
             children: [
               Spacer(),
