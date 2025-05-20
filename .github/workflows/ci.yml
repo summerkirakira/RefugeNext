@@ -1,0 +1,78 @@
+name: Release Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            output_path: build/app/outputs/flutter-apk/refuge-android.apk
+            asset_name: refuge-android.apk
+          - os: macos-latest
+            output_path: build/macos/Build/Products/Release/refuge-macos.zip
+            asset_name: refuge-macos.zip
+          - os: windows-latest
+            output_path: build/windows/x64/runner/refuge-windows.zip
+            asset_name: refuge-windows.zip
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Build Android
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # 创建 key.properties 文件
+          echo "storeFile=keystore.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          
+          # 解码并保存 keystore 文件
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+          
+          # 构建发布版 APK
+          flutter build apk --release
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/refuge-android.apk
+
+      - name: Build macOS
+        if: matrix.os == 'macos-latest'
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
+          p12-password: ${{ secrets.CERTIFICATE_PASSWORD }}
+      
+      - name: Build and Package macOS App
+        if: matrix.os == 'macos-latest'
+        run: |
+          flutter config --enable-macos-desktop
+          flutter build macos --release
+          cd build/macos/Build/Products/Release
+          zip -r refuge-macos.zip 星河避难所.app/
+
+      - name: Build Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows --release
+          powershell Compress-Archive build/windows/x64/runner/Release build/windows/x64/runner/refuge-windows.zip
+
+      - name: Upload Release Asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.output_path }}
