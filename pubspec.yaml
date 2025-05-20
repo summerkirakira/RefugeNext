@@ -75,6 +75,7 @@ dependencies:
   animated_tree_view: ^2.3.0
   vector_math: ^2.1.4
   toastification: ^2.3.0
+  msix: ^3.7.0
 
 
 dev_dependencies:
@@ -137,3 +138,11 @@ flutter:
 
 flutter_native_splash:
   color: "#42a5f5"
+
+msix_config:
+  display_name: 星河避难所
+  publisher_display_name: Summerkirakira
+  identity_name: vip.kirakira.Refuge-windows
+  capabilities: internetClient
+  languages: zh-cn
+  store: false
