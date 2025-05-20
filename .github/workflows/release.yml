@@ -83,10 +83,22 @@ jobs:
           flutter build windows --release
           powershell Compress-Archive build/windows/x64/runner/Release refuge-windows.zip
 
+      - name: Get Changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(awk '/## [${{ github.ref_name }}]/,/## [0-9]/' CHANGELOG.md)
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             ${{ matrix.asset_name }}
+          body: ${{ env.CHANGELOG }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
