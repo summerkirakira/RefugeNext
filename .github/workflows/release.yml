@@ -87,13 +87,19 @@ jobs:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.output_path }}
 
+      - name: Download All Artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
       - name: Create Release
         if: matrix.os == 'ubuntu-latest'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{ matrix.asset_name }}
-            artifacts/*
+            build/app/outputs/flutter-apk/app-release.apk
+            artifacts/**/*
           body: ${{ env.CHANGELOG }}
           name: Release ${{ github.ref_name }}
           draft: false
