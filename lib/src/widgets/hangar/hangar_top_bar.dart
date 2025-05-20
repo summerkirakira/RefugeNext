@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -55,6 +57,22 @@ class _HangarTopBarState extends State<HangarTopBar> {
                           )),
                       const Text('我的机库', style: TextStyle(fontSize: 24)),
                       const Spacer(),
+                      if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
+                        IconButton(
+                          onPressed: () {
+                            switch (dataModel.activePageIndex) {
+                              case 0: // 机库
+                                widget.refreshKeys?[0].currentState?.show();
+                                break;
+                              case 1: // 回购
+                                widget.refreshKeys?[1].currentState?.show();
+                                break;
+                              default:
+                                break;
+                            }
+                          },
+                          icon: const Icon(Icons.refresh),
+                        ),
                       IconButton(onPressed: () {
                         WoltModalSheet.show<void>(
                             context: context,
@@ -75,22 +93,6 @@ class _HangarTopBarState extends State<HangarTopBar> {
                                 });
                           },
                           icon: const Icon(Icons.search)),
-                      if (widget.refreshKeys != null)
-                        IconButton(
-                          onPressed: () {
-                            switch (dataModel.activePageIndex) {
-                              case 0: // 机库
-                                widget.refreshKeys?[0].currentState?.show();
-                                break;
-                              case 1: // 回购
-                                widget.refreshKeys?[1].currentState?.show();
-                                break;
-                              default:
-                                break;
-                            }
-                          },
-                          icon: const Icon(Icons.refresh),
-                        ),
                     ],
                   ),
           ),

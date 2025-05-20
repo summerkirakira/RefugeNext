@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -59,7 +61,7 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   )),
               const Text('商店', style: TextStyle(fontSize: 24)),
               const Spacer(),
-              if (widget.refreshKeys != null)
+              if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
                 IconButton(
                   onPressed: () {
                     final activePageIndex = context.read<MainDataModel>().activePageIndex;
