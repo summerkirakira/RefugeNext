@@ -33,21 +33,20 @@ Future<String> downloadAndExtractFile({
     final contentLength = response.contentLength ?? 0;
     int received = 0;
 
-    final sink = file.openWrite();
-    await response.stream.listen(
-          (List<int> chunk) {
+    final sink = await file.openWrite();
+    try {
+      await for (final chunk in response.stream) {
         sink.add(chunk);
         received += chunk.length;
         if (contentLength > 0 && onProgress != null) {
           final progress = received / contentLength;
           onProgress(progress);
         }
-      },
-      onDone: () async {
-        await sink.close();
-      },
-      cancelOnError: true,
-    ).asFuture();
+      }
+    } finally {
+      await sink.close(); // 确保 sink 被正确关闭
+    }
+
 
     // 更新状态：开始解压
     onStatus?.call('下载完成，开始解压...');
