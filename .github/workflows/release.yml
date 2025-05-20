@@ -73,18 +73,27 @@ jobs:
           powershell Compress-Archive build/windows/x64/runner/Release refuge-windows.zip
 
       - name: Get Changelog
-        id: changelog
+        if: matrix.os == 'ubuntu-latest'
         run: |
           CHANGELOG=$(awk '/## [${{ github.ref_name }}]/,/## [0-9]/' CHANGELOG.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      - name: Upload Release Asset
+        if: matrix.os != 'ubuntu-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.output_path }}
+
       - name: Create Release
+        if: matrix.os == 'ubuntu-latest'
         uses: softprops/action-gh-release@v1
         with:
           files: |
             ${{ matrix.asset_name }}
+            artifacts/*
           body: ${{ env.CHANGELOG }}
           name: Release ${{ github.ref_name }}
           draft: false
