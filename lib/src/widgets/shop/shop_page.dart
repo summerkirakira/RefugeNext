@@ -18,7 +18,19 @@ class ShopPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<ShopPage> {
-
+  // 为每个页面创建独立的RefreshKey
+  final List<GlobalKey<RefreshIndicatorState>> _refreshKeys = [
+    GlobalKey<RefreshIndicatorState>(), // 舰船
+    GlobalKey<RefreshIndicatorState>(), // 涂装
+    GlobalKey<RefreshIndicatorState>(), // 装备
+    GlobalKey<RefreshIndicatorState>(), // 订阅
+    GlobalKey<RefreshIndicatorState>(), // 游戏包
+    GlobalKey<RefreshIndicatorState>(), // 附加
+    GlobalKey<RefreshIndicatorState>(), // 组合包
+    GlobalKey<RefreshIndicatorState>(), // UEC
+    GlobalKey<RefreshIndicatorState>(), // 礼品卡
+    GlobalKey<RefreshIndicatorState>(), // 组合包
+  ];
 
   void onTap(HangarItem hangarItem, BuildContext context){
 
@@ -45,23 +57,54 @@ class _ShopPageState extends State<ShopPage> {
 
   @override
   Widget build(BuildContext context) {
-
-    return  Column(
+    return Column(
       children: [
-        ShopTopBar(),
-        ShopListPage(children: [
-          CatalogPage(catalogTypes: CatalogTypes.standAloneShip),
-          CatalogPage(catalogTypes: CatalogTypes.paints),
-          CatalogPage(catalogTypes: CatalogTypes.gear),
-          CatalogPage(catalogTypes: CatalogTypes.subscriber),
-          CatalogPage(catalogTypes: CatalogTypes.package),
-          CatalogPage(catalogTypes: CatalogTypes.addOns),
-          CatalogPage(catalogTypes: CatalogTypes.packs),
-          CatalogPage(catalogTypes: CatalogTypes.uec),
-          CatalogPage(catalogTypes: CatalogTypes.giftCard),
-          CatalogPage(catalogTypes: CatalogTypes.combo)
-        ],
-            titles: const ["舰船", "涂装", "装备", "订阅", "游戏包", "附加", "组合包", "UEC", "礼品卡", "组合包"])
+        ShopTopBar(refreshKeys: _refreshKeys),
+        ShopListPage(
+          children: [
+            CatalogPage(
+              catalogTypes: CatalogTypes.standAloneShip,
+              refreshKey: _refreshKeys[0],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.paints,
+              refreshKey: _refreshKeys[1],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.gear,
+              refreshKey: _refreshKeys[2],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.subscriber,
+              refreshKey: _refreshKeys[3],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.package,
+              refreshKey: _refreshKeys[4],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.addOns,
+              refreshKey: _refreshKeys[5],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.packs,
+              refreshKey: _refreshKeys[6],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.uec,
+              refreshKey: _refreshKeys[7],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.giftCard,
+              refreshKey: _refreshKeys[8],
+            ),
+            CatalogPage(
+              catalogTypes: CatalogTypes.combo,
+              refreshKey: _refreshKeys[9],
+            ),
+          ],
+          titles: const ["舰船", "涂装", "装备", "订阅", "游戏包", "附加", "组合包", "UEC", "礼品卡", "组合包"],
+        ),
       ],
     );
   }

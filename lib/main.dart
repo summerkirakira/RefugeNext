@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:refuge_next/src/funcs/request_star.dart';
 import 'package:refuge_next/src/widgets/utility/utility_page.dart';
 import 'src/datasource/data_model.dart';
 import 'src/widgets/navigation/main_navigation_bar.dart';
@@ -12,6 +13,7 @@ import 'package:loader_overlay/loader_overlay.dart';
 import 'package:refuge_next/src/widgets/empty_page/empty_page.dart' show EmptyPage;
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
 import 'package:refuge_next/src/funcs/app_update.dart';
+import 'package:toastification/toastification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,12 +34,14 @@ class RefugeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<MainDataModel>(
         builder: (context, dataModel, _) {
-      return MaterialApp(
-        title: '星河避难所',
-        theme: dataModel.getTheme(context),
-        // theme: FlexColorScheme.light(scheme: FlexScheme.aquaBlue).toTheme,
-        home: LoaderOverlay(
-          child: MyHomePage(),
+      return ToastificationWrapper(
+        child: MaterialApp(
+          title: '星河避难所',
+          theme: dataModel.getTheme(context),
+          // theme: FlexColorScheme.light(scheme: FlexScheme.aquaBlue).toTheme,
+          home: LoaderOverlay(
+            child: MyHomePage(),
+          ),
         ),
       );
     });
@@ -118,6 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkUpdate();
+      showStarDialog(context);
     });
   }
 

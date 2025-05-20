@@ -1,6 +1,9 @@
 import 'package:flutter_custom_tab_bar/library.dart';
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/widgets/hangar/hangar_page.dart';
+import 'package:provider/provider.dart';
+
+import '../../datasource/data_model.dart';
 
 
 class HangarBuybackPage extends StatefulWidget {
@@ -23,8 +26,28 @@ class _HangarBuybackPageState extends State<HangarBuybackPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('HangarBuybackPage initState');
+    // 添加页面切换监听
+    _tabBarController.addListener(() {
+      print('tabBarController.currentIndex: ${_tabBarController.currentIndex}');
+      switch (_tabBarController.currentIndex) {
+        case 0: // 机库页面
+          context.read<MainDataModel>().updateActivePageIndex(0);
+          break;
+        case 1: // 回购页面
+          context.read<MainDataModel>().updateActivePageIndex(1);
+          break;
+        default:
+          break;
+      }
+    });
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Widget getTabbarChild(BuildContext context, int index) {
     return TabBarItem(

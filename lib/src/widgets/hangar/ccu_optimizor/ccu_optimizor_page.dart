@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
@@ -32,8 +33,6 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
   // 已屏蔽的升级列表
   List<UpgradeStep> _blockedUpgrades = [];
   List<UpgradeStep> _mustHaveUpgrades = [];
-
-  final List<String> _products = ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'];
 
   List<String> _fromShips = [];
 
@@ -330,63 +329,6 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     );
   }
 
-  void _showAddBlockedUpgradeDialog(BuildContext modalContext) {
-    String? fromProduct;
-    String? toProduct;
-
-    showDialog(
-      context: modalContext,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add Blocked Upgrade'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomDropdown<String>(
-                hintText: 'From Product',
-                items: _products,
-                onChanged: (value) {
-                  fromProduct = value;
-                },
-              ),
-              SizedBox(height: 8),
-              CustomDropdown<String>(
-                hintText: 'To Product',
-                items: _products,
-                onChanged: (value) {
-                  toProduct = value;
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Add'),
-              onPressed: () {
-                if (fromProduct != null && toProduct != null) {
-                  setState(() {
-                    // _blockedUpgrades.add('$fromProduct to $toProduct');
-                  });
-                  Navigator.of(context).pop();
-                  // 重新构建模态框以反映更改
-                  // WoltModalSheet.changePageTo(
-                  //   pageIndex: 0,
-                  //   context: modalContext,
-                  // );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   void _removeUpgradeStep(int index) {
     _blockedUpgrades.add(_upgradePath[index]);
@@ -425,7 +367,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     return CustomScrollView(
       slivers: <Widget>[
         SliverAppBar(
-          expandedHeight: 185.0,
+          expandedHeight: (Platform.isIOS | Platform.isAndroid) ? 185 : 240,
           floating: false,
           pinned: false,
           flexibleSpace: FlexibleSpaceBar(
@@ -455,7 +397,8 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
+                  Spacer(),
                   Theme(data: FlexColorScheme.light(
                       scheme: FlexScheme.blue).toTheme,
                       child: CustomDropdown<String>.search(
@@ -473,7 +416,8 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                         },
                       ),
                   ),
-
+                  if (!Platform.isIOS && !Platform.isAndroid)
+                    const SizedBox(height: 12),
                   const SizedBox(height: 8),
                   Theme(data: FlexColorScheme.light(
                       scheme: FlexScheme.blue).toTheme,

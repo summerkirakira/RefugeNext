@@ -25,7 +25,11 @@ class HangarPage extends StatefulWidget {
 }
 
 class _HangarPageState extends State<HangarPage> {
-
+  // 添加两个RefreshKey
+  final List<GlobalKey<RefreshIndicatorState>> _refreshKeys = [
+    GlobalKey<RefreshIndicatorState>(), // 机库页面的RefreshKey
+    GlobalKey<RefreshIndicatorState>(), // 回购页面的RefreshKey
+  ];
 
   void onTap(HangarItem hangarItem, BuildContext context){
 
@@ -61,10 +65,11 @@ class _HangarPageState extends State<HangarPage> {
 
     return  Column(
       children: [
-        HangarTopBar(),
+        HangarTopBar(refreshKeys: _refreshKeys),
         HangarBuybackPage(titles: getTitles(), children: [
           Container(
             child: RefreshIndicator(
+                key: _refreshKeys[0],
                 onRefresh: () async {
                   await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
                 },
@@ -139,7 +144,7 @@ class _HangarPageState extends State<HangarPage> {
                 )
             ),
           ),
-          BuybackPage(),
+          BuybackPage(refreshKey: _refreshKeys[1]),
           if (!(Provider.of<MainDataModel>(context).currentUser!.email == '934869815@qq.com'))
           ProductUpgradeWidget(),
         ]),

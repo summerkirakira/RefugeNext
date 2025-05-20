@@ -45,6 +45,8 @@ void onConfirmClicked(RefugeVersionProperty property) {
     onAndroidUpdateConfirmClicked(property);
   } else if (Platform.isIOS) {
     onIosUpdateConfirmClicked(property);
+  } else {
+    showToast(message: "前往QQ群获取最新版本~");
   }
 }
 

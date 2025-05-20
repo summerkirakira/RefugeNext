@@ -4,28 +4,73 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:quickalert/quickalert.dart';
 
 import '../widgets/settings/settings_page.dart';
+import 'package:toastification/toastification.dart';
 
 void showToast({required String message}) {
-  Fluttertoast.showToast(
-    msg: message,
-    toastLength: Toast.LENGTH_SHORT,
-    gravity: ToastGravity.TOP,
-    timeInSecForIosWeb: 1,
-    backgroundColor: Colors.black,
-    textColor: Colors.white,
-    fontSize: 16.0,
-  );
+  // Fluttertoast.showToast(
+  //   msg: message,
+  //   toastLength: Toast.LENGTH_SHORT,
+  //   gravity: ToastGravity.TOP,
+  //   timeInSecForIosWeb: 1,
+  //   backgroundColor: Colors.black,
+  //   textColor: Colors.white,
+  //   fontSize: 16.0,
+  // );
+  debugPrint("Toast: $message");
+
+  if (message.length < 20) {
+    toastification.show(
+      type: ToastificationType.success,
+      style: ToastificationStyle.simple,
+      title: Text(message),
+      description: Text(message),
+      alignment: Alignment.topCenter,
+      autoCloseDuration: const Duration(seconds: 6),
+      borderRadius: BorderRadius.circular(12.0),
+      dragToClose: true,
+    );
+  } else {
+    toastification.show(
+      type: ToastificationType.error,
+      style: ToastificationStyle.flat,
+      title: Text("错误"),
+      description: Text(
+        message,
+      ),
+      alignment: Alignment.topCenter,
+      autoCloseDuration: const Duration(seconds: 6),
+      borderRadius: BorderRadius.circular(12.0),
+      dragToClose: true,
+    );
+  }
+
+
+
+
+
 }
 
 void showAlert({required String message}) {
-  Fluttertoast.showToast(
-    msg: message,
-    toastLength: Toast.LENGTH_SHORT,
-    gravity: ToastGravity.TOP,
-    timeInSecForIosWeb: 1,
-    backgroundColor: Colors.black,
-    textColor: Colors.white,
-    fontSize: 16.0,
+  // Fluttertoast.showToast(
+  //   msg: message,
+  //   toastLength: Toast.LENGTH_SHORT,
+  //   gravity: ToastGravity.TOP,
+  //   timeInSecForIosWeb: 1,
+  //   backgroundColor: Colors.black,
+  //   textColor: Colors.white,
+  //   fontSize: 16.0,
+  // );
+  toastification.show(
+    type: ToastificationType.error,
+    style: ToastificationStyle.flat,
+    title: Text("错误"),
+    description: Text(
+      message,
+    ),
+    alignment: Alignment.topCenter,
+    autoCloseDuration: const Duration(seconds: 6),
+    borderRadius: BorderRadius.circular(12.0),
+    dragToClose: true,
   );
 }
 

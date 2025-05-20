@@ -488,4 +488,22 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _activePageIndex = 0;
+
+  // 0: 机库
+  // 1: 回购
+  // 2: 商店-舰船
+  // 3: 商店-涂装
+  // 4: 商店-升级
+
+
+  int get activePageIndex => _activePageIndex;
+
+  void updateActivePageIndex(int index) {
+    if (_activePageIndex != index) {
+      _activePageIndex = index;
+      notifyListeners();
+    }
+  }
+
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
@@ -10,7 +12,12 @@ import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 
 class HangarTopBar extends StatefulWidget {
-  const HangarTopBar({Key? key}) : super(key: key);
+  final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
+  
+  const HangarTopBar({
+    Key? key, 
+    this.refreshKeys,
+  }) : super(key: key);
 
   @override
   _HangarTopBarState createState() => _HangarTopBarState();
@@ -19,66 +26,78 @@ class HangarTopBar extends StatefulWidget {
 class _HangarTopBarState extends State<HangarTopBar> {
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Container(
-          // color: Colors.black,
-      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),
-      height: 60,
-      child: Provider.of<MainDataModel>(context).currentUser == null
-          ? IconButton(
-              onPressed: () {
-                WoltModalSheet.show<void>(
-                    context: context,
-                    pageListBuilder: (modalSheetContext) {
-                      return [
-                        // getSearchBottomSheet(context)
-                        getLoginBottomSheet(modalSheetContext, context),
-                        // getCaptchaInputBottomSheet(modalSheetContext),
-                        // getEmailInputBottomSheet(modalSheetContext)
-                      ];
-                    });
-              },
-              icon: const Icon(Icons.search))
-          : Row(
-              children: [
-                AdvancedAvatar(
-                    name: 'Hangar',
-                    size: 40,
-                    image: CachedNetworkImageProvider(
-                        Provider.of<MainDataModel>(context)
-                            .currentUser!
-                            .profileImage),
-                    margin: EdgeInsets.only(right: 10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                    )),
-                const Text('我的机库', style: TextStyle(fontSize: 24)),
-                const Spacer(),
-                IconButton(onPressed: () {
-                  WoltModalSheet.show<void>(
-                      context: context,
-                      pageListBuilder: (modalSheetContext) {
-                        return [
-                          getHangarLogBottomSheet(context, null)
-                        ];
-                      });
-                }, icon: const Icon(Icons.description_outlined)),
-                IconButton(
+    return Consumer<MainDataModel>(
+      builder: (context, dataModel, child) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),
+            height: 60,
+            child: dataModel.currentUser == null
+                ? IconButton(
                     onPressed: () {
                       WoltModalSheet.show<void>(
                           context: context,
                           pageListBuilder: (modalSheetContext) {
                             return [
-                              getSearchBottomSheet(context)
-                              // getLoginBottomSheet(modalSheetContext, context),
-                              // getCaptchaInputBottomSheet(modalSheetContext),
-                              // getEmailInputBottomSheet(modalSheetContext)
+                              getLoginBottomSheet(modalSheetContext, context),
                             ];
                           });
                     },
-                    icon: const Icon(Icons.search)),
-              ],
-            ),
-    ));
+                    icon: const Icon(Icons.search))
+                : Row(
+                    children: [
+                      AdvancedAvatar(
+                          name: 'Hangar',
+                          size: 40,
+                          image: CachedNetworkImageProvider(
+                              dataModel.currentUser!.profileImage),
+                          margin: EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                          )),
+                      const Text('我的机库', style: TextStyle(fontSize: 24)),
+                      const Spacer(),
+                      if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
+                        IconButton(
+                          onPressed: () {
+                            switch (dataModel.activePageIndex) {
+                              case 0: // 机库
+                                widget.refreshKeys?[0].currentState?.show();
+                                break;
+                              case 1: // 回购
+                                widget.refreshKeys?[1].currentState?.show();
+                                break;
+                              default:
+                                break;
+                            }
+                          },
+                          icon: const Icon(Icons.refresh),
+                        ),
+                      IconButton(onPressed: () {
+                        WoltModalSheet.show<void>(
+                            context: context,
+                            pageListBuilder: (modalSheetContext) {
+                              return [
+                                getHangarLogBottomSheet(context, null)
+                              ];
+                            });
+                      }, icon: const Icon(Icons.description_outlined)),
+                      IconButton(
+                          onPressed: () {
+                            WoltModalSheet.show<void>(
+                                context: context,
+                                pageListBuilder: (modalSheetContext) {
+                                  return [
+                                    getSearchBottomSheet(context)
+                                  ];
+                                });
+                          },
+                          icon: const Icon(Icons.search)),
+                    ],
+                  ),
+          ),
+        );
+      },
+    );
   }
 }

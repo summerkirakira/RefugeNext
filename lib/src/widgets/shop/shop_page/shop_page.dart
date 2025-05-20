@@ -6,18 +6,24 @@ import 'shop_item_widget.dart' show ShopItemWidget;
 
 
 class CatalogPage extends StatefulWidget {
+  final CatalogTypes catalogTypes;
+  final Key? refreshKey;
 
-  CatalogTypes catalogTypes;
+  const CatalogPage({
+    super.key, 
+    required this.catalogTypes,
+    this.refreshKey,
+  });
 
   @override
   _ShopPageState createState() => _ShopPageState();
-  CatalogPage({super.key, required this.catalogTypes});
 }
 
 class _ShopPageState extends State<CatalogPage> {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
+        key: widget.refreshKey,
         child: Container(
           child: Column(
             children: [

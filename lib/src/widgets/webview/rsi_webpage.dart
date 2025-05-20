@@ -20,6 +20,16 @@ void openRsiWebview({ required BuildContext context, bool replace = false, requi
     return;
   }
 
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    showAlert(message: '桌面端暂不支持此功能QAQ请使用官网浏览器访问');
+    return;
+  }
+
+  if (!Platform.isAndroid) {
+    showAlert(message: '暂不支持此平台QAQ');
+    return;
+  }
+
   final headers = getRsiHeaders();
 
   if (replace) {
