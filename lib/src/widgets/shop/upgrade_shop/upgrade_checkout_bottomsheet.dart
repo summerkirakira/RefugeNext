@@ -27,7 +27,7 @@ String convertVersionNameToChinese(String? version) {
 
 WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeShipInfo fromShip, UpgradeShipInfo toShip, Skus toSku, BuildContext rootContext) {
 
-  String numberString = '';
+  String numberString = '1';
 
   return WoltModalSheetPage(
     navBarHeight: 50,
