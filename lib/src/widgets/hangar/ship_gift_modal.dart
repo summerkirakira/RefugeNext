@@ -14,6 +14,7 @@ WoltModalSheetPage getGiftPage(BuildContext modalSheetContext, BuildContext main
 
   String inputString = "";
   String emailString = "";
+  String targetName = "避难所用户";
 
   return WoltModalSheetPage(
       navBarHeight: 60,
@@ -91,7 +92,7 @@ WoltModalSheetPage getGiftPage(BuildContext modalSheetContext, BuildContext main
               RsiApiClient apiClient = RsiApiClient();
 
               for (int i = 0; i < number; i++) {
-                final result = await apiClient.giftItem(pledge: hangarItem.idList[i].toString(), password: password, email: emailString);
+                final result = await apiClient.giftItem(pledge: hangarItem.idList[i].toString(), password: password, email: emailString, name: targetName);
                 if (result.success == 1) {
                   continue;
                 }
@@ -139,7 +140,18 @@ WoltModalSheetPage getGiftPage(BuildContext modalSheetContext, BuildContext main
             //     });
             //   },
             // )
-
+            TextField(
+              onChanged: (value) {
+                targetName = value;
+              },
+              decoration: const InputDecoration(
+                  labelText: '目标称呼', 
+                  hintText: '避难所用户',
+                  border: OutlineInputBorder()
+              ),
+              controller: TextEditingController(text: '避难所用户'),
+            ),
+            const SizedBox(height: 10),
             TextField(
               onChanged: (value) {
                 emailString = value;
