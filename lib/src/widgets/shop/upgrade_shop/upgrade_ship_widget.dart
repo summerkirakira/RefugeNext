@@ -85,7 +85,7 @@ Future<void> onPressUpgrade(BuildContext context) async {
                   Navigator.of(modalSheetContext).pop();
                   return;
                 }
-                Provider.of<MainDataModel>(context, listen: false).setToSku(ship.skus![0]);
+                Provider.of<MainDataModel>(context, listen: false).setToSku(sku);
 
                 WoltModalSheet.of(modalSheetContext).addPage(
                     getShipSelectBottomSheet(modalSheetContext, fromShips, (UpgradeShipInfo fromShip) async {
@@ -93,7 +93,7 @@ Future<void> onPressUpgrade(BuildContext context) async {
                       Provider.of<MainDataModel>(context, listen: false).setFromShip(fromShip);
                       WoltModalSheet.of(modalSheetContext).showNext();
 
-                      final page = getUpgradeCheckoutBottomSheet(modalSheetContext, fromShip, ship, ship.skus![0], context);
+                      final page = getUpgradeCheckoutBottomSheet(modalSheetContext, fromShip, ship, sku, context);
                       WoltModalSheet.of(modalSheetContext).addPage(page);
                       WoltModalSheet.of(modalSheetContext).showNext();
 

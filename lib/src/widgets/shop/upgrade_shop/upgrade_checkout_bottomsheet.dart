@@ -18,7 +18,7 @@ String convertVersionNameToChinese(String? version) {
   switch (versionName) {
     case "Standard Edition":
       return "标准版";
-    case "Warbound Edition":
+    case "Warbond Edition":
       return "战争债券版";
     default:
       return version;
