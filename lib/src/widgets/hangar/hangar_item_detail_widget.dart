@@ -44,12 +44,25 @@ Future<void> jumpToShipInfoPage(BuildContext context, ShipAlias ship) async {
 
 
 Widget getUpgradeFromWiget(BuildContext context, ShipAlias? ship, bool isFromShip) {
+  String title = isFromShip ? '从 ' : '到 ';
 
   if (ship == null) {
-    return Container();
+    return Row(
+      children: [
+        Text(title, style: const TextStyle(
+            fontSize: 14,
+        )),
+        const Text("未知舰船", style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold
+        )),
+        const SizedBox(width: 10)
+      ],
+    );
   }
 
-  String title = isFromShip ? '从 ' : '到 ';
+
+  String shipName = ship.chineseName == null ? ship.name : ship.chineseName!;
 
 
   return Row(
@@ -61,7 +74,7 @@ Widget getUpgradeFromWiget(BuildContext context, ShipAlias? ship, bool isFromShi
         onTap: () async {
           await jumpToShipInfoPage(context, ship);
         },
-        child: Text(ship.chineseName!, style: const TextStyle(
+        child: Text(shipName, style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold
         )),
