@@ -10,7 +10,20 @@ import '../cart/cart.dart';
 // import 'package:refuge_next/src/network/graphql/shop/step1query.dart';
 // import 'package:refuge_next/src/network/graphql/shop/credit_query.dart';
 
-
+String convertVersionNameToChinese(String? version) {
+  if (version == null) {
+    return "未知版本";
+  }
+  String versionName = version.trim();
+  switch (versionName) {
+    case "Standard Edition":
+      return "标准版";
+    case "Warbound Edition":
+      return "战争债券版";
+    default:
+      return version;
+  }
+}
 
 WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeShipInfo fromShip, UpgradeShipInfo toShip, Skus toSku, BuildContext rootContext) {
 
@@ -25,7 +38,7 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
           children: [
             Text('升级购买',
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-            Text('请选择支付方式',
+            Text('请确认',
                 style: TextStyle(fontSize: 15, color: Colors.grey)),
           ],
         )),
@@ -48,17 +61,17 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
         children: [
           const Text("确定要购买以下升级吗？"),
           Text("从 ${fromShip.name} 升级到 ${toShip.name}"),
-          Text("升级版本: ${toSku.title}"),
-          SizedBox(height: 20),
-          TextField(
-            decoration: InputDecoration(
-              // hintText: '购买数量',
-              labelText: '购买数量',
-            ),
-            onChanged: (value) {
-              numberString = value;
-            },
-          ),
+          Text("升级版本: ${convertVersionNameToChinese(toSku.title)}"),
+          SizedBox(height: 50),
+          // TextField(
+          //   decoration: InputDecoration(
+          //     // hintText: '购买数量',
+          //     labelText: '购买数量',
+          //   ),
+          //   onChanged: (value) {
+          //     numberString = value;
+          //   },
+          // ),
 
           const SizedBox(height: 200),
         ],
