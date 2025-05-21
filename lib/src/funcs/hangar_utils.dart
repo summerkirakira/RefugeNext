@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'package:refuge_next/src/datasource/models/cirno/property.dart';
+import 'package:refuge_next/src/network/cirno/cirno_api.dart';
+
 import '../datasource/models/hangar.dart' show HangarItem, HangarSubItem;
 // import 'package:provider/provider.dart';
 import '../datasource/data_model.dart' show MainDataModel, HangarItemType;
@@ -146,6 +149,7 @@ List<String> splitShipName(String title) {
 Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async {
   final shipAliasRepo = ShipAliasRepo();
   final List<HangarItem> newHangarItems = [];
+  final Map<int, String> notFindShipUpgradeMap = {};
 
 
   for (var hangarItem in hangarItems) {
@@ -168,6 +172,16 @@ Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async 
         fromShip ??= await shipAliasRepo.getShipAlias(matchItemList[0].name!);
 
         toShip ??= await shipAliasRepo.getShipAlias(matchItemList[1].name!);
+
+
+        if (fromShip == null && fromShipId != null) {
+          notFindShipUpgradeMap[fromShipId] = matchItemList[0].name!;
+        }
+        if (toShip == null && toShipId != null) {
+          notFindShipUpgradeMap[toShipId] = matchItemList[1].name!;
+        }
+
+
         if (fromShip != null && toShip != null) {
           price = toShip.getHighestSku() - fromShip.getHighestSku();
         }
@@ -202,6 +216,20 @@ Future<List<HangarItem>> calculateShipPrice(List<HangarItem> hangarItems) async 
 
     newHangarItems.add(newHangarItem);
   }
+
+  CirnoApiClient client = CirnoApiClient();
+  List<UpgradeShip> upgradeShips = notFindShipUpgradeMap.entries.map((e) {
+    return UpgradeShip(
+      id: e.key,
+      name: e.value,
+    );
+  }).toList();
+
+  if (upgradeShips.isEmpty) {
+    return newHangarItems;
+  }
+
+  await client.uploadNotFindShip(upgradeShips);
 
   return newHangarItems;
 }

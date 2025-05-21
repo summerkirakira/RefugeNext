@@ -94,3 +94,66 @@ class RefugeVersionProperty {
     };
   }
 }
+
+class UpgradeShip {
+  final String name;
+  final int id;
+
+  UpgradeShip({
+    required this.name,
+    required this.id,
+  });
+
+  factory UpgradeShip.fromJson(Map<String, dynamic> json) {
+    return UpgradeShip(
+      name: json['name'] as String,
+      id: json['id'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'id': id,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'UpgradeShip{name: $name, id: $id}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is UpgradeShip &&
+        other.name == name &&
+        other.id == id;
+  }
+
+  @override
+  int get hashCode => name.hashCode ^ id.hashCode;
+}
+
+class UpgradeShipList {
+  final List<UpgradeShip> ships;
+
+  UpgradeShipList({
+    required this.ships,
+  });
+
+  factory UpgradeShipList.fromJson(Map<String, dynamic> json) {
+    return UpgradeShipList(
+      ships: (json['ships'] as List<dynamic>)
+          .map((e) => UpgradeShip.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'ships': ships.map((e) => e.toJson()).toList(),
+    };
+  }
+}

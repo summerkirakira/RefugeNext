@@ -97,5 +97,12 @@ class CirnoApiClient {
     await basicPost(endpoint: 'v2/addTranslation', data: data);
   }
 
+  Future<void> uploadNotFindShip(List<UpgradeShip> upgradeShips) async {
+    final data = {
+      'ships': upgradeShips,
+    };
+    await basicPost(endpoint: 'v2/addUpgradeShipRecord', data: data);
+  }
+
 
 }
