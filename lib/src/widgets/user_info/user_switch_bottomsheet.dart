@@ -1,3 +1,5 @@
+import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/repo/user.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../datasource/models/user.dart';
 
@@ -75,20 +77,49 @@ WoltModalSheetPage getUserSwitchBottomSheet(BuildContext woltContext, BuildConte
       ),
     ),
     stickyActionBar: Container(
-      height: 80,
+      height: 120,
       width: double.infinity,
       padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
-      child: SizedBox(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 40,
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              onPressed: () {
+                WoltModalSheet.of(woltContext).addPages([getLoginBottomSheet(woltContext, context)]);
+                WoltModalSheet.of(woltContext).showNext();
+              },
+              child: const Text('添加新账号'),
+            ),
           ),
-          onPressed: () {
-            WoltModalSheet.of(woltContext).addPages([getLoginBottomSheet(woltContext, context)]);
-            WoltModalSheet.of(woltContext).showNext();
-          },
-          child: const Text('添加新账号'),
-        ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () async {
+                // Provider.of<MainDataModel>(context, listen: false).clearCurrentUser();
+                final currentUser = Provider.of<MainDataModel>(context, listen: false).currentUser;
+                if (currentUser == null) {
+                  showAlert(message: '当前没有登录账号');
+                  return;
+                }
+                await UserRepo().removeUser(handle: currentUser.handle);
+                Provider.of<MainDataModel>(context, listen: false).removeCurrentUser();
+                Navigator.of(context).pop();
+              },
+              child: const Text('退出当前账号'),
+            ),
+          ),
+        ],
       ),
     ),
   );

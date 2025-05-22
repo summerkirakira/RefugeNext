@@ -56,7 +56,7 @@ class _TopBarState extends State<TopBar> {
                           children: [
                             Icon(Icons.edit_outlined, size: 15, color: Colors.grey.withOpacity(0.7),),
                             Text(
-                                "切换账号",
+                                "切换/退出账号",
                                 style: TextStyle(fontSize: 15, color: Colors.grey.withOpacity(0.7))),
                           ]
                       ),

@@ -125,6 +125,11 @@ class MainDataModel extends ChangeNotifier {
 
   Ship? get currentShipInfo => _currentShipInfo;
 
+  void removeCurrentUser() {
+    _currentUser = null;
+    notifyListeners();
+  }
+
   void setCurrentShipInfo(Ship? ship) {
     _currentShipInfo = ship;
     notifyListeners();
