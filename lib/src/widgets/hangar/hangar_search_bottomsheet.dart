@@ -55,7 +55,9 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
       fromShip: ["all"],
       toShip: ["all"],
       searchText: null,
-      selectedCCUSlots: []
+      selectedCCUSlots: [],
+      orderSelected: false,
+      priceOrder: false
   );
 
 
@@ -77,6 +79,7 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
       ));
   final itemTypeController = MultiSelectController();
   final searchController = TextEditingController();
+  final itemOrderController = MultiSelectController();
 
   return WoltModalSheetPage(
       navBarHeight: 50,
@@ -113,6 +116,44 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
               ),
             ),
             const SizedBox(height: 20),
+            const Text("价格排序",
+                style: TextStyle(
+                  fontSize: 15,
+                  // fontWeight: FontWeight.bold
+                )),
+            const SizedBox(height: 10),
+            MultiSelectContainer(
+              controller: itemOrderController,
+              itemsDecoration: MultiSelectDecorations(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              suffix: tagSuffix,
+              items: [
+                // MultiSelectCard(value: "time_desc", label: "时间倒序"),
+                // MultiSelectCard(value: "time_asc", label: "时间正序"),
+                MultiSelectCard(value: "price_desc", label: "倒序"),
+                MultiSelectCard(value: "price_asc", label: "正序"),
+              ], onChange: (List<dynamic> selectedItems, selectedItem) {
+                if (selectedItem == "time_desc") {
+                  selectedItems = ["time_desc"];
+
+                } else if (selectedItem == "time_asc") {
+
+                } else if (selectedItem == "price_desc") {
+                  searchKey.priceOrder = false;
+                  searchKey.orderSelected = true;
+                } else if (selectedItem == "price_asc") {
+                  searchKey.priceOrder = true;
+                  searchKey.orderSelected = true;
+                }
+            },
+            ),
+
+
+            const SizedBox(height: 10),
             const Text("类型",
                 style: TextStyle(
                   fontSize: 15,

@@ -244,10 +244,32 @@ List<HangarItem> processSearch(List<HangarItem> items, SearchProperty? searchKey
     return isKeepItem(item, searchKey);
   }).toList();
 
-  return filteredItems.where((item) {
+  final finalItems = filteredItems.where((item) {
     return slotSearch(item, slots);
   }).toList();
+
+  if (!searchKey.orderSelected) {
+    return finalItems;
+  }
+  final sortedItems = sortByPrice(finalItems, searchKey.priceOrder);
+
+  return sortedItems;
 }
+
+
+List<HangarItem> sortByPrice(List<HangarItem> items, bool timeOrder) {
+  if (timeOrder) {
+    items.sort((a, b) => a.price.compareTo(b.price));
+  } else {
+    items.sort((a, b) => b.price.compareTo(a.price));
+  }
+  return items;
+}
+
+
+
+
+
 
 
 bool isContainSearchKeyBuyback(BuybackItem item, String? searchKey) {
