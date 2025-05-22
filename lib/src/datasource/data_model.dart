@@ -451,13 +451,16 @@ class MainDataModel extends ChangeNotifier {
     final calculatedItems = await calculateShipPrice(stackedItems);
 
     int totalPrice = 0;
+    int totalCurrentPrice = 0;
     calculatedItems.forEach((element) {
       totalPrice += element.price * element.number;
+      totalCurrentPrice += element.currentPrice * element.number;
     });
 
     if (_currentUser != null) {
-      if (_currentUser!.hangarValue != totalPrice) {
+      if (_currentUser!.hangarValue != totalPrice || _currentUser!.currentHangarValue != totalCurrentPrice) {
         _currentUser!.hangarValue = totalPrice;
+        _currentUser!.currentHangarValue = totalCurrentPrice;
         await userRepo.addUser(_currentUser!);
       }
     }
