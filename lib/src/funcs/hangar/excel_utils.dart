@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:refuge_next/src/datasource/models/hangar.dart';
 import 'package:intl/intl.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/repo/translation.dart';
 
 import '../../repo/ship_alias.dart';
@@ -72,14 +73,14 @@ Future<void> generateUpgradeHangarExcelTable(List<HangarItem> hangarItems, Strin
       File(filePath)
         ..createSync(recursive: true)
         ..writeAsBytesSync(bytes);
-      print('Excel file saved to: $filePath');
+      showToast(message: '机库导出成功！文件被保存到: $filePath');
 
       // Open the file based on the platform
       await _openFile(filePath);
 
     }
   } catch (e) {
-    print('Error saving or opening Excel file: $e');
+    showAlert(message: '导出机库失败: $e');
   }
 }
 
@@ -145,14 +146,14 @@ Future<void> generateGeneralExcelTable(List<HangarItem> hangarItems, String user
       File(filePath)
         ..createSync(recursive: true)
         ..writeAsBytesSync(bytes);
-      print('Excel file saved to: $filePath');
+      showToast(message: '机库导出成功！文件被保存到: $filePath');
 
       // Open the file based on the platform
       await _openFile(filePath);
 
     }
   } catch (e) {
-    print('Error saving or opening Excel file: $e');
+    showAlert(message: '导出机库失败: $e');
   }
 }
 
@@ -331,14 +332,14 @@ Future<void> generateShipExcelTable(List<HangarItem> hangarItems, String userNam
       File(filePath)
         ..createSync(recursive: true)
         ..writeAsBytesSync(bytes);
-      print('Excel file saved to: $filePath');
+      showToast(message: '机库导出成功！文件被保存到: $filePath');
 
       // Open the file based on the platform
       await _openFile(filePath);
 
     }
   } catch (e) {
-    print('Error saving or opening Excel file: $e');
+    showAlert(message: '导出机库失败: $e');
   }
 }
 

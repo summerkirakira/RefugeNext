@@ -30,24 +30,35 @@ void showToast({required String message}) {
       dragToClose: true,
     );
   } else {
-    toastification.show(
-      type: ToastificationType.error,
-      style: ToastificationStyle.flat,
-      title: Text("错误"),
-      description: Text(
-        message,
-      ),
-      alignment: Alignment.topCenter,
-      autoCloseDuration: const Duration(seconds: 6),
-      borderRadius: BorderRadius.circular(12.0),
-      dragToClose: true,
-    );
+    if (message.contains("成功")) {
+      toastification.show(
+        type: ToastificationType.success,
+        style: ToastificationStyle.flat,
+        title: Text("成功"),
+        description: Text(
+          message,
+        ),
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 6),
+        borderRadius: BorderRadius.circular(12.0),
+        dragToClose: true,
+      );
+      return;
+    } else {
+      toastification.show(
+        type: ToastificationType.error,
+        style: ToastificationStyle.flat,
+        title: Text("错误"),
+        description: Text(
+          message,
+        ),
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 6),
+        borderRadius: BorderRadius.circular(12.0),
+        dragToClose: true,
+      );
+    }
   }
-
-
-
-
-
 }
 
 void showAlert({required String message}) {
