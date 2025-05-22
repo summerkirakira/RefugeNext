@@ -77,6 +77,8 @@ dependencies:
   vector_math: ^2.1.4
   toastification: ^2.3.0
   msix: ^3.7.0
+  excel: ^4.0.6
+  open_file: ^3.5.4
 
 
 dev_dependencies:

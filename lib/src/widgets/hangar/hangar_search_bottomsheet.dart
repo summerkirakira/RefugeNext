@@ -46,7 +46,6 @@ List<MultiSelectCard> getCCUSlotCards(int num) {
 
 WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
 
-
   final SearchProperty searchKey = SearchProperty(searchType: ["all"],
       searchStatus: ["all"],
       searchInsurance: ["all"],
