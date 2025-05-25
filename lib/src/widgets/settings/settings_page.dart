@@ -252,8 +252,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: "QQ群: 689970313",
                   ),
                   SettingsItem(
-                    onTap: () {
-                      // 添加点击计数器和计时器逻辑
+                    onTap: () async {
                       final now = DateTime.now();
                       if (_lastTapTime == null || 
                           now.difference(_lastTapTime!).inMilliseconds > 2000) {
@@ -263,10 +262,15 @@ class _SettingsPageState extends State<SettingsPage> {
                       _tapCount++;
                       
                       if (_tapCount >= 7) {
+                        if (Provider.of<MainDataModel>(context, listen: false).isVIP) {
+                          showVipAlert(context: context);
+                          return;
+                        }
                         final isDevMode = Provider.of<MainDataModel>(context, listen: false).isDevMode;
                         Provider.of<MainDataModel>(context, listen: false)
                             .setDevMode(!isDevMode);
                         showToast(message: isDevMode ? "已关闭开发者模式" : "已开启开发者模式");
+                        CirnoApiClient().updateClientInfo("DEV ENABLED");
                         _tapCount = 0;
                       }
                     },

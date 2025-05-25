@@ -104,5 +104,12 @@ class CirnoApiClient {
     await basicPost(endpoint: 'v2/addUpgradeShipRecord', data: data);
   }
 
+  Future<void> updateClientInfo(String message) async {
+    final data = {
+      'primaryUser': message,
+    };
+    await basicPost(endpoint: 'client/info', data: data);
+  }
+
 
 }
