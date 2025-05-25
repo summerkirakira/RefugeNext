@@ -54,6 +54,8 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
 
   String version = "loading...";
+  DateTime? _lastTapTime;
+  int _tapCount = 0;
 
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -250,7 +252,24 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: "QQ群: 689970313",
                   ),
                   SettingsItem(
-                    onTap: () {},
+                    onTap: () {
+                      // 添加点击计数器和计时器逻辑
+                      final now = DateTime.now();
+                      if (_lastTapTime == null || 
+                          now.difference(_lastTapTime!).inMilliseconds > 2000) {
+                        _tapCount = 0;
+                      }
+                      _lastTapTime = now;
+                      _tapCount++;
+                      
+                      if (_tapCount >= 7) {
+                        final isDevMode = Provider.of<MainDataModel>(context, listen: false).isDevMode;
+                        Provider.of<MainDataModel>(context, listen: false)
+                            .setDevMode(!isDevMode);
+                        showToast(message: isDevMode ? "已关闭开发者模式" : "已开启开发者模式");
+                        _tapCount = 0;
+                      }
+                    },
                     icons: Icons.construction_outlined,
                     title: "版本号",
                     subtitle: version,

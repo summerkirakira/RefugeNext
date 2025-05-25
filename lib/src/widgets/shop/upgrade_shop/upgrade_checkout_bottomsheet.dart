@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import '../../../datasource/data_model.dart';
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/network/graphql/shop/upgrade_add_to_cart.dart';
 import 'package:refuge_next/src/network/graphql/shop/cart_summary.dart';
 import 'package:refuge_next/src/network/graphql/shop/apply_upgrade_token.dart';
+import '../../../funcs/shop/upgrades.dart';
+import '../../../funcs/validation.dart';
+import '../../webview/rsi_webpage.dart';
 import '../cart/cart.dart';
 // import 'package:refuge_next/src/funcs/shop/cart.dart';
 // import 'package:refuge_next/src/network/graphql/shop/step1query.dart';
@@ -25,9 +30,12 @@ String convertVersionNameToChinese(String? version) {
   }
 }
 
+Future<void> Function()? lastBuyProcess;
+
 WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeShipInfo fromShip, UpgradeShipInfo toShip, Skus toSku, BuildContext rootContext) {
 
   String numberString = '1';
+  final isDevMode = Provider.of<MainDataModel>(context, listen: false).isDevMode;
 
   return WoltModalSheetPage(
     navBarHeight: 50,
@@ -63,15 +71,16 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
           Text("从 ${fromShip.name} 升级到 ${toShip.name}"),
           Text("升级版本: ${convertVersionNameToChinese(toSku.title)}"),
           SizedBox(height: 50),
-          // TextField(
-          //   decoration: InputDecoration(
-          //     // hintText: '购买数量',
-          //     labelText: '购买数量',
-          //   ),
-          //   onChanged: (value) {
-          //     numberString = value;
-          //   },
-          // ),
+          if (isDevMode)
+            TextField(
+              decoration: InputDecoration(
+                // hintText: '购买数量',
+                labelText: '购买数量',
+              ),
+              onChanged: (value) {
+                numberString = value;
+              },
+            ),
 
           const SizedBox(height: 200),
         ],
@@ -87,21 +96,65 @@ WoltModalSheetPage getUpgradeCheckoutBottomSheet(BuildContext context, UpgradeSh
             backgroundColor: Theme.of(context).primaryColor,
           ),
           onPressed: () async {
-
             int? number = int.tryParse(numberString);
-            if (number == null) {
-              showToast(message: "请输入正确的购买数量");
-              return;
-            }
-            if (number > 5) {
-              showToast(message: "购买数量不能大于5");
-              return;
-            }
-            if (number <= 0) {
-              showToast(message: "购买数量不能小于1");
-              return;
-            }
 
+            if (isDevMode) {
+              if (number == null) {
+                showToast(message: "请输入正确的购买数量");
+                return;
+              }
+
+              final result = await authenticateWithBiometrics(reason: "请验证以购买物品");
+              if (result == false) {
+                showToast(message: "验证失败");
+                return;
+              }
+
+
+              try {
+                final result = await handleUpgradePurchaseWithConfirmation(
+                  toSku.id!,
+                  fromShip.id!,
+                  number,
+                );
+                if (result == 'SUCCESS') {
+                  showToast(message: "购买成功");
+                  Navigator.of(context).pop();
+                  return;
+                } else if (result == 'BUY_FAILED') {
+                  showToast(message: "购买失败");
+                  return;
+                } else if (result == 'NEED_WEBVIEW') {
+                  showToast(message: "添加购物车成功，之后可以在商店页面右上方的重播图标中重放当前购买操作~");
+                  openRsiCartWebview(context: context, replace: false);
+                  lastBuyProcess = () async {
+                    showToast(message: "正在重放购买操作...");
+                    final result = await handleUpgradePurchaseWithConfirmation(
+                      toSku.id!,
+                      fromShip.id!,
+                      1,
+                    );
+                    if (result == 'NEED_WEBVIEW') {
+                      showToast(message: "需要在浏览器中完成购买");
+                    } else if (result == 'BUY_FAILED') {
+                      showToast(message: "购买失败");
+                    } else if (result == 'SUCCESS') {
+                      showToast(message: "购买成功");
+                    } else {
+                      showToast(message: "未知错误: $result");
+                    }
+                  };
+                  return;
+                } else {
+                  showToast(message: "未知错误: $result");
+                  return;
+                }
+              } catch (e) {
+                showToast(message: "购买失败: $e");
+                return;
+              }
+              return;
+            }
 
             String token = await UpgradeAddToCart(skuId: toSku.id!, fromShipId: fromShip.id!).execute();
             try {

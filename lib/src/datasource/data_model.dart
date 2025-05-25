@@ -104,6 +104,14 @@ class MainDataModel extends ChangeNotifier {
   int get upgradeWbNumber => _upgradeWbNumber;
   int get cartItemNumber => _cartItemNumber;
 
+  bool _isDevMode = false;
+
+  bool get isDevMode => _isDevMode;
+
+  void setDevMode(bool isDevMode) {
+    _isDevMode = isDevMode;
+    notifyListeners();
+  }
 
   Map<String, List<CatalogProperty>> _catalog = {};
 

@@ -4,7 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/widgets/shop/upgrade_shop/upgrade_checkout_bottomsheet.dart';
+import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import '../../funcs/validation.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
@@ -26,6 +30,7 @@ class ShopTopBar extends StatefulWidget {
 class _ShopTopBarState extends State<ShopTopBar> {
   @override
   Widget build(BuildContext context) {
+    final isDevMode = Provider.of<MainDataModel>(context, listen: false).isDevMode;
     return SafeArea(
         child: Container(
           // color: Colors.black,
@@ -61,6 +66,25 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   )),
               const Text('商店', style: TextStyle(fontSize: 24)),
               const Spacer(),
+              if (isDevMode)
+              IconButton(
+                  onPressed: () async {
+                    final result = await authenticateWithBiometrics(reason: "请验证以重放购买操作");
+                    if (result == false) {
+                      showToast(message: "验证失败");
+                      return;
+                    }
+                    if (lastBuyProcess == null) {
+                      showToast(message: "没有上一次购买记录");
+                    } else {
+                      await lastBuyProcess!();
+                      openRsiCartWebview(context: context);
+                    }
+                  },
+                  icon: const Icon(Icons.replay_5),
+                  tooltip: "重放购买操作",
+                ),
+                SizedBox(width: 5,),
               if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
                 IconButton(
                   onPressed: () {
