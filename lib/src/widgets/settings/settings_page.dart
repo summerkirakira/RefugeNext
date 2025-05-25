@@ -262,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       _tapCount++;
                       
                       if (_tapCount >= 7) {
-                        if (Provider.of<MainDataModel>(context, listen: false).isVIP) {
+                        if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
                           showVipAlert(context: context);
                           return;
                         }
