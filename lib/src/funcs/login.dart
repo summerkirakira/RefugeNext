@@ -29,6 +29,16 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
 
   final loginResponse = await rsiClient.login(email: email, password: password, captcha: captcha);
 
+  if (loginResponse.code == "ErrMaxThrottleLogin") {
+    showToast(message: "登录过于频繁，请稍后再试");
+    return LoginStatus(
+        success: false,
+        msg: loginResponse.msg,
+        needCode: false,
+        needCaptcha: false
+    );
+  }
+
   if (loginResponse.code == "ErrWrongPassword_email") {
     showToast(message: "邮箱或密码错误");
     return LoginStatus(
