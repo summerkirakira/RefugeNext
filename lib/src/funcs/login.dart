@@ -39,8 +39,18 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
     );
   }
 
-  if (loginResponse.data == null && loginResponse.code != "ErrNoGamePackage") {
+  if (loginResponse.code == "ErrNoGamePackage") {
     showToast(message: "避难所暂不支持无游戏包账号登录QAQ");
+    return LoginStatus(
+        success: false,
+        msg: loginResponse.msg,
+        needCode: false,
+        needCaptcha: false
+    );
+  }
+
+  if (loginResponse.data == null) {
+    showToast(message: "登录信息为空QAQ，错误代码: ${loginResponse.code}");
     return LoginStatus(
         success: false,
         msg: loginResponse.msg,
