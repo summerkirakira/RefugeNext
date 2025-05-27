@@ -16,6 +16,7 @@ WoltModalSheetPage getLoginBottomSheet(
     BuildContext context, BuildContext itemContext) {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool isProcessing = false;
 
   return WoltModalSheetPage(
     navBarHeight: 50,
@@ -82,6 +83,12 @@ WoltModalSheetPage getLoginBottomSheet(
               return;
             }
             context.loaderOverlay.show();
+
+            if (isProcessing) {
+              return;
+            }
+            isProcessing = true;
+
             loginFirstStep(
                     email: emailController.text,
                     password: passwordController.text)
@@ -89,6 +96,9 @@ WoltModalSheetPage getLoginBottomSheet(
               context.loaderOverlay.hide();
               cachedEmail = emailController.text;
               cachedPassword = passwordController.text;
+
+              isProcessing = false;
+
               if (status.success) {
                 UserRepo().getCurrentUser().then((user) {
                   if (user != null) {
@@ -128,6 +138,7 @@ WoltModalSheetPage getLoginBottomSheet(
 WoltModalSheetPage getCaptchaInputBottomSheet(
     BuildContext context, BuildContext itemContext) {
   final captchaController = TextEditingController();
+  bool isProcessing = false;
 
   return WoltModalSheetPage(
     navBarHeight: 50,
@@ -187,6 +198,10 @@ WoltModalSheetPage getCaptchaInputBottomSheet(
             if (captchaController.text.isEmpty) {
               return;
             }
+            if (isProcessing) {
+              return;
+            }
+            isProcessing = true;
             context.loaderOverlay.show();
             try {
               loginFirstStep(
@@ -194,6 +209,7 @@ WoltModalSheetPage getCaptchaInputBottomSheet(
                       password: cachedPassword,
                       captcha: captchaController.text)
                   .then((status) {
+                isProcessing = false;
                 if (status.success) {
                   final userRepo = UserRepo();
 
@@ -216,6 +232,7 @@ WoltModalSheetPage getCaptchaInputBottomSheet(
               showToast(message: e.toString());
             } finally {
               context.loaderOverlay.hide();
+              isProcessing = false;
             }
           },
           child: const Text('下一步',
@@ -231,6 +248,7 @@ WoltModalSheetPage getCaptchaInputBottomSheet(
 WoltModalSheetPage getEmailInputBottomSheet(
     BuildContext context, BuildContext itemContext) {
   final codeController = TextEditingController();
+  bool isProcessing = false;
 
   return WoltModalSheetPage(
     navBarHeight: 50,
@@ -286,9 +304,13 @@ WoltModalSheetPage getEmailInputBottomSheet(
             if (codeController.text.isEmpty) {
               return;
             }
-
+            if (isProcessing) {
+              return;
+            }
+            isProcessing = true;
             loginSecondStep(cachedEmail, cachedPassword, codeController.text)
                 .then((status) {
+                  isProcessing = false;
               if (status.success) {
                 UserRepo().getCurrentUser().then((user) {
                   if (user != null) {
@@ -299,9 +321,14 @@ WoltModalSheetPage getEmailInputBottomSheet(
                 });
               } else {
                 showToast(message: status.msg);
-                Navigator.of(context).pop();
+                // Navigator.of(context).pop();
               }
-            });
+            }).catchError(
+              (e) {
+                showToast(message: e.toString());
+                isProcessing = false;
+              },
+            );
           },
           child: const Text('下一步',
               style: TextStyle(
