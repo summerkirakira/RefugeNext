@@ -16,7 +16,11 @@ void showToast({required String message}) {
   //   textColor: Colors.white,
   //   fontSize: 16.0,
   // );
-  debugPrint("Toast: $message");
+  // debugPrint("Toast: $message");
+
+  if (message.contains("out of stock")) {
+    return;
+  }
 
   if (message.length < 20) {
     toastification.show(
@@ -71,6 +75,9 @@ void showAlert({required String message}) {
   //   textColor: Colors.white,
   //   fontSize: 16.0,
   // );
+  if (message.contains("out of stock")) {
+    return;
+  }
   toastification.show(
     type: ToastificationType.error,
     style: ToastificationStyle.flat,
