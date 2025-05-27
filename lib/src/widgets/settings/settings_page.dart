@@ -60,7 +60,8 @@ class _SettingsPageState extends State<SettingsPage> {
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     setState(() {
-      version = packageInfo.version;
+      final buildNumber = packageInfo.buildNumber;
+      version = "${packageInfo.version}+$buildNumber";
     });
   }
 
