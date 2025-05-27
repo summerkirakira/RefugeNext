@@ -39,7 +39,7 @@ class ShipUpgradeRepo {
 
     ships.sort((a, b) {
       if (a.shipAlias != null && b.shipAlias != null) {
-        return a.shipAlias!.getHighestSku().compareTo(b.shipAlias!.getHighestSku());
+        return -a.shipAlias!.getHighestSku().compareTo(b.shipAlias!.getHighestSku());
       }
       return 0;
     });

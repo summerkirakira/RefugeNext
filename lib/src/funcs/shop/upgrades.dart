@@ -32,22 +32,20 @@ Future<String> handleUpgradePurchaseWithConfirmation(
   int fromShipId,
   int number,
 ) async {
-  await clearCart();
-  String result = await handleUpgradePurchase(skuId, fromShipId);
-  if (result != 'SUCCESS') {
-    return 'BUY_FAILED'; // 如果购买失败，返回false
-  }
-  final step1query = await Step1Query().execute();
   int leftNumber = number;
-
-  if (step1query.store.cart.lineItems.length != 1) {
-    showToast(message: "购物车中没有升级物品");
-    return 'BUY_FAILED'; // 如果购物车中没有升级物品，返回false
-  }
-  final item = step1query.store.cart.lineItems.first;
-  final maxQuantity = item.sku.maxQty;
-
   while (leftNumber > 0) {
+    await clearCart();
+    String result = await handleUpgradePurchase(skuId, fromShipId);
+    if (result != 'SUCCESS') {
+      return 'BUY_FAILED'; // 如果购买失败，返回false
+    }
+    final step1query = await Step1Query().execute();
+    if (step1query.store.cart.lineItems.length != 1) {
+      showToast(message: "购物车中没有升级物品");
+      return 'BUY_FAILED'; // 如果购物车中没有升级物品，返回false
+    }
+    final item = step1query.store.cart.lineItems.first;
+    final maxQuantity = item.sku.maxQty;
     final qtyToAdd = leftNumber > maxQuantity ? maxQuantity : leftNumber;
     if (qtyToAdd != 1) {
       await updateCartNumber(item, qtyToAdd);
