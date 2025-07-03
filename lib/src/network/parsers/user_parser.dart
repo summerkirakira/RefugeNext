@@ -52,11 +52,26 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
   //     .replaceAll(',', '');
 
 
-  String? recruitNumberString = referralDoc.querySelector('div.progress')?.querySelector('.label')?.text
-      .replaceAll('Total recruits: ', '');
-  String? totalReferralNumberString = referralDoc.querySelector('a[href="/account/referral-program"][data-type="pending"]')?.text
-      .replaceAll('Prospects (', '')
-      .replaceAll(')', '');
+  RegExp numRegExp = RegExp(r'\((\d+)\)');
+
+
+  String? recruitNumberString = referralDoc.querySelector('a[href="/account/referral-program?recruits=1"]')?.text;
+  String? totalReferralNumberString = referralDoc.querySelector('a[href="/account/referral-program"][data-type="pending"]')?.text;
+  if (recruitNumberString != null) {
+    var match = numRegExp.firstMatch(recruitNumberString);
+    if (match != null) {
+      recruitNumberString = match.group(1);
+    }
+  }
+
+  if (totalReferralNumberString != null) {
+    var match = numRegExp.firstMatch(totalReferralNumberString);
+    if (match != null) {
+      totalReferralNumberString = match.group(1);
+    }
+  }
+
+
   String? referralCode = referralDoc.querySelector('#share-referral-form')?.querySelector('input')?.attributes['value'];
 
   var billingPage = await rsiClient.getPage('account/billing');
@@ -95,6 +110,13 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
       }
     }
   }
+
+  totalReferralNumberString ??= '0';
+  recruitNumberString ??= '0';
+
+  referralCode ??= '';
+  totalSpentString ??= '0';
+
 
   if (userImage == null || userHandle == null || referralCode == null || recruitNumberString == null || totalReferralNumberString == null || totalSpentString == null || enlisted == null) {
     return null;
