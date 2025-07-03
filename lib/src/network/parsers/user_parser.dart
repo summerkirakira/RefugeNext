@@ -71,8 +71,13 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     }
   }
 
+  RegExp referralRegExp = RegExp(r'STAR-[A-Z0-9]{4}-[A-Z0-9]{4}');
 
-  String? referralCode = referralDoc.querySelector('#share-referral-form')?.querySelector('input')?.attributes['value'];
+
+  Iterable<Match> matches = referralRegExp.allMatches(referralPage);
+
+
+  String? referralCode = matches.isNotEmpty ? matches.first.group(0) : null;
 
   var billingPage = await rsiClient.getPage('account/billing');
 
