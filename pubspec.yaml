@@ -47,13 +47,13 @@ dependencies:
   html: ^0.15.4
   intl: ^0.19.0
   cached_network_image: ^3.3.1
-  fast_cached_network_image: ^1.2.9
+  fast_cached_network_image: 1.2.9
   loading_animation_widget: ^1.2.1
   flutter_advanced_avatar: ^1.5.0
   wolt_modal_sheet: ^0.7.0
   syncfusion_flutter_sliders: ^26.1.40
   local_auth: ^2.3.0
-  shared_preferences: 2.0.15
+  shared_preferences: 2.3.3
   flutter_keyboard_visibility: ^6.0.0
   share_plus: ^9.0.0
   image: ^3.0.2

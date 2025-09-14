@@ -15,17 +15,8 @@ Map<String, String> getRsiHeaders() {
 
 void openRsiWebview({ required BuildContext context, bool replace = false, required String url}) {
 
-  if (Platform.isIOS) {
-    showAlert(message: 'iOS设备暂不支持此功能QAQ');
-    return;
-  }
-
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    showAlert(message: '桌面端暂不支持此功能QAQ请使用官网浏览器访问');
-    return;
-  }
-
-  if (!Platform.isAndroid) {
+  // WebView现在支持iOS、Android和Windows平台
+  if (!Platform.isIOS && !Platform.isAndroid && !Platform.isWindows && !Platform.isMacOS) {
     showAlert(message: '暂不支持此平台QAQ');
     return;
   }

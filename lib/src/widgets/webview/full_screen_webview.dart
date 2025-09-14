@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -49,21 +50,32 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
+          onPageStarted: (String url) {
+            print('WebView Page started loading: $url');
+          },
           onPageFinished: (String url) {
+            print('WebView Page finished loading: $url');
             setState(() {
               _isLoading = false;
             });
           },
+          onWebResourceError: (WebResourceError error) {
+            print('WebView Error: ${error.description}');
+            print('WebView Error Code: ${error.errorCode}');
+            print('WebView Error Type: ${error.errorType}');
+          },
           onNavigationRequest: (NavigationRequest request) {
+            print('WebView Navigation request: ${request.url}');
 
+            // 只对特定的支付跳转进行拦截
             if (request.url.startsWith("https://hooks.stripe.com/redirect/authenticate")) {
               final alipayUrl = Uri.parse(request.url);
               launchUrl(alipayUrl, mode: LaunchMode.inAppBrowserView);
               return NavigationDecision.prevent;
             }
 
-            _loadUrlWithHeaders(request.url);
-            return NavigationDecision.prevent;
+            // 允许RSI网站的正常导航
+            return NavigationDecision.navigate;
           },
         ),
       );
@@ -125,7 +137,7 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
                 child: CircularProgressIndicator(),
               ),
             Positioned(
-              top: 100,
+              top: Platform.isWindows || Platform.isMacOS ? 40 : 100,
               right: 10,
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -141,7 +153,7 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
               ),
             ),
             Positioned(
-              top: 160,
+              top: Platform.isWindows || Platform.isMacOS ? 100 : 160,
               right: 10,
               child: DecoratedBox(
                 decoration: BoxDecoration(
