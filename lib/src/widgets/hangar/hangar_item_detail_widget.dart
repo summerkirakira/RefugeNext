@@ -110,7 +110,7 @@ Widget getUpgradeSubHangarItemWidget(BuildContext context, HangarItem hangarItem
         width: 120,
         child: CachedNetworkImage(
             imageUrl: item.image,
-            placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 30),
+            placeholder: (context, url) => LoadingAnimationWidget.threeArchedCircle(color: Theme.of(context).indicatorColor, size: 30),
             errorWidget: (context, url, error) => const Icon(Icons.error),
             imageBuilder: (context, imageProvider) => Container(
               decoration: BoxDecoration(
@@ -155,7 +155,7 @@ Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
           width: 120,
           child: CachedNetworkImage(
               imageUrl: item.image,
-              placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 30),
+              placeholder: (context, url) => LoadingAnimationWidget.threeArchedCircle(color: Theme.of(context).indicatorColor, size: 30),
               errorWidget: (context, url, error) => Icon(Icons.error),
               imageBuilder: (context, imageProvider) => Container(
                 decoration: BoxDecoration(
@@ -550,7 +550,7 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
                 width: 120,
                 child: CachedNetworkImage(
                     imageUrl: hangarItem.image,
-                    placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 60),
+                    placeholder: (context, url) => LoadingAnimationWidget.threeArchedCircle(color: Theme.of(context).indicatorColor, size: 60),
                     errorWidget: (context, url, error) => Icon(Icons.error),
                     imageBuilder: (context, imageProvider) => Container(
                       decoration: BoxDecoration(
