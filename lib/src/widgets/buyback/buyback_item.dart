@@ -42,7 +42,13 @@ class BuybackItemImageWidget extends StatelessWidget {
           children: [
             CachedNetworkImage(
                 imageUrl: buybackItem.image,
-                placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 60),
+                placeholder: (context, url) => Container(
+                  padding: EdgeInsets.all(40),
+                  child: LoadingAnimationWidget.threeArchedCircle(
+                    color: Theme.of(context).indicatorColor, 
+                    size: 30
+                  )
+                ),
                 errorWidget: (context, url, error) => Icon(Icons.error),
                 imageBuilder: (context, imageProvider) => Container(
                   decoration: BoxDecoration(

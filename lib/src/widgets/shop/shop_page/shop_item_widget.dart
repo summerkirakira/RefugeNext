@@ -36,9 +36,18 @@ class ShopItemImageWidget extends StatelessWidget {
                       .startsWith('/')
                   ? 'https://robertsspaceindustries.com${catalogProperty.media.thumbnail.storeSmall}'
                   : catalogProperty.media.thumbnail.storeSmall,
-              placeholder: (context, url) =>
-                  LoadingAnimationWidget.fourRotatingDots(
-                      color: Theme.of(context).indicatorColor, size: 60),
+              placeholder: (context, url) => Container(
+                padding: EdgeInsets.only(
+                  left: 60,
+                  right: 60,
+                  top: 30,
+                  bottom: 30
+                ),
+                child: LoadingAnimationWidget.threeArchedCircle(
+                  color: Theme.of(context).indicatorColor, 
+                  size: 40
+                )
+              ),
               errorWidget: (context, url, error) => Icon(Icons.error),
               imageBuilder: (context, imageProvider) => Container(
                     decoration: BoxDecoration(
