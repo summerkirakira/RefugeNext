@@ -142,7 +142,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     int savings = (originalCost ~/ 100) - totalNewCost;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -516,7 +516,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '智能CCU优化方案',
+                              '智能CCU链优化',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.white.withOpacity(0.8),
