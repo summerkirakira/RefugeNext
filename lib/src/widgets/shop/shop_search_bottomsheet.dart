@@ -125,6 +125,31 @@ WoltModalSheetPage getShopSearchBottomSheet(BuildContext context) {
                     searchKey.priceRange.add(item);
                   }
                 }),
+            const SizedBox(height: 10),
+            const Text("特殊标签",
+                style: TextStyle(
+                  fontSize: 15,
+                )),
+            const SizedBox(height: 10),
+            MultiSelectContainer(
+                itemsDecoration: MultiSelectDecorations(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                suffix: tagSuffix,
+                items: [
+                  MultiSelectCard(value: "all", label: "全部"),
+                  MultiSelectCard(value: "warbond", label: "战争债券"),
+                ],
+                onChange: (allSelectedItems, selectedItem) {
+                  searchKey.itemFlags = [];
+                  for (var item in allSelectedItems) {
+                    searchKey.itemFlags.add(item);
+                  }
+                }
+            ),
             const SizedBox(
               height: 100,
             ),
