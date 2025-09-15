@@ -214,58 +214,111 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
   final price = hangarItem.price;
   final currentPrice = hangarItem.currentPrice;
 
-  return Padding(
-    padding: const EdgeInsets.only(
-      top: 10,
-      bottom: 10,
-      left: 50,
-      right: 50
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    padding: const EdgeInsets.all(0),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      // borderRadius: BorderRadius.circular(16),
+      // border: Border.all(
+      //   color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+      //   width: 1,
+      // ),
     ),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Column(
-          children: [
-            Text('${priceString(price)}', style: const TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold
-            )),
-            const SizedBox(height: 5),
-            const Text("可融(\$)", style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey
-            ))
-          ],
+        _buildPriceColumn(
+          context,
+          price: priceString(price),
+          label: "可融(\$)",
+          icon: Icons.recycling,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        const VerticalDivider(),
-        Column(
-          children: [
-            Text('${priceString(currentPrice)}', style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor
-            )),
-            const SizedBox(height: 5),
-            const Text("当前(\$)", style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey
-            ))
-          ],
+        Container(
+          height: 50,
+          width: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              ],
+            ),
+          ),
         ),
-        const VerticalDivider(),
-        Column(
-          children: [
-            Text('${priceString(currentPrice - price)}', style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                color: Colors.green
-            )),
-            const SizedBox(height: 5),
-            const Text("节约(\$)", style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey
-            ))
-          ],
+        _buildPriceColumn(
+          context,
+          price: priceString(currentPrice),
+          label: "当前(\$)",
+          icon: Icons.local_offer_outlined,
+          color: Theme.of(context).primaryColor,
+        ),
+        Container(
+          height: 50,
+          width: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              ],
+            ),
+          ),
+        ),
+        _buildPriceColumn(
+          context,
+          price: priceString(currentPrice - price),
+          label: "节约(\$)",
+          icon: Icons.price_change_outlined,
+          color: Colors.green,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildPriceColumn(BuildContext context, {
+  required String price,
+  required String label,
+  required IconData icon,
+  required Color color,
+}) {
+  return Expanded(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: color.withOpacity(0.7),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          price,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: color,
+            letterSpacing: -0.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     ),
