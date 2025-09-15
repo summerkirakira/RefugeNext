@@ -61,9 +61,7 @@ Widget getUpgradeFromWiget(BuildContext context, ShipAlias? ship, bool isFromShi
     );
   }
 
-
   String shipName = ship.chineseName == null ? ship.name : ship.chineseName!;
-
 
   return Row(
     children: [
@@ -80,10 +78,18 @@ Widget getUpgradeFromWiget(BuildContext context, ShipAlias? ship, bool isFromShi
         )),
       ),
       const SizedBox(width: 10),
-      Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
-        fontSize: 16,
-        color: Colors.green
-      )),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text("\$${ship.getHighestSku() ~/ 100}", style: const TextStyle(
+          fontSize: 12,
+          color: Colors.green,
+          fontWeight: FontWeight.w600,
+        )),
+      ),
     ],
   );
 }
@@ -105,7 +111,7 @@ Widget getUpgradeSubHangarItemWidget(BuildContext context, HangarItem hangarItem
         child: CachedNetworkImage(
             imageUrl: item.image,
             placeholder: (context, url) => LoadingAnimationWidget.fourRotatingDots(color: Theme.of(context).indicatorColor, size: 30),
-            errorWidget: (context, url, error) => Icon(Icons.error),
+            errorWidget: (context, url, error) => const Icon(Icons.error),
             imageBuilder: (context, imageProvider) => Container(
               decoration: BoxDecoration(
                   image: DecorationImage(
@@ -117,17 +123,16 @@ Widget getUpgradeSubHangarItemWidget(BuildContext context, HangarItem hangarItem
             )
         ),
       ),
-      const SizedBox(width: 10),
+      const SizedBox(width: 12),
       Expanded(
           child: Container(
-            height: 70,
+            height: 100,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 getUpgradeFromWiget(context, hangarItem.fromShip, true),
-                // Icon(Icons.keyboard_double_arrow_down_outlined),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 getUpgradeFromWiget(context, hangarItem.toShip, false),
               ],
             ),
@@ -214,111 +219,58 @@ Widget getPriceInfoWidget(BuildContext context, HangarItem hangarItem) {
   final price = hangarItem.price;
   final currentPrice = hangarItem.currentPrice;
 
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    padding: const EdgeInsets.all(0),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-      // borderRadius: BorderRadius.circular(16),
-      // border: Border.all(
-      //   color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-      //   width: 1,
-      // ),
+  return Padding(
+    padding: const EdgeInsets.only(
+        top: 10,
+        bottom: 10,
+        left: 50,
+        right: 50
     ),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildPriceColumn(
-          context,
-          price: priceString(price),
-          label: "可融(\$)",
-          icon: Icons.recycling,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        Column(
+          children: [
+            Text('${priceString(price)}', style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold
+            )),
+            const SizedBox(height: 5),
+            const Text("可融(\$)", style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey
+            ))
+          ],
         ),
-        Container(
-          height: 50,
-          width: 1,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                Theme.of(context).colorScheme.outline.withOpacity(0.5),
-                Theme.of(context).colorScheme.outline.withOpacity(0.1),
-              ],
-            ),
-          ),
+        const VerticalDivider(),
+        Column(
+          children: [
+            Text('${priceString(currentPrice)}', style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor
+            )),
+            const SizedBox(height: 5),
+            const Text("当前(\$)", style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey
+            ))
+          ],
         ),
-        _buildPriceColumn(
-          context,
-          price: priceString(currentPrice),
-          label: "当前(\$)",
-          icon: Icons.local_offer_outlined,
-          color: Theme.of(context).primaryColor,
-        ),
-        Container(
-          height: 50,
-          width: 1,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                Theme.of(context).colorScheme.outline.withOpacity(0.5),
-                Theme.of(context).colorScheme.outline.withOpacity(0.1),
-              ],
-            ),
-          ),
-        ),
-        _buildPriceColumn(
-          context,
-          price: priceString(currentPrice - price),
-          label: "节约(\$)",
-          icon: Icons.price_change_outlined,
-          color: Colors.green,
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildPriceColumn(BuildContext context, {
-  required String price,
-  required String label,
-  required IconData icon,
-  required Color color,
-}) {
-  return Expanded(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 20,
-          color: color.withOpacity(0.7),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          price,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: color,
-            letterSpacing: -0.5,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
-          ),
-          textAlign: TextAlign.center,
+        const VerticalDivider(),
+        Column(
+          children: [
+            Text('${priceString(currentPrice - price)}', style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.green
+            )),
+            const SizedBox(height: 5),
+            const Text("节约(\$)", style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey
+            ))
+          ],
         ),
       ],
     ),
