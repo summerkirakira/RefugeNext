@@ -4,6 +4,8 @@ import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
 import '../datasource/models/buyback.dart';
 import '../datasource/models/searchProperty.dart';
 import '../datasource/models/hangar.dart';
+import '../datasource/models/shop_search_property.dart';
+import '../datasource/models/shop/catalog_property.dart';
 
 
 bool isSearchedType(HangarItem item, List<String> searchType) {
@@ -345,4 +347,165 @@ List<BuybackItem> processBuybackSearch(List<BuybackItem> items, SearchProperty? 
   }).toList();
 
   return filteredItems;
+}
+
+bool isShopSearchedType(CatalogProperty item, List<String> searchType) {
+  if (searchType.isEmpty) {
+    return true;
+  }
+
+  for (var type in searchType) {
+    if (type == 'all') {
+      return true;
+    }
+    if (type == "ship") {
+      if (item.type == "Ship" || item.name.toLowerCase().contains("ship")) {
+        return true;
+      }
+    }
+    if (type == "paint") {
+      if (item.type == "Paint" || item.name.toLowerCase().contains("paint") || item.name.toLowerCase().contains("skin")) {
+        return true;
+      }
+    }
+    if (type == "upgrade") {
+      if (item.type == "Upgrade" || item.name.toLowerCase().contains("upgrade")) {
+        return true;
+      }
+    }
+    if (type == "subscription") {
+      if (item.name.toLowerCase().contains("subscriber")) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool isShopPriceRange(CatalogProperty item, List<String> priceRange) {
+  if (priceRange.isEmpty) {
+    return true;
+  }
+
+  final price = item.price.amount;
+
+  for (var range in priceRange) {
+    if (range == 'all') {
+      return true;
+    }
+    if (range == "0-100" && price >= 0 && price <= 10000) {
+      return true;
+    }
+    if (range == "100-500" && price > 10000 && price <= 50000) {
+      return true;
+    }
+    if (range == "500+" && price > 50000) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool isShopStockStatus(CatalogProperty item, List<String> stockStatus) {
+  if (stockStatus.isEmpty) {
+    return true;
+  }
+
+  for (var status in stockStatus) {
+    if (status == 'all') {
+      return true;
+    }
+    if (status == "available" && item.stock.unlimited) {
+      return true;
+    }
+    if (status == "unavailable" && !item.stock.unlimited) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool isShopItemFlags(CatalogProperty item, List<String> itemFlags) {
+  if (itemFlags.isEmpty) {
+    return true;
+  }
+
+  for (var flag in itemFlags) {
+    if (flag == 'all') {
+      return true;
+    }
+    if (flag == "warbond" && item.isWarbond) {
+      return true;
+    }
+    if (flag == "package" && item.isPackage) {
+      return true;
+    }
+    if (flag == "vip" && item.isVip) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool isShopSearchText(CatalogProperty item, String? searchText) {
+  if (searchText == null || searchText.trim().isEmpty) {
+    return true;
+  }
+
+  final key = searchText.toLowerCase().trim();
+  if (item.name.toLowerCase().contains(key)) {
+    return true;
+  }
+  if (item.title.toLowerCase().contains(key)) {
+    return true;
+  }
+  if (item.subtitle.toLowerCase().contains(key)) {
+    return true;
+  }
+  if (item.excerpt != null && item.excerpt!.toLowerCase().contains(key)) {
+    return true;
+  }
+  if (item.chineseExcerpt != null && item.chineseExcerpt!.toLowerCase().contains(key)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool isKeepShopItem(CatalogProperty item, ShopSearchProperty searchKey) {
+  return isShopSearchedType(item, searchKey.searchType)
+      && isShopPriceRange(item, searchKey.priceRange)
+      && isShopStockStatus(item, searchKey.stockStatus)
+      && isShopItemFlags(item, searchKey.itemFlags)
+      && isShopSearchText(item, searchKey.searchText);
+}
+
+List<CatalogProperty> processShopSearch(List<CatalogProperty> items, ShopSearchProperty? searchKey) {
+  if (searchKey == null) {
+    return items;
+  }
+
+  final filteredItems = items.where((item) {
+    return isKeepShopItem(item, searchKey);
+  }).toList();
+
+  if (!searchKey.orderSelected) {
+    return filteredItems;
+  }
+
+  final sortedItems = sortShopByPrice(filteredItems, searchKey.priceOrder);
+  return sortedItems;
+}
+
+List<CatalogProperty> sortShopByPrice(List<CatalogProperty> items, bool priceOrder) {
+  if (priceOrder) {
+    items.sort((a, b) => a.price.amount.compareTo(b.price.amount));
+  } else {
+    items.sort((a, b) => b.price.amount.compareTo(a.price.amount));
+  }
+  return items;
 }

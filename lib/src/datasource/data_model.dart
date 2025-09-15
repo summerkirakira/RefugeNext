@@ -14,8 +14,9 @@ import '../funcs/hangar_utils.dart';
 import '../funcs/buyback_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/api_service.dart';
-import '../funcs/search.dart' show processBuybackSearch, processSearch;
+import '../funcs/search.dart' show processBuybackSearch, processSearch, processShopSearch;
 import './models/searchProperty.dart';
+import './models/shop_search_property.dart';
 import '../repo/buyback.dart';
 import '../repo/ship_upgrade.dart';
 import '../repo/translation.dart';
@@ -62,6 +63,12 @@ class MainDataModel extends ChangeNotifier {
   bool get isSearched => _searchProperty != null;
 
   SearchProperty? get searchProperty => _searchProperty;
+
+  ShopSearchProperty? _shopSearchProperty = null;
+
+  bool get isShopSearched => _shopSearchProperty != null;
+
+  ShopSearchProperty? get shopSearchProperty => _shopSearchProperty;
 
   List<HangarItem> _hangarItems = [];
 
@@ -120,7 +127,7 @@ class MainDataModel extends ChangeNotifier {
       // refreshCatalog(catalogType).then((value) => readCatalogs());
       return [];
     }
-    return _catalog[catalogType.value]!;
+    return processShopSearch(_catalog[catalogType.value]!, _shopSearchProperty);
   }
 
 
@@ -486,6 +493,16 @@ class MainDataModel extends ChangeNotifier {
 
   void updateSearchProperty(SearchProperty? newProperty) {
     _searchProperty = newProperty;
+    notifyListeners();
+  }
+
+  void updateShopSearchProperty(ShopSearchProperty? newProperty) {
+    _shopSearchProperty = newProperty;
+    notifyListeners();
+  }
+
+  void clearShopSearch() {
+    _shopSearchProperty = null;
     notifyListeners();
   }
 

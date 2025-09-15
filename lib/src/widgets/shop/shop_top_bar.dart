@@ -10,6 +10,7 @@ import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../funcs/validation.dart';
 import '../user_info/user_login_bottomsheet.dart';
+import 'shop_search_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import 'upgrade_shop/upgrade_ship_widget.dart';
@@ -111,17 +112,17 @@ class _ShopTopBarState extends State<ShopTopBar> {
               ),
               SizedBox(width: 5,),
               IconButton(onPressed: () async { await onPressCart(context); }, icon: Icon(Icons.shopping_cart_outlined)),
-              // IconButton(
-              //     onPressed: () {
-              //       WoltModalSheet.show<void>(
-              //           context: context,
-              //           pageListBuilder: (modalSheetContext) {
-              //             return [
-              //
-              //             ];
-              //           });
-              //     },
-              //     icon: const Icon(Icons.search)),
+              IconButton(
+                  onPressed: () {
+                    WoltModalSheet.show<void>(
+                        context: context,
+                        pageListBuilder: (modalSheetContext) {
+                          return [
+                            getShopSearchBottomSheet(context)
+                          ];
+                        });
+                  },
+                  icon: const Icon(Icons.search)),
             ],
           ),
         ));
