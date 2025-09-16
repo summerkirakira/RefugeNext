@@ -35,6 +35,8 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>避难所会在回收或礼物时请求生物验证来保证安全，拒绝后会使用密码进行验证</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<string>YES</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
