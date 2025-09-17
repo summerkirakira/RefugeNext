@@ -12,6 +12,7 @@ import '../user_info/user_switch_bottomsheet.dart';
 import 'package:refuge_next/src/network/parsers/user_parser.dart' show parseNewUser;
 import 'package:refuge_next/src/network/api_service.dart';
 import 'package:refuge_next/src/widgets/settings/settings_page.dart';
+import 'package:refuge_next/src/widgets/user_info/referral_list_modal.dart';
 
 class TopBar extends StatefulWidget {
   const TopBar({Key? key}) : super(key: key);
@@ -375,6 +376,16 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                     .currentUser!
                     .newReferralsCount
                     .toString(),
+                onTap: () {
+                  WoltModalSheet.show<void>(
+                    context: context,
+                    pageListBuilder: (modalSheetContext) {
+                      return [
+                        getReferralListPage(modalSheetContext, context),
+                      ];
+                    },
+                  );
+                },
               ),
               SizedBox(height: 10),
               DetailInfoItem(

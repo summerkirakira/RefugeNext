@@ -5,6 +5,8 @@ import 'package:refuge_next/src/widgets/utility/player_search_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/utility/promote_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/utility/utility_topbar.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:refuge_next/src/widgets/user_info/referral_list_modal.dart';
 
 
 class FeatureSelectionPage extends StatelessWidget {
@@ -12,8 +14,15 @@ class FeatureSelectionPage extends StatelessWidget {
     FeatureItem(icon: Icons.search_rounded, title: '玩家搜索', onTap: (context) {
       showPlayerSearchSheet(context);
     }),
-    FeatureItem(icon: Icons.bolt_outlined, title: '组件查询', onTap: (context) {
-      showToast(message: "该功能未实现~");
+    FeatureItem(icon: Icons.groups_outlined, title: '邀请查询', onTap: (context) {
+      WoltModalSheet.show<void>(
+        context: context,
+        pageListBuilder: (modalSheetContext) {
+          return [
+            getReferralListPage(modalSheetContext, context),
+          ];
+        },
+      );
     }),
     FeatureItem(icon: Icons.card_giftcard_outlined, title: '礼物兑换', onTap: (context) async {
       final selectedOptions = await ModalSheetUtil.showUseCaseSelector(context);
