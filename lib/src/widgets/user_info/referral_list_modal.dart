@@ -22,18 +22,22 @@ String _formatTime(String timeString) {
 class ReferralListState {
   final List<ReferralRecruitListData> users;
   final bool isLoading;
+  final bool isLoadingMore;
   final bool hasError;
   final int currentPage;
   final bool showConverted;
+  final bool hasMoreData;
   final int totalRecruits;
   final int totalProspects;
 
   ReferralListState({
     this.users = const [],
     this.isLoading = false,
+    this.isLoadingMore = false,
     this.hasError = false,
     this.currentPage = 1,
     this.showConverted = false,
+    this.hasMoreData = true,
     this.totalRecruits = 0,
     this.totalProspects = 0,
   });
@@ -41,18 +45,22 @@ class ReferralListState {
   ReferralListState copyWith({
     List<ReferralRecruitListData>? users,
     bool? isLoading,
+    bool? isLoadingMore,
     bool? hasError,
     int? currentPage,
     bool? showConverted,
+    bool? hasMoreData,
     int? totalRecruits,
     int? totalProspects,
   }) {
     return ReferralListState(
       users: users ?? this.users,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasError: hasError ?? this.hasError,
       currentPage: currentPage ?? this.currentPage,
       showConverted: showConverted ?? this.showConverted,
+      hasMoreData: hasMoreData ?? this.hasMoreData,
       totalRecruits: totalRecruits ?? this.totalRecruits,
       totalProspects: totalProspects ?? this.totalProspects,
     );
@@ -112,23 +120,48 @@ class ReferralListWidget extends StatefulWidget {
 
 class _ReferralListWidgetState extends State<ReferralListWidget> {
   ReferralListState _state = ReferralListState(isLoading: true);
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     _loadReferralData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      // 当滚动到距离底部200像素时开始加载更多
+      if (_state.hasMoreData && !_state.isLoadingMore && !_state.isLoading) {
+        _loadMoreData();
+      }
+    }
   }
 
   Future<void> _loadReferralData() async {
     setState(() {
-      _state = _state.copyWith(isLoading: true, hasError: false);
+      _state = _state.copyWith(
+        isLoading: true,
+        hasError: false,
+        currentPage: 1,
+        hasMoreData: true,
+        users: [],
+      );
     });
 
     try {
       final query = ReferralListQuery(
         converted: _state.showConverted,
         limit: 10,
-        page: _state.currentPage,
+        page: 1,
       );
 
       final result = await query.execute();
@@ -137,6 +170,8 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
         _state = _state.copyWith(
           users: result.data,
           isLoading: false,
+          currentPage: 1,
+          hasMoreData: result.data.length >= 10,
           totalRecruits: result.recruitsCount,
           totalProspects: result.prospectsCount,
         );
@@ -149,32 +184,48 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
     }
   }
 
+  Future<void> _loadMoreData() async {
+    if (_state.isLoadingMore || !_state.hasMoreData) return;
+
+    setState(() {
+      _state = _state.copyWith(isLoadingMore: true);
+    });
+
+    try {
+      final nextPage = _state.currentPage + 1;
+      final query = ReferralListQuery(
+        converted: _state.showConverted,
+        limit: 10,
+        page: nextPage,
+      );
+
+      final result = await query.execute();
+
+      setState(() {
+        _state = _state.copyWith(
+          users: [..._state.users, ...result.data],
+          isLoadingMore: false,
+          currentPage: nextPage,
+          hasMoreData: result.data.length >= 10,
+          totalRecruits: result.recruitsCount,
+          totalProspects: result.prospectsCount,
+        );
+      });
+    } catch (e) {
+      setState(() {
+        _state = _state.copyWith(isLoadingMore: false);
+      });
+      showToast(message: "加载更多数据失败");
+    }
+  }
+
   void _toggleFilter() {
     setState(() {
       _state = _state.copyWith(
         showConverted: !_state.showConverted,
-        currentPage: 1,
       );
     });
     _loadReferralData();
-  }
-
-  void _nextPage() {
-    if (!_state.isLoading) {
-      setState(() {
-        _state = _state.copyWith(currentPage: _state.currentPage + 1);
-      });
-      _loadReferralData();
-    }
-  }
-
-  void _previousPage() {
-    if (_state.currentPage > 1 && !_state.isLoading) {
-      setState(() {
-        _state = _state.copyWith(currentPage: _state.currentPage - 1);
-      });
-      _loadReferralData();
-    }
   }
 
   @override
@@ -265,33 +316,18 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _state.users.length,
+                      controller: _scrollController,
+                      itemCount: _state.users.length + (_state.hasMoreData || _state.isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (index >= _state.users.length) {
+                          // 显示加载更多指示器
+                          return _buildLoadMoreIndicator();
+                        }
                         final user = _state.users[index];
                         return _buildUserCard(user);
                       },
                     ),
           ),
-
-          // 分页控制
-          if (_state.users.isNotEmpty)
-            Container(
-              height: 50,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton(
-                    onPressed: _state.currentPage > 1 ? _previousPage : null,
-                    child: Text('上一页'),
-                  ),
-                  Text('第 ${_state.currentPage} 页'),
-                  ElevatedButton(
-                    onPressed: _state.users.length >= 10 ? _nextPage : null,
-                    child: Text('下一页'),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
@@ -411,6 +447,39 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
         ),
       ),
     );
+  }
+
+  Widget _buildLoadMoreIndicator() {
+    if (_state.isLoadingMore) {
+      return Container(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 10),
+              Text('加载更多...', style: TextStyle(color: Colors.grey)),
+            ],
+          ),
+        ),
+      );
+    } else if (!_state.hasMoreData && _state.users.isNotEmpty) {
+      return Container(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            '已加载全部数据',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
+    return SizedBox.shrink();
   }
 }
 
