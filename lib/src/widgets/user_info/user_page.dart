@@ -507,20 +507,33 @@ class _UserInfoPageState extends State<UserInfoPage>
           onRefresh: () async {
             final currentUserHangarValue = model.currentUser!.hangarValue;
             final currentValue = model.currentUser!.currentHangarValue;
-            final newUser = await parseNewUser(
-                model.currentUser!.email,
-                model.currentUser!.password,
-                RsiApiClient().rsiDevice,
-                model.currentUser!.rsiToken
-            );
-            if (newUser == null) {
-              showToast(message: "用户信息刷新失败");
+            try {
+              final newUser = await parseNewUser(
+                  model.currentUser!.email,
+                  model.currentUser!.password,
+                  RsiApiClient().rsiDevice,
+                  model.currentUser!.rsiToken
+              );
+              if (newUser == null) {
+                showToast(message: "用户信息刷新失败");
+                return;
+              }
+              model.updateCurrentUser(newUser.copyWith(
+                  hangarValue: currentUserHangarValue,
+                  currentHangarValue: currentValue
+              ));
+            } catch (e) {
+              showToast(message: "用户信息刷新失败, 正在重新登录");
+              final result = await model.reLogin();
+              if (result) {
+                showToast(message: "重新登录成功");
+              } else {
+                showToast(message: "自动登录失败, 请手动登录");
+              }
+
               return;
             }
-            model.updateCurrentUser(newUser.copyWith(
-                hangarValue: currentUserHangarValue,
-                currentHangarValue: currentValue
-            ));
+
           },
         );
       },
