@@ -6,6 +6,7 @@ import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/network/api_service.dart';
 
 import 'full_screen_webview.dart';
+import 'anonymous_webpage.dart';
 
 
 Map<String, String> getRsiHeaders() {
@@ -13,7 +14,7 @@ Map<String, String> getRsiHeaders() {
   return rsiApiClient.getHeaders();
 }
 
-void openRsiWebview({ required BuildContext context, bool replace = false, required String url}) {
+void openRsiWebview({ required BuildContext context, bool replace = false, required String url, bool isAnonymous = false}) {
 
   // WebView现在支持iOS、Android和Windows平台
   if (!Platform.isIOS && !Platform.isAndroid && !Platform.isWindows && !Platform.isMacOS) {
@@ -27,7 +28,7 @@ void openRsiWebview({ required BuildContext context, bool replace = false, requi
     Navigator.pushReplacement(
       context,
       CupertinoPageRoute(
-        builder: (context) => FullScreenWebView(url: url, headers: headers,),
+        builder: (context) => isAnonymous ? AnonymousWebpage(url: url, headers: headers,) : FullScreenWebView(url: url, headers: headers,),
       ),
     );
     return;
@@ -35,7 +36,7 @@ void openRsiWebview({ required BuildContext context, bool replace = false, requi
     Navigator.push(
       context,
       CupertinoPageRoute(
-        builder: (context) => FullScreenWebView(url: url, headers: headers,),
+        builder: (context) => isAnonymous ? AnonymousWebpage(url: url, headers: headers,) : FullScreenWebView(url: url, headers: headers,),
       ),
     );
   }

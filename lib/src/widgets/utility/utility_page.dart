@@ -33,8 +33,9 @@ class FeatureSelectionPage extends StatelessWidget {
         MaterialPageRoute(builder: (context) => ShipFullPage()),
       );
     }),
-    FeatureItem(icon: Icons.category_outlined, title: '货运规划', onTap: (context) {
-      showToast(message: "该功能未实现~");
+    FeatureItem(icon: Icons.person_search, title: '邀请反查', onTap: (context) {
+      showToast(message: "在账号注册界面输入邀请码来获取目标用户~");
+      openRsiWebview(context: context, url: 'https://robertsspaceindustries.com/en/enlist', isAnonymous: true);
     }),
     FeatureItem(icon: Icons.bug_report_outlined, title: '转移账号', onTap: (context) {
       showToast(message: "该功能未实现~");

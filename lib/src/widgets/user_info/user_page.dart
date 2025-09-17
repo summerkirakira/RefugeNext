@@ -417,7 +417,7 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                 SizedBox(height: 10),
                 DetailInfoItem(
                   leading: Icon(Icons.how_to_reg_outlined, color: Theme.of(context).iconTheme.color),
-                  title: '推荐人邀请码',
+                  title: '邀请人邀请码',
                   value: Provider.of<MainDataModel>(context)
                       .currentUser!
                       .referrerReferralCode,
@@ -425,7 +425,7 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                     Clipboard.setData(ClipboardData(text: Provider.of<MainDataModel>(context, listen: false)
                         .currentUser!
                         .referrerReferralCode));
-                    showToast(message: "推荐人邀请码已复制");
+                    showToast(message: "邀请人邀请码已复制");
                   },
                 ),
               ]
