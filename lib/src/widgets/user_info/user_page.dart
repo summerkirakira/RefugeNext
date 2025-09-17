@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -195,17 +196,19 @@ class DetailInfoItem extends StatelessWidget {
   final String title;
   final String value;
   final Widget leading;
+  final VoidCallback? onTap;
 
   const DetailInfoItem(
       {Key? key,
       required this.leading,
       required this.title,
-      required this.value})
+      required this.value,
+      this.onTap})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    Widget content = Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
       child: Row(
         children: [
@@ -218,6 +221,15 @@ class DetailInfoItem extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: content,
+      );
+    }
+
+    return content;
   }
 }
 
@@ -380,6 +392,12 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                 value: Provider.of<MainDataModel>(context)
                     .currentUser!
                     .referralCode,
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: Provider.of<MainDataModel>(context, listen: false)
+                      .currentUser!
+                      .referralCode));
+                  showToast(message: "邀请码已复制");
+                },
               ),
               if (Provider.of<MainDataModel>(context)
                   .currentUser!
@@ -392,6 +410,12 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                   value: Provider.of<MainDataModel>(context)
                       .currentUser!
                       .referrerReferralCode,
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: Provider.of<MainDataModel>(context, listen: false)
+                        .currentUser!
+                        .referrerReferralCode));
+                    showToast(message: "推荐人邀请码已复制");
+                  },
                 ),
               ]
             ],
