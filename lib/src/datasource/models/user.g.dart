@@ -30,6 +30,12 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
       registerTime: DateTime.parse(json['registerTime'] as String),
       registerTimeString: json['registerTimeString'] as String,
       extra: json['extra'] as String? ?? '',
+      referrerReferralCode: json['referrerReferralCode'] as String? ?? '',
+      hasGamePackage: json['hasGamePackage'] as bool? ?? false,
+      hasBeenReferred: json['hasBeenReferred'] as bool? ?? false,
+      referrerReferralHandle: json['referrerReferralHandle'] as String? ?? "",
+      username: json['username'] as String? ?? "",
+      newReferralsCount: (json['newReferralsCount'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
@@ -57,4 +63,10 @@ Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
       'registerTime': instance.registerTime.toIso8601String(),
       'registerTimeString': instance.registerTimeString,
       'extra': instance.extra,
+      'referrerReferralCode': instance.referrerReferralCode,
+      'hasGamePackage': instance.hasGamePackage,
+      'hasBeenReferred': instance.hasBeenReferred,
+      'referrerReferralHandle': instance.referrerReferralHandle,
+      'username': instance.username,
+      'newReferralsCount': instance.newReferralsCount,
     };

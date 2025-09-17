@@ -20,8 +20,19 @@ class Account with _$Account {
     required String? avatar,
     required List<Badge>? badges,
     required String displayname,
+    required bool canBeReferred,
+    required String createdAt,
+    required String email,
+    required bool hasBeenReferred,
+    required bool hasGamePackage,
+    required String referral_code,
+    required int referral_count,
+    required String referrerReferralCode,
     required int id,
     required String nickname,
+    required String username,
+    required String profileUrl,
+    required String status
   }) = _Account;
 
   factory Account.fromJson(Map<String, dynamic> json) =>

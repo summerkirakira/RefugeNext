@@ -330,12 +330,38 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                     Provider.of<MainDataModel>(context).currentUser!.currentHangarValue),
               ),
               SizedBox(height: 10),
+              if (Provider.of<MainDataModel>(context)
+                  .currentUser!
+                  .hasGamePackage) ...[
+                DetailInfoItem(
+                  leading: Icon(Icons.check_circle_outline, color: Theme.of(context).iconTheme.color),
+                  title: '拥有游戏资格',
+                  value: '是',
+                ),
+                SizedBox(height: 10),
+              ] else ...[
+                DetailInfoItem(
+                  leading: Icon(Icons.cancel_outlined, color: Theme.of(context).iconTheme.color),
+                  title: '拥有游戏资格',
+                  value: '否',
+                ),
+                SizedBox(height: 10),
+              ],
               DetailInfoItem(
                 leading: Icon(Icons.groups, color: Theme.of(context).iconTheme.color),
-                title: '邀请人数',
+                title: '总邀请人数',
                 value: Provider.of<MainDataModel>(context)
                     .currentUser!
                     .referralCount
+                    .toString(),
+              ),
+              SizedBox(height: 10),
+              DetailInfoItem(
+                leading: Icon(Icons.group_outlined, color: Theme.of(context).iconTheme.color),
+                title: '新版邀请人数',
+                value: Provider.of<MainDataModel>(context)
+                    .currentUser!
+                    .newReferralsCount
                     .toString(),
               ),
               SizedBox(height: 10),
@@ -355,6 +381,19 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
                     .currentUser!
                     .referralCode,
               ),
+              if (Provider.of<MainDataModel>(context)
+                  .currentUser!
+                  .referrerReferralCode
+                  .isNotEmpty) ...[
+                SizedBox(height: 10),
+                DetailInfoItem(
+                  leading: Icon(Icons.how_to_reg_outlined, color: Theme.of(context).iconTheme.color),
+                  title: '推荐人邀请码',
+                  value: Provider.of<MainDataModel>(context)
+                      .currentUser!
+                      .referrerReferralCode,
+                ),
+              ]
             ],
           ),
         )

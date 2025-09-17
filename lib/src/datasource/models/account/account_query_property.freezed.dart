@@ -177,8 +177,19 @@ mixin _$Account {
   String? get avatar => throw _privateConstructorUsedError;
   List<Badge>? get badges => throw _privateConstructorUsedError;
   String get displayname => throw _privateConstructorUsedError;
+  bool get canBeReferred => throw _privateConstructorUsedError;
+  String get createdAt => throw _privateConstructorUsedError;
+  String get email => throw _privateConstructorUsedError;
+  bool get hasBeenReferred => throw _privateConstructorUsedError;
+  bool get hasGamePackage => throw _privateConstructorUsedError;
+  String get referral_code => throw _privateConstructorUsedError;
+  int get referral_count => throw _privateConstructorUsedError;
+  String get referrerReferralCode => throw _privateConstructorUsedError;
   int get id => throw _privateConstructorUsedError;
   String get nickname => throw _privateConstructorUsedError;
+  String get username => throw _privateConstructorUsedError;
+  String get profileUrl => throw _privateConstructorUsedError;
+  String get status => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -195,8 +206,19 @@ abstract class $AccountCopyWith<$Res> {
       String? avatar,
       List<Badge>? badges,
       String displayname,
+      bool canBeReferred,
+      String createdAt,
+      String email,
+      bool hasBeenReferred,
+      bool hasGamePackage,
+      String referral_code,
+      int referral_count,
+      String referrerReferralCode,
       int id,
-      String nickname});
+      String nickname,
+      String username,
+      String profileUrl,
+      String status});
 }
 
 /// @nodoc
@@ -216,8 +238,19 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
     Object? avatar = freezed,
     Object? badges = freezed,
     Object? displayname = null,
+    Object? canBeReferred = null,
+    Object? createdAt = null,
+    Object? email = null,
+    Object? hasBeenReferred = null,
+    Object? hasGamePackage = null,
+    Object? referral_code = null,
+    Object? referral_count = null,
+    Object? referrerReferralCode = null,
     Object? id = null,
     Object? nickname = null,
+    Object? username = null,
+    Object? profileUrl = null,
+    Object? status = null,
   }) {
     return _then(_value.copyWith(
       isAnonymous: null == isAnonymous
@@ -236,6 +269,38 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
           ? _value.displayname
           : displayname // ignore: cast_nullable_to_non_nullable
               as String,
+      canBeReferred: null == canBeReferred
+          ? _value.canBeReferred
+          : canBeReferred // ignore: cast_nullable_to_non_nullable
+              as bool,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      email: null == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
+              as String,
+      hasBeenReferred: null == hasBeenReferred
+          ? _value.hasBeenReferred
+          : hasBeenReferred // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasGamePackage: null == hasGamePackage
+          ? _value.hasGamePackage
+          : hasGamePackage // ignore: cast_nullable_to_non_nullable
+              as bool,
+      referral_code: null == referral_code
+          ? _value.referral_code
+          : referral_code // ignore: cast_nullable_to_non_nullable
+              as String,
+      referral_count: null == referral_count
+          ? _value.referral_count
+          : referral_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      referrerReferralCode: null == referrerReferralCode
+          ? _value.referrerReferralCode
+          : referrerReferralCode // ignore: cast_nullable_to_non_nullable
+              as String,
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -243,6 +308,18 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
       nickname: null == nickname
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
+              as String,
+      username: null == username
+          ? _value.username
+          : username // ignore: cast_nullable_to_non_nullable
+              as String,
+      profileUrl: null == profileUrl
+          ? _value.profileUrl
+          : profileUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
               as String,
     ) as $Val);
   }
@@ -260,8 +337,19 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
       String? avatar,
       List<Badge>? badges,
       String displayname,
+      bool canBeReferred,
+      String createdAt,
+      String email,
+      bool hasBeenReferred,
+      bool hasGamePackage,
+      String referral_code,
+      int referral_count,
+      String referrerReferralCode,
       int id,
-      String nickname});
+      String nickname,
+      String username,
+      String profileUrl,
+      String status});
 }
 
 /// @nodoc
@@ -279,8 +367,19 @@ class __$$AccountImplCopyWithImpl<$Res>
     Object? avatar = freezed,
     Object? badges = freezed,
     Object? displayname = null,
+    Object? canBeReferred = null,
+    Object? createdAt = null,
+    Object? email = null,
+    Object? hasBeenReferred = null,
+    Object? hasGamePackage = null,
+    Object? referral_code = null,
+    Object? referral_count = null,
+    Object? referrerReferralCode = null,
     Object? id = null,
     Object? nickname = null,
+    Object? username = null,
+    Object? profileUrl = null,
+    Object? status = null,
   }) {
     return _then(_$AccountImpl(
       isAnonymous: null == isAnonymous
@@ -299,6 +398,38 @@ class __$$AccountImplCopyWithImpl<$Res>
           ? _value.displayname
           : displayname // ignore: cast_nullable_to_non_nullable
               as String,
+      canBeReferred: null == canBeReferred
+          ? _value.canBeReferred
+          : canBeReferred // ignore: cast_nullable_to_non_nullable
+              as bool,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      email: null == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
+              as String,
+      hasBeenReferred: null == hasBeenReferred
+          ? _value.hasBeenReferred
+          : hasBeenReferred // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasGamePackage: null == hasGamePackage
+          ? _value.hasGamePackage
+          : hasGamePackage // ignore: cast_nullable_to_non_nullable
+              as bool,
+      referral_code: null == referral_code
+          ? _value.referral_code
+          : referral_code // ignore: cast_nullable_to_non_nullable
+              as String,
+      referral_count: null == referral_count
+          ? _value.referral_count
+          : referral_count // ignore: cast_nullable_to_non_nullable
+              as int,
+      referrerReferralCode: null == referrerReferralCode
+          ? _value.referrerReferralCode
+          : referrerReferralCode // ignore: cast_nullable_to_non_nullable
+              as String,
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -306,6 +437,18 @@ class __$$AccountImplCopyWithImpl<$Res>
       nickname: null == nickname
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
+              as String,
+      username: null == username
+          ? _value.username
+          : username // ignore: cast_nullable_to_non_nullable
+              as String,
+      profileUrl: null == profileUrl
+          ? _value.profileUrl
+          : profileUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -319,8 +462,19 @@ class _$AccountImpl implements _Account {
       required this.avatar,
       required final List<Badge>? badges,
       required this.displayname,
+      required this.canBeReferred,
+      required this.createdAt,
+      required this.email,
+      required this.hasBeenReferred,
+      required this.hasGamePackage,
+      required this.referral_code,
+      required this.referral_count,
+      required this.referrerReferralCode,
       required this.id,
-      required this.nickname})
+      required this.nickname,
+      required this.username,
+      required this.profileUrl,
+      required this.status})
       : _badges = badges;
 
   factory _$AccountImpl.fromJson(Map<String, dynamic> json) =>
@@ -343,13 +497,35 @@ class _$AccountImpl implements _Account {
   @override
   final String displayname;
   @override
+  final bool canBeReferred;
+  @override
+  final String createdAt;
+  @override
+  final String email;
+  @override
+  final bool hasBeenReferred;
+  @override
+  final bool hasGamePackage;
+  @override
+  final String referral_code;
+  @override
+  final int referral_count;
+  @override
+  final String referrerReferralCode;
+  @override
   final int id;
   @override
   final String nickname;
+  @override
+  final String username;
+  @override
+  final String profileUrl;
+  @override
+  final String status;
 
   @override
   String toString() {
-    return 'Account(isAnonymous: $isAnonymous, avatar: $avatar, badges: $badges, displayname: $displayname, id: $id, nickname: $nickname)';
+    return 'Account(isAnonymous: $isAnonymous, avatar: $avatar, badges: $badges, displayname: $displayname, canBeReferred: $canBeReferred, createdAt: $createdAt, email: $email, hasBeenReferred: $hasBeenReferred, hasGamePackage: $hasGamePackage, referral_code: $referral_code, referral_count: $referral_count, referrerReferralCode: $referrerReferralCode, id: $id, nickname: $nickname, username: $username, profileUrl: $profileUrl, status: $status)';
   }
 
   @override
@@ -363,15 +539,52 @@ class _$AccountImpl implements _Account {
             const DeepCollectionEquality().equals(other._badges, _badges) &&
             (identical(other.displayname, displayname) ||
                 other.displayname == displayname) &&
+            (identical(other.canBeReferred, canBeReferred) ||
+                other.canBeReferred == canBeReferred) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.email, email) || other.email == email) &&
+            (identical(other.hasBeenReferred, hasBeenReferred) ||
+                other.hasBeenReferred == hasBeenReferred) &&
+            (identical(other.hasGamePackage, hasGamePackage) ||
+                other.hasGamePackage == hasGamePackage) &&
+            (identical(other.referral_code, referral_code) ||
+                other.referral_code == referral_code) &&
+            (identical(other.referral_count, referral_count) ||
+                other.referral_count == referral_count) &&
+            (identical(other.referrerReferralCode, referrerReferralCode) ||
+                other.referrerReferralCode == referrerReferralCode) &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.nickname, nickname) ||
-                other.nickname == nickname));
+                other.nickname == nickname) &&
+            (identical(other.username, username) ||
+                other.username == username) &&
+            (identical(other.profileUrl, profileUrl) ||
+                other.profileUrl == profileUrl) &&
+            (identical(other.status, status) || other.status == status));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, isAnonymous, avatar,
-      const DeepCollectionEquality().hash(_badges), displayname, id, nickname);
+  int get hashCode => Object.hash(
+      runtimeType,
+      isAnonymous,
+      avatar,
+      const DeepCollectionEquality().hash(_badges),
+      displayname,
+      canBeReferred,
+      createdAt,
+      email,
+      hasBeenReferred,
+      hasGamePackage,
+      referral_code,
+      referral_count,
+      referrerReferralCode,
+      id,
+      nickname,
+      username,
+      profileUrl,
+      status);
 
   @JsonKey(ignore: true)
   @override
@@ -393,8 +606,19 @@ abstract class _Account implements Account {
       required final String? avatar,
       required final List<Badge>? badges,
       required final String displayname,
+      required final bool canBeReferred,
+      required final String createdAt,
+      required final String email,
+      required final bool hasBeenReferred,
+      required final bool hasGamePackage,
+      required final String referral_code,
+      required final int referral_count,
+      required final String referrerReferralCode,
       required final int id,
-      required final String nickname}) = _$AccountImpl;
+      required final String nickname,
+      required final String username,
+      required final String profileUrl,
+      required final String status}) = _$AccountImpl;
 
   factory _Account.fromJson(Map<String, dynamic> json) = _$AccountImpl.fromJson;
 
@@ -407,9 +631,31 @@ abstract class _Account implements Account {
   @override
   String get displayname;
   @override
+  bool get canBeReferred;
+  @override
+  String get createdAt;
+  @override
+  String get email;
+  @override
+  bool get hasBeenReferred;
+  @override
+  bool get hasGamePackage;
+  @override
+  String get referral_code;
+  @override
+  int get referral_count;
+  @override
+  String get referrerReferralCode;
+  @override
   int get id;
   @override
   String get nickname;
+  @override
+  String get username;
+  @override
+  String get profileUrl;
+  @override
+  String get status;
   @override
   @JsonKey(ignore: true)
   _$$AccountImplCopyWith<_$AccountImpl> get copyWith =>

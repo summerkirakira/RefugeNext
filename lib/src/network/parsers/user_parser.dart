@@ -1,10 +1,15 @@
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart';
 import 'package:intl/intl.dart';
+import 'package:refuge_next/src/funcs/shop/recaptcha.dart';
+import 'package:refuge_next/src/network/graphql/account/referral_list_query.dart';
+import 'package:refuge_next/src/network/graphql/account/referral_query.dart';
 import '../../datasource/models/user.dart';
 import '../../network/api_service.dart';
 import 'package:refuge_next/src/network/graphql/account/account_query.dart';
 import 'package:refuge_next/src/network/graphql/account/credit_query.dart';
+
+import '../graphql/account/referral_code_search.dart';
 
 Future<User?> parseNewUser(String email, String password, String? rsiDevice, String? rsiToken) async {
 
@@ -19,11 +24,13 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
 
   await rsiClient.refreshCsrfToken();
 
-  var referralPage = await rsiClient.getPage('account/referral-program');
-  Document referralDoc = html_parser.parse(referralPage);
+  // var referralPage = await rsiClient.getPage('account/referral-program');
+  // Document referralDoc = html_parser.parse(referralPage);
 
   final accountQuery = await AccountQuery().execute();
   final creditQuery = await CreditQuery().execute();
+  final referralQuery = await ReferralListQuery(converted: false, limit: 5, page: 1).execute();
+  final newReferral = await ReferralCountQuery(campaignId: "2").execute();
 
   String? userName = accountQuery.account.displayname;
   String? userHandle = accountQuery.account.nickname;
@@ -55,29 +62,29 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
   RegExp numRegExp = RegExp(r'\((\d+)\)');
 
 
-  String? recruitNumberString = referralDoc.querySelector('a[href="/account/referral-program?recruits=1"]')?.text;
-  String? totalReferralNumberString = referralDoc.querySelector('a[href="/account/referral-program"][data-type="pending"]')?.text;
-  if (recruitNumberString != null) {
-    var match = numRegExp.firstMatch(recruitNumberString);
-    if (match != null) {
-      recruitNumberString = match.group(1);
-    }
-  }
-
-  if (totalReferralNumberString != null) {
-    var match = numRegExp.firstMatch(totalReferralNumberString);
-    if (match != null) {
-      totalReferralNumberString = match.group(1);
-    }
-  }
+  // String? recruitNumberString = referralDoc.querySelector('a[href="/account/referral-program?recruits=1"]')?.text;
+  // String? totalReferralNumberString = referralDoc.querySelector('a[href="/account/referral-program"][data-type="pending"]')?.text;
+  // if (recruitNumberString != null) {
+  //   var match = numRegExp.firstMatch(recruitNumberString);
+  //   if (match != null) {
+  //     recruitNumberString = match.group(1);
+  //   }
+  // }
+  //
+  // if (totalReferralNumberString != null) {
+  //   var match = numRegExp.firstMatch(totalReferralNumberString);
+  //   if (match != null) {
+  //     totalReferralNumberString = match.group(1);
+  //   }
+  // }
 
   RegExp referralRegExp = RegExp(r'STAR-[A-Z0-9]{4}-[A-Z0-9]{4}');
 
 
-  Iterable<Match> matches = referralRegExp.allMatches(referralPage);
+  // Iterable<Match> matches = referralRegExp.allMatches(referralPage);
 
 
-  String? referralCode = matches.isNotEmpty ? matches.first.group(0) : null;
+  // String? referralCode = matches.isNotEmpty ? matches.first.group(0) : null;
 
   var billingPage = await rsiClient.getPage('account/billing');
 
@@ -116,14 +123,14 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     }
   }
 
-  totalReferralNumberString ??= '0';
-  recruitNumberString ??= '0';
+  // totalReferralNumberString ??= '0';
+  // recruitNumberString ??= '0';
 
-  referralCode ??= '';
+  // referralCode ??= '';
   totalSpentString ??= '0';
 
 
-  if (userImage == null || userHandle == null || referralCode == null || recruitNumberString == null || totalReferralNumberString == null || totalSpentString == null || enlisted == null) {
+  if (userImage == null || enlisted == null) {
     return null;
   }
 
@@ -144,14 +151,14 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
 
   User newUser = User(
     handle: userHandle,
-    name: userName!,
+    name: userName,
     email: email,
     password: password,
-    rsiToken: rsiTokenFinal!,
+    rsiToken: rsiTokenFinal,
     profileImage: userImage,
-    referralCode: referralCode,
-    referralCount: int.parse(recruitNumberString),
-    referralProspectCount: int.parse(totalReferralNumberString),
+    referralCode: accountQuery.account.referral_code,
+    referralCount: accountQuery.account.referral_count,
+    referralProspectCount: referralQuery.prospectsCount,
     usd: userCredit,
     uec: userUEC,
     rec: userREC,
@@ -165,6 +172,11 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     orgLevel: orgLevel,
     registerTime: registerTime,
     registerTimeString: registerTimeString,
+    referrerReferralCode: accountQuery.account.referrerReferralCode,
+    hasBeenReferred: accountQuery.account.hasBeenReferred,
+    hasGamePackage: accountQuery.account.hasGamePackage,
+    username: accountQuery.account.username,
+    newReferralsCount: newReferral.referralCountByCampaign
   );
 
   return newUser;

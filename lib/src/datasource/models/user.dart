@@ -29,6 +29,12 @@ class User with _$User {
     required DateTime registerTime,
     required String registerTimeString,
     @Default('') String extra,
+    @Default('') String referrerReferralCode,
+    @Default(false) bool hasGamePackage,
+    @Default(false) bool hasBeenReferred,
+    @Default("") String referrerReferralHandle,
+    @Default("") String username,
+    @Default(0) int newReferralsCount,
   }) = _User;
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);

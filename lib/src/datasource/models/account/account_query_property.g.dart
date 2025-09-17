@@ -26,8 +26,19 @@ _$AccountImpl _$$AccountImplFromJson(Map<String, dynamic> json) =>
           ?.map((e) => Badge.fromJson(e as Map<String, dynamic>))
           .toList(),
       displayname: json['displayname'] as String,
+      canBeReferred: json['canBeReferred'] as bool,
+      createdAt: json['createdAt'] as String,
+      email: json['email'] as String,
+      hasBeenReferred: json['hasBeenReferred'] as bool,
+      hasGamePackage: json['hasGamePackage'] as bool,
+      referral_code: json['referral_code'] as String,
+      referral_count: (json['referral_count'] as num).toInt(),
+      referrerReferralCode: json['referrerReferralCode'] as String,
       id: (json['id'] as num).toInt(),
       nickname: json['nickname'] as String,
+      username: json['username'] as String,
+      profileUrl: json['profileUrl'] as String,
+      status: json['status'] as String,
     );
 
 Map<String, dynamic> _$$AccountImplToJson(_$AccountImpl instance) =>
@@ -36,8 +47,19 @@ Map<String, dynamic> _$$AccountImplToJson(_$AccountImpl instance) =>
       'avatar': instance.avatar,
       'badges': instance.badges,
       'displayname': instance.displayname,
+      'canBeReferred': instance.canBeReferred,
+      'createdAt': instance.createdAt,
+      'email': instance.email,
+      'hasBeenReferred': instance.hasBeenReferred,
+      'hasGamePackage': instance.hasGamePackage,
+      'referral_code': instance.referral_code,
+      'referral_count': instance.referral_count,
+      'referrerReferralCode': instance.referrerReferralCode,
       'id': instance.id,
       'nickname': instance.nickname,
+      'username': instance.username,
+      'profileUrl': instance.profileUrl,
+      'status': instance.status,
     };
 
 _$BadgeImpl _$$BadgeImplFromJson(Map<String, dynamic> json) => _$BadgeImpl(

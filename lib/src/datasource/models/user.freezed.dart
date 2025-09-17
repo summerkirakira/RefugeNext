@@ -66,6 +66,19 @@ mixin _$User {
   set registerTimeString(String value) => throw _privateConstructorUsedError;
   String get extra => throw _privateConstructorUsedError;
   set extra(String value) => throw _privateConstructorUsedError;
+  String get referrerReferralCode => throw _privateConstructorUsedError;
+  set referrerReferralCode(String value) => throw _privateConstructorUsedError;
+  bool get hasGamePackage => throw _privateConstructorUsedError;
+  set hasGamePackage(bool value) => throw _privateConstructorUsedError;
+  bool get hasBeenReferred => throw _privateConstructorUsedError;
+  set hasBeenReferred(bool value) => throw _privateConstructorUsedError;
+  String get referrerReferralHandle => throw _privateConstructorUsedError;
+  set referrerReferralHandle(String value) =>
+      throw _privateConstructorUsedError;
+  String get username => throw _privateConstructorUsedError;
+  set username(String value) => throw _privateConstructorUsedError;
+  int get newReferralsCount => throw _privateConstructorUsedError;
+  set newReferralsCount(int value) => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -100,7 +113,13 @@ abstract class $UserCopyWith<$Res> {
       int orgLevel,
       DateTime registerTime,
       String registerTimeString,
-      String extra});
+      String extra,
+      String referrerReferralCode,
+      bool hasGamePackage,
+      bool hasBeenReferred,
+      String referrerReferralHandle,
+      String username,
+      int newReferralsCount});
 }
 
 /// @nodoc
@@ -139,6 +158,12 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? registerTime = null,
     Object? registerTimeString = null,
     Object? extra = null,
+    Object? referrerReferralCode = null,
+    Object? hasGamePackage = null,
+    Object? hasBeenReferred = null,
+    Object? referrerReferralHandle = null,
+    Object? username = null,
+    Object? newReferralsCount = null,
   }) {
     return _then(_value.copyWith(
       handle: null == handle
@@ -233,6 +258,30 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           ? _value.extra
           : extra // ignore: cast_nullable_to_non_nullable
               as String,
+      referrerReferralCode: null == referrerReferralCode
+          ? _value.referrerReferralCode
+          : referrerReferralCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      hasGamePackage: null == hasGamePackage
+          ? _value.hasGamePackage
+          : hasGamePackage // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasBeenReferred: null == hasBeenReferred
+          ? _value.hasBeenReferred
+          : hasBeenReferred // ignore: cast_nullable_to_non_nullable
+              as bool,
+      referrerReferralHandle: null == referrerReferralHandle
+          ? _value.referrerReferralHandle
+          : referrerReferralHandle // ignore: cast_nullable_to_non_nullable
+              as String,
+      username: null == username
+          ? _value.username
+          : username // ignore: cast_nullable_to_non_nullable
+              as String,
+      newReferralsCount: null == newReferralsCount
+          ? _value.newReferralsCount
+          : newReferralsCount // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -267,7 +316,13 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       int orgLevel,
       DateTime registerTime,
       String registerTimeString,
-      String extra});
+      String extra,
+      String referrerReferralCode,
+      bool hasGamePackage,
+      bool hasBeenReferred,
+      String referrerReferralHandle,
+      String username,
+      int newReferralsCount});
 }
 
 /// @nodoc
@@ -303,6 +358,12 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? registerTime = null,
     Object? registerTimeString = null,
     Object? extra = null,
+    Object? referrerReferralCode = null,
+    Object? hasGamePackage = null,
+    Object? hasBeenReferred = null,
+    Object? referrerReferralHandle = null,
+    Object? username = null,
+    Object? newReferralsCount = null,
   }) {
     return _then(_$UserImpl(
       handle: null == handle
@@ -397,6 +458,30 @@ class __$$UserImplCopyWithImpl<$Res>
           ? _value.extra
           : extra // ignore: cast_nullable_to_non_nullable
               as String,
+      referrerReferralCode: null == referrerReferralCode
+          ? _value.referrerReferralCode
+          : referrerReferralCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      hasGamePackage: null == hasGamePackage
+          ? _value.hasGamePackage
+          : hasGamePackage // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasBeenReferred: null == hasBeenReferred
+          ? _value.hasBeenReferred
+          : hasBeenReferred // ignore: cast_nullable_to_non_nullable
+              as bool,
+      referrerReferralHandle: null == referrerReferralHandle
+          ? _value.referrerReferralHandle
+          : referrerReferralHandle // ignore: cast_nullable_to_non_nullable
+              as String,
+      username: null == username
+          ? _value.username
+          : username // ignore: cast_nullable_to_non_nullable
+              as String,
+      newReferralsCount: null == newReferralsCount
+          ? _value.newReferralsCount
+          : newReferralsCount // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -427,7 +512,13 @@ class _$UserImpl implements _User {
       required this.orgLevel,
       required this.registerTime,
       required this.registerTimeString,
-      this.extra = ''});
+      this.extra = '',
+      this.referrerReferralCode = '',
+      this.hasGamePackage = false,
+      this.hasBeenReferred = false,
+      this.referrerReferralHandle = "",
+      this.username = "",
+      this.newReferralsCount = 0});
 
   factory _$UserImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserImplFromJson(json);
@@ -479,10 +570,28 @@ class _$UserImpl implements _User {
   @override
   @JsonKey()
   String extra;
+  @override
+  @JsonKey()
+  String referrerReferralCode;
+  @override
+  @JsonKey()
+  bool hasGamePackage;
+  @override
+  @JsonKey()
+  bool hasBeenReferred;
+  @override
+  @JsonKey()
+  String referrerReferralHandle;
+  @override
+  @JsonKey()
+  String username;
+  @override
+  @JsonKey()
+  int newReferralsCount;
 
   @override
   String toString() {
-    return 'User(handle: $handle, name: $name, email: $email, password: $password, rsiToken: $rsiToken, profileImage: $profileImage, referralCode: $referralCode, referralCount: $referralCount, referralProspectCount: $referralProspectCount, usd: $usd, uec: $uec, rec: $rec, hangarValue: $hangarValue, currentHangarValue: $currentHangarValue, totalSpent: $totalSpent, organization: $organization, organizationName: $organizationName, organizationImage: $organizationImage, orgRank: $orgRank, orgLevel: $orgLevel, registerTime: $registerTime, registerTimeString: $registerTimeString, extra: $extra)';
+    return 'User(handle: $handle, name: $name, email: $email, password: $password, rsiToken: $rsiToken, profileImage: $profileImage, referralCode: $referralCode, referralCount: $referralCount, referralProspectCount: $referralProspectCount, usd: $usd, uec: $uec, rec: $rec, hangarValue: $hangarValue, currentHangarValue: $currentHangarValue, totalSpent: $totalSpent, organization: $organization, organizationName: $organizationName, organizationImage: $organizationImage, orgRank: $orgRank, orgLevel: $orgLevel, registerTime: $registerTime, registerTimeString: $registerTimeString, extra: $extra, referrerReferralCode: $referrerReferralCode, hasGamePackage: $hasGamePackage, hasBeenReferred: $hasBeenReferred, referrerReferralHandle: $referrerReferralHandle, username: $username, newReferralsCount: $newReferralsCount)';
   }
 
   @JsonKey(ignore: true)
@@ -523,7 +632,13 @@ abstract class _User implements User {
       required int orgLevel,
       required DateTime registerTime,
       required String registerTimeString,
-      String extra}) = _$UserImpl;
+      String extra,
+      String referrerReferralCode,
+      bool hasGamePackage,
+      bool hasBeenReferred,
+      String referrerReferralHandle,
+      String username,
+      int newReferralsCount}) = _$UserImpl;
 
   factory _User.fromJson(Map<String, dynamic> json) = _$UserImpl.fromJson;
 
@@ -596,6 +711,24 @@ abstract class _User implements User {
   @override
   String get extra;
   set extra(String value);
+  @override
+  String get referrerReferralCode;
+  set referrerReferralCode(String value);
+  @override
+  bool get hasGamePackage;
+  set hasGamePackage(bool value);
+  @override
+  bool get hasBeenReferred;
+  set hasBeenReferred(bool value);
+  @override
+  String get referrerReferralHandle;
+  set referrerReferralHandle(String value);
+  @override
+  String get username;
+  set username(String value);
+  @override
+  int get newReferralsCount;
+  set newReferralsCount(int value);
   @override
   @JsonKey(ignore: true)
   _$$UserImplCopyWith<_$UserImpl> get copyWith =>
