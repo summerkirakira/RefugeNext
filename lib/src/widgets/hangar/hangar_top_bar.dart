@@ -15,10 +15,12 @@ import '../../datasource/data_model.dart';
 
 class HangarTopBar extends StatefulWidget {
   final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
-  
+  final VoidCallback? onScrollToTop;
+
   const HangarTopBar({
-    Key? key, 
+    Key? key,
     this.refreshKeys,
+    this.onScrollToTop,
   }) : super(key: key);
 
   @override
@@ -57,7 +59,12 @@ class _HangarTopBarState extends State<HangarTopBar> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                           )),
-                      const Text('我的机库', style: TextStyle(fontSize: 24)),
+                      GestureDetector(
+                        onDoubleTap: () {
+                          widget.onScrollToTop?.call();
+                        },
+                        child: const Text('我的机库', style: TextStyle(fontSize: 24)),
+                      ),
                       const Spacer(),
                       if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
                         IconButton(

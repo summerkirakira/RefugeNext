@@ -31,6 +31,9 @@ class _HangarPageState extends State<HangarPage> {
     GlobalKey<RefreshIndicatorState>(), // 回购页面的RefreshKey
   ];
 
+  final ScrollController _hangarScrollController = ScrollController();
+  VoidCallback? _buybackScrollToTop;
+
   void onTap(HangarItem hangarItem, BuildContext context){
 
 
@@ -59,13 +62,43 @@ class _HangarPageState extends State<HangarPage> {
   }
 
   @override
+  void dispose() {
+    _hangarScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_hangarScrollController.hasClients) {
+      _hangarScrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _handleScrollToTop() {
+    final activePageIndex = Provider.of<MainDataModel>(context, listen: false).activePageIndex;
+    switch (activePageIndex) {
+      case 0: // 机库页面
+        _scrollToTop();
+        break;
+      case 1: // 回购页面
+        _buybackScrollToTop?.call();
+        break;
+      default:
+        break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     final items = Provider.of<MainDataModel>(context).hangarItems;
 
     return  Column(
       children: [
-        HangarTopBar(refreshKeys: _refreshKeys),
+        HangarTopBar(refreshKeys: _refreshKeys, onScrollToTop: _handleScrollToTop),
         HangarBuybackPage(titles: getTitles(), children: [
           Container(
             child: RefreshIndicator(
@@ -117,6 +150,7 @@ class _HangarPageState extends State<HangarPage> {
                       ),
                     Expanded(
                       child: ListView.builder(
+                          controller: _hangarScrollController,
                           padding: const EdgeInsets.all(0),
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: items.isEmpty ? 1 : items.length,
@@ -144,7 +178,12 @@ class _HangarPageState extends State<HangarPage> {
                 )
             ),
           ),
-          BuybackPage(refreshKey: _refreshKeys[1]),
+          BuybackPage(
+            refreshKey: _refreshKeys[1],
+            onScrollControllerReady: (callback) {
+              _buybackScrollToTop = callback;
+            },
+          ),
           if (!(Provider.of<MainDataModel>(context).currentUser!.email == '934869815@qq.com'))
           ProductUpgradeWidget(),
         ]),

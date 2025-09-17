@@ -5,10 +5,12 @@ import 'buyback_item.dart';
 
 class BuybackPage extends StatefulWidget {
   final Key? refreshKey;
+  final Function(VoidCallback)? onScrollControllerReady;
 
   const BuybackPage({
     Key? key,
     this.refreshKey,
+    this.onScrollControllerReady,
   }) : super(key: key);
 
   @override
@@ -16,6 +18,34 @@ class BuybackPage extends StatefulWidget {
 }
 
 class _BuybackPageState extends State<BuybackPage> {
+  final ScrollController _buybackScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _buybackScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_buybackScrollController.hasClients) {
+      _buybackScrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.onScrollControllerReady != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onScrollControllerReady!(_scrollToTop);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -65,6 +95,7 @@ class _BuybackPageState extends State<BuybackPage> {
                 ),
               Expanded(
                   child: ListView.builder(
+                    controller: _buybackScrollController,
                     padding: const EdgeInsets.all(0),
                     itemCount: Provider.of<MainDataModel>(context).buybackItems.length,
                     itemBuilder: (context, index) {
