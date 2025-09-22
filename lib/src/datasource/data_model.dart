@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/buyback.dart';
 import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
@@ -120,6 +122,24 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _showRefreshButton = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+
+  bool get showRefreshButton => _showRefreshButton;
+
+  Future<void> setShowRefreshButton(bool show) async {
+    _showRefreshButton = show;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('app.settings.showRefreshButton', show);
+    notifyListeners();
+  }
+
+  Future<void> loadShowRefreshButtonSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    // 桌面端默认开启，移动端默认关闭
+    final defaultValue = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+    _showRefreshButton = prefs.getBool('app.settings.showRefreshButton') ?? defaultValue;
+  }
+
   Map<String, List<CatalogProperty>> _catalog = {};
 
   List<CatalogProperty> getCataLog(CatalogTypes catalogType) {
@@ -204,6 +224,7 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> initialize() async {
     await initUser();
+    await loadShowRefreshButtonSetting();
     await translationRepo.readTranslation();
     await shipAliasRepo.getShipAliases();
     readHangarItems();

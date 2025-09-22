@@ -221,6 +221,24 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ),
+                  SettingsItem(
+                    onTap: () {},
+                    icons: Icons.refresh_rounded,
+                    iconStyle: IconStyle(
+                      iconsColor: Colors.white,
+                      withBackground: true,
+                      backgroundColor: Colors.blue,
+                    ),
+                    title: '显示刷新按钮',
+                    subtitle: Provider.of<MainDataModel>(context).showRefreshButton ? "机库和商店页面显示刷新按钮" : "隐藏机库和商店页面的刷新按钮",
+                    trailing: Switch.adaptive(
+                      value: Provider.of<MainDataModel>(context).showRefreshButton,
+                      onChanged: (value) {
+                        Provider.of<MainDataModel>(context, listen: false)
+                            .setShowRefreshButton(value);
+                      },
+                    ),
+                  ),
                 ],
               ),
               SettingsGroup(

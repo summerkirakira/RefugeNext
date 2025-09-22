@@ -86,7 +86,7 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   tooltip: "重放购买操作",
                 ),
                 SizedBox(width: 5,),
-              if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
+              if (widget.refreshKeys != null && Provider.of<MainDataModel>(context).showRefreshButton)
                 IconButton(
                   onPressed: () {
                     final activePageIndex = context.read<MainDataModel>().activePageIndex;

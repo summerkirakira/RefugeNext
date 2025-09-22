@@ -66,7 +66,7 @@ class _HangarTopBarState extends State<HangarTopBar> {
                         child: const Text('我的机库', style: TextStyle(fontSize: 24)),
                       ),
                       const Spacer(),
-                      if (widget.refreshKeys != null && !Platform.isIOS && !Platform.isAndroid)
+                      if (widget.refreshKeys != null && dataModel.showRefreshButton)
                         IconButton(
                           onPressed: () {
                             switch (dataModel.activePageIndex) {
