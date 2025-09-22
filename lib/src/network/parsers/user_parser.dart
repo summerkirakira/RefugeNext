@@ -36,7 +36,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
   String? userHandle = accountQuery.account.nickname;
   int userCredit = creditQuery.ledgerCredit.amount.value;
   int userUEC = creditQuery.ledgerUec.amount.value;
-  int userREC = creditQuery.ledgerRec.amount.value;
+  int userREC = creditQuery.ledgerRec.amount.value; 
 
 
 

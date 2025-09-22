@@ -61,12 +61,12 @@ SPEC CHECKSUMS:
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   open_file_mac: 01874b6d6a2c1485ac9b126d7105b99102dea2cf
-  package_info_plus: a8a591e70e87ce97ce5d21b2594f69cea9e0312f
+  package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   share_plus: 11c7b7fa7020465584eca3ff6392c5bc1e399d6e
   shared_preferences_macos: 6a94472ee68acef5c48bd4f77b715be32f537375
   sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
-  url_launcher_macos: de10e46d8d8b9e3a7b8a133e8de92b104379f05e
+  url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
 
 PODFILE CHECKSUM: 236401fc2c932af29a9fcf0e97baeeb2d750d367
 

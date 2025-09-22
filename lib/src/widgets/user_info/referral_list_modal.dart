@@ -20,49 +20,70 @@ String _formatTime(String timeString) {
 }
 
 class ReferralListState {
-  final List<ReferralRecruitListData> users;
+  final List<ReferralRecruitListData> allUsers;
   final bool isLoading;
-  final bool isLoadingMore;
   final bool hasError;
-  final int currentPage;
   final bool showConverted;
-  final bool hasMoreData;
   final int totalRecruits;
   final int totalProspects;
+  final bool isReversed;
+  final int displayedCount;
+  static const int pageSize = 10;
 
   ReferralListState({
-    this.users = const [],
+    this.allUsers = const [],
     this.isLoading = false,
-    this.isLoadingMore = false,
     this.hasError = false,
-    this.currentPage = 1,
     this.showConverted = false,
-    this.hasMoreData = true,
     this.totalRecruits = 0,
     this.totalProspects = 0,
+    this.isReversed = false,
+    this.displayedCount = 10,
   });
 
+  int get totalCount => showConverted ? totalRecruits : (totalRecruits + totalProspects);
+
+  List<ReferralRecruitListData> get filteredUsers {
+    // 数据已经在API层面按照showConverted过滤了，直接返回
+    return allUsers;
+  }
+
+  List<ReferralRecruitListData> get sortedUsers {
+    final filtered = List<ReferralRecruitListData>.from(filteredUsers);
+    filtered.sort((a, b) {
+      final dateA = DateTime.tryParse(a.enlistedOn) ?? DateTime(1970);
+      final dateB = DateTime.tryParse(b.enlistedOn) ?? DateTime(1970);
+      return isReversed ? dateB.compareTo(dateA) : dateA.compareTo(dateB);
+    });
+    return filtered;
+  }
+
+  List<ReferralRecruitListData> get displayedUsers {
+    final sorted = sortedUsers;
+    return sorted.take(displayedCount).toList();
+  }
+
+  bool get hasMoreData => displayedUsers.length < sortedUsers.length;
+
   ReferralListState copyWith({
-    List<ReferralRecruitListData>? users,
+    List<ReferralRecruitListData>? allUsers,
     bool? isLoading,
-    bool? isLoadingMore,
     bool? hasError,
-    int? currentPage,
     bool? showConverted,
-    bool? hasMoreData,
     int? totalRecruits,
     int? totalProspects,
+    bool? isReversed,
+    int? displayedCount,
   }) {
     return ReferralListState(
-      users: users ?? this.users,
+      allUsers: allUsers ?? this.allUsers,
       isLoading: isLoading ?? this.isLoading,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasError: hasError ?? this.hasError,
-      currentPage: currentPage ?? this.currentPage,
       showConverted: showConverted ?? this.showConverted,
-      hasMoreData: hasMoreData ?? this.hasMoreData,
       totalRecruits: totalRecruits ?? this.totalRecruits,
       totalProspects: totalProspects ?? this.totalProspects,
+      isReversed: isReversed ?? this.isReversed,
+      displayedCount: displayedCount ?? this.displayedCount,
     );
   }
 }
@@ -140,7 +161,7 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       // 当滚动到距离底部200像素时开始加载更多
-      if (_state.hasMoreData && !_state.isLoadingMore && !_state.isLoading) {
+      if (_state.hasMoreData && !_state.isLoading) {
         _loadMoreData();
       }
     }
@@ -151,16 +172,15 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
       _state = _state.copyWith(
         isLoading: true,
         hasError: false,
-        currentPage: 1,
-        hasMoreData: true,
-        users: [],
+        displayedCount: ReferralListState.pageSize,
       );
     });
 
     try {
+      // 根据当前过滤状态加载对应数据
       final query = ReferralListQuery(
-        converted: _state.showConverted,
-        limit: 10,
+        converted: _state.showConverted, // 根据当前状态选择数据类型
+        limit: 10000, // 使用大limit
         page: 1,
       );
 
@@ -168,10 +188,8 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
 
       setState(() {
         _state = _state.copyWith(
-          users: result.data,
+          allUsers: result.data,
           isLoading: false,
-          currentPage: 1,
-          hasMoreData: result.data.length >= 10,
           totalRecruits: result.recruitsCount,
           totalProspects: result.prospectsCount,
         );
@@ -184,48 +202,33 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
     }
   }
 
-  Future<void> _loadMoreData() async {
-    if (_state.isLoadingMore || !_state.hasMoreData) return;
+  void _loadMoreData() {
+    if (!_state.hasMoreData) return;
 
     setState(() {
-      _state = _state.copyWith(isLoadingMore: true);
-    });
-
-    try {
-      final nextPage = _state.currentPage + 1;
-      final query = ReferralListQuery(
-        converted: _state.showConverted,
-        limit: 10,
-        page: nextPage,
+      _state = _state.copyWith(
+        displayedCount: _state.displayedCount + ReferralListState.pageSize,
       );
-
-      final result = await query.execute();
-
-      setState(() {
-        _state = _state.copyWith(
-          users: [..._state.users, ...result.data],
-          isLoadingMore: false,
-          currentPage: nextPage,
-          hasMoreData: result.data.length >= 10,
-          totalRecruits: result.recruitsCount,
-          totalProspects: result.prospectsCount,
-        );
-      });
-    } catch (e) {
-      setState(() {
-        _state = _state.copyWith(isLoadingMore: false);
-      });
-      showToast(message: "加载更多数据失败");
-    }
+    });
   }
 
   void _toggleFilter() {
     setState(() {
       _state = _state.copyWith(
         showConverted: !_state.showConverted,
+        displayedCount: ReferralListState.pageSize, // 重置显示数量
       );
     });
-    _loadReferralData();
+    _loadReferralData(); // 重新加载对应类型的数据
+  }
+
+  void _toggleSort() {
+    setState(() {
+      _state = _state.copyWith(
+        isReversed: !_state.isReversed,
+        displayedCount: ReferralListState.pageSize, // 重置显示数量
+      );
+    });
   }
 
   @override
@@ -267,6 +270,7 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                 Row(
                   children: [
                     Expanded(
+                      flex: 2,
                       child: ElevatedButton(
                         onPressed: _toggleFilter,
                         style: ElevatedButton.styleFrom(
@@ -274,7 +278,27 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                             ? Theme.of(context).primaryColor
                             : Colors.grey.withOpacity(0.3),
                         ),
-                        child: Text(_state.showConverted ? '已购买用户' : '全部用户'),
+                        child: Text(_state.showConverted ? '已购买用户' : '未购买用户'),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton.icon(
+                        onPressed: _toggleSort,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _state.isReversed
+                            ? Theme.of(context).primaryColor.withOpacity(0.8)
+                            : Colors.grey.withOpacity(0.3),
+                        ),
+                        icon: Icon(
+                          _state.isReversed ? Icons.arrow_downward : Icons.arrow_upward,
+                          size: 16,
+                        ),
+                        label: Text(
+                          _state.isReversed ? '最新' : '最旧',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ),
                   ],
@@ -304,7 +328,7 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                       ],
                     ),
                   )
-                : _state.users.isEmpty
+                : _state.displayedUsers.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -317,13 +341,13 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      itemCount: _state.users.length + (_state.hasMoreData || _state.isLoadingMore ? 1 : 0),
+                      itemCount: _state.displayedUsers.length + (_state.hasMoreData ? 1 : 0),
                       itemBuilder: (context, index) {
-                        if (index >= _state.users.length) {
+                        if (index >= _state.displayedUsers.length) {
                           // 显示加载更多指示器
                           return _buildLoadMoreIndicator();
                         }
-                        final user = _state.users[index];
+                        final user = _state.displayedUsers[index];
                         return _buildUserCard(user);
                       },
                     ),
@@ -450,25 +474,27 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
   }
 
   Widget _buildLoadMoreIndicator() {
-    if (_state.isLoadingMore) {
+    if (_state.hasMoreData) {
       return Container(
         padding: EdgeInsets.all(20),
         child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+          child: GestureDetector(
+            onTap: _loadMoreData,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
               ),
-              SizedBox(width: 10),
-              Text('加载更多...', style: TextStyle(color: Colors.grey)),
-            ],
+              child: Text(
+                '加载更多',
+                style: TextStyle(color: Colors.grey[700]),
+              ),
+            ),
           ),
         ),
       );
-    } else if (!_state.hasMoreData && _state.users.isNotEmpty) {
+    } else if (_state.displayedUsers.isNotEmpty) {
       return Container(
         padding: EdgeInsets.all(20),
         child: Center(
