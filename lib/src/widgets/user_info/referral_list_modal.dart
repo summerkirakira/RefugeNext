@@ -28,6 +28,7 @@ class ReferralListState {
   final int totalProspects;
   final bool isReversed;
   final int displayedCount;
+  final String campaignId;
   static const int pageSize = 10;
 
   ReferralListState({
@@ -39,6 +40,7 @@ class ReferralListState {
     this.totalProspects = 0,
     this.isReversed = false,
     this.displayedCount = 10,
+    this.campaignId = "1",
   });
 
   int get totalCount => showConverted ? totalRecruits : (totalRecruits + totalProspects);
@@ -74,6 +76,7 @@ class ReferralListState {
     int? totalProspects,
     bool? isReversed,
     int? displayedCount,
+    String? campaignId,
   }) {
     return ReferralListState(
       allUsers: allUsers ?? this.allUsers,
@@ -84,6 +87,7 @@ class ReferralListState {
       totalProspects: totalProspects ?? this.totalProspects,
       isReversed: isReversed ?? this.isReversed,
       displayedCount: displayedCount ?? this.displayedCount,
+      campaignId: campaignId ?? this.campaignId,
     );
   }
 }
@@ -182,6 +186,7 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
         converted: _state.showConverted, // 根据当前状态选择数据类型
         limit: 10000, // 使用大limit
         page: 1,
+        campaignId: _state.campaignId,
       );
 
       final result = await query.execute();
@@ -231,6 +236,16 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
     });
   }
 
+  void _toggleCampaign() {
+    setState(() {
+      _state = _state.copyWith(
+        campaignId: _state.campaignId == "1" ? "2" : "1",
+        displayedCount: ReferralListState.pageSize, // 重置显示数量
+      );
+    });
+    _loadReferralData(); // 重新加载对应版本的数据
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -278,12 +293,28 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                             ? Theme.of(context).primaryColor
                             : Colors.grey.withOpacity(0.3),
                         ),
-                        child: Text(_state.showConverted ? '已购买用户' : '未购买用户'),
+                        child: Text(_state.showConverted ? '已购买' : '未购买'),
                       ),
                     ),
-                    SizedBox(width: 10),
+                    SizedBox(width: 8),
                     Expanded(
-                      flex: 1,
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: _toggleCampaign,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _state.campaignId == "2"
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey.withOpacity(0.3),
+                        ),
+                        label: Text(
+                          _state.campaignId == "2" ? '新版' : '旧版',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
                       child: ElevatedButton.icon(
                         onPressed: _toggleSort,
                         style: ElevatedButton.styleFrom(
@@ -293,11 +324,11 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
                         ),
                         icon: Icon(
                           _state.isReversed ? Icons.arrow_downward : Icons.arrow_upward,
-                          size: 16,
+                          size: 14,
                         ),
                         label: Text(
                           _state.isReversed ? '最新' : '最旧',
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 11),
                         ),
                       ),
                     ),

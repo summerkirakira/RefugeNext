@@ -3,8 +3,10 @@ import 'package:refuge_next/src/datasource/models/referral/referral_list_propert
 
 
 class ReferralListQuery {
-  final String query = r"""query GetReferralRecruitsList($converted: Boolean!, $limit: Int!, $page: Int!) {
-  referralRecruitsList(query: {converted: $converted, limit: $limit, page: $page}) {
+  final String query = r"""query GetReferralRecruitsList($converted: Boolean!, $limit: Int!, $page: Int!, $campaignId: ID!) {
+  referralRecruitsList(
+    query: {converted: $converted, limit: $limit, page: $page, campaignId: $campaignId}
+  ) {
     recruitsCount
     prospectsCount
     data {
@@ -23,8 +25,9 @@ class ReferralListQuery {
   final bool converted;
   final int limit;
   final int page;
+  final String campaignId;
 
-  ReferralListQuery({this.converted = false, this.limit = 5, this.page = 1});
+  ReferralListQuery({this.converted = false, this.limit = 5, this.page = 1, this.campaignId = "1"});
 
 
   Future<ReferralRecruitsList> execute() async {
@@ -34,6 +37,7 @@ class ReferralListQuery {
         "converted": converted,
         "limit": limit,
         "page": page,
+        "campaignId": campaignId,
       },
     };
 

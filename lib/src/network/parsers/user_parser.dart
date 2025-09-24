@@ -29,8 +29,18 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
 
   final accountQuery = await AccountQuery().execute();
   final creditQuery = await CreditQuery().execute();
-  final referralQuery = await ReferralListQuery(converted: false, limit: 5, page: 1).execute();
-  final newReferral = await ReferralCountQuery(campaignId: "2").execute();
+  var prospectsCount = 0;
+  var newReferralsCount = 0;
+  try {
+    final referralQueryOld = await ReferralListQuery(converted: false, limit: 5, page: 1, campaignId: "1").execute();
+    final referralQueryNew = await ReferralListQuery(converted: false, limit: 5, page: 1, campaignId: "2").execute();
+    prospectsCount = referralQueryOld.prospectsCount + referralQueryNew.prospectsCount;
+    final newReferral = await ReferralCountQuery(campaignId: "2").execute();
+    newReferralsCount = newReferral.referralCountByCampaign;
+  } catch (e) {
+
+  }
+
 
   String? userName = accountQuery.account.displayname;
   String? userHandle = accountQuery.account.nickname;
@@ -158,7 +168,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     profileImage: userImage,
     referralCode: accountQuery.account.referral_code,
     referralCount: accountQuery.account.referral_count,
-    referralProspectCount: referralQuery.prospectsCount,
+    referralProspectCount: prospectsCount,
     usd: userCredit,
     uec: userUEC,
     rec: userREC,
@@ -176,7 +186,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     hasBeenReferred: accountQuery.account.hasBeenReferred,
     hasGamePackage: accountQuery.account.hasGamePackage,
     username: accountQuery.account.username,
-    newReferralsCount: newReferral.referralCountByCampaign
+    newReferralsCount:newReferralsCount
   );
 
   return newUser;
