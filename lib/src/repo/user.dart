@@ -3,9 +3,11 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synchronized/synchronized.dart';
 
 
 class UserRepo {
+  final Lock _lock = Lock();
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
     return directory.path;
@@ -17,19 +19,23 @@ class UserRepo {
   }
 
   Future<List<User>> readUsers() async {
-    try {
-      final file = await _localFile;
-      final contents = await file.readAsString();
-      final List<dynamic> json = jsonDecode(contents);
-      return json.map((e) => User.fromJson(e)).toList();
-    } catch (e) {
-      return [];
-    }
+    return await _lock.synchronized(() async {
+      try {
+        final file = await _localFile;
+        final contents = await file.readAsString();
+        final List<dynamic> json = jsonDecode(contents);
+        return json.map((e) => User.fromJson(e)).toList();
+      } catch (e) {
+        return [];
+      }
+    });
   }
 
   Future<File> writeUsers(List<User> items) async {
-    final file = await _localFile;
-    return file.writeAsString(jsonEncode(items));
+    return await _lock.synchronized(() async {
+      final file = await _localFile;
+      return file.writeAsString(jsonEncode(items));
+    });
   }
 
   Future<void> addUser(User user) async {
