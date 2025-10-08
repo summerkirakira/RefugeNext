@@ -53,7 +53,7 @@ dependencies:
   wolt_modal_sheet: ^0.7.0
   syncfusion_flutter_sliders: ^26.1.40
   local_auth: ^2.3.0
-  shared_preferences: 2.0.15
+  shared_preferences: 2.2.3
   flutter_keyboard_visibility: ^6.0.0
   share_plus: ^9.0.0
   image: ^3.0.2

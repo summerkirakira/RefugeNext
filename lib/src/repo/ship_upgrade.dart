@@ -73,7 +73,15 @@ class ShipUpgradeRepo {
     if (upgradeMap.isEmpty) {
       return result;
     }
-    List<UpgradeShipInfo> ships = idList.map((id) => upgradeMap[id]!).toList();
+    List<UpgradeShipInfo> ships = [];
+    for (var id in idList) {
+      if (upgradeMap.containsKey(id)) {
+        ships.add(upgradeMap[id]!);
+      } else {
+        print("Warning: Ship with ID $id not found in upgrade map.");
+      }
+    }
+
     if (toSkus != null) {
       for (int i = 0; i < toSkus.length; i++) {
         ships[i].skus = toSkus[i];
