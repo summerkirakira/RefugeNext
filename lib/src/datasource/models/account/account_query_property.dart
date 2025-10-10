@@ -26,7 +26,6 @@ class Account with _$Account {
     required bool hasBeenReferred,
     required bool hasGamePackage,
     required String referral_code,
-    required int referral_count,
     required String referrerReferralCode,
     required int id,
     required String nickname,

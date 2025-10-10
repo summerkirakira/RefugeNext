@@ -183,7 +183,6 @@ mixin _$Account {
   bool get hasBeenReferred => throw _privateConstructorUsedError;
   bool get hasGamePackage => throw _privateConstructorUsedError;
   String get referral_code => throw _privateConstructorUsedError;
-  int get referral_count => throw _privateConstructorUsedError;
   String get referrerReferralCode => throw _privateConstructorUsedError;
   int get id => throw _privateConstructorUsedError;
   String get nickname => throw _privateConstructorUsedError;
@@ -212,7 +211,6 @@ abstract class $AccountCopyWith<$Res> {
       bool hasBeenReferred,
       bool hasGamePackage,
       String referral_code,
-      int referral_count,
       String referrerReferralCode,
       int id,
       String nickname,
@@ -244,7 +242,6 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
     Object? hasBeenReferred = null,
     Object? hasGamePackage = null,
     Object? referral_code = null,
-    Object? referral_count = null,
     Object? referrerReferralCode = null,
     Object? id = null,
     Object? nickname = null,
@@ -293,10 +290,6 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
           ? _value.referral_code
           : referral_code // ignore: cast_nullable_to_non_nullable
               as String,
-      referral_count: null == referral_count
-          ? _value.referral_count
-          : referral_count // ignore: cast_nullable_to_non_nullable
-              as int,
       referrerReferralCode: null == referrerReferralCode
           ? _value.referrerReferralCode
           : referrerReferralCode // ignore: cast_nullable_to_non_nullable
@@ -343,7 +336,6 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
       bool hasBeenReferred,
       bool hasGamePackage,
       String referral_code,
-      int referral_count,
       String referrerReferralCode,
       int id,
       String nickname,
@@ -373,7 +365,6 @@ class __$$AccountImplCopyWithImpl<$Res>
     Object? hasBeenReferred = null,
     Object? hasGamePackage = null,
     Object? referral_code = null,
-    Object? referral_count = null,
     Object? referrerReferralCode = null,
     Object? id = null,
     Object? nickname = null,
@@ -422,10 +413,6 @@ class __$$AccountImplCopyWithImpl<$Res>
           ? _value.referral_code
           : referral_code // ignore: cast_nullable_to_non_nullable
               as String,
-      referral_count: null == referral_count
-          ? _value.referral_count
-          : referral_count // ignore: cast_nullable_to_non_nullable
-              as int,
       referrerReferralCode: null == referrerReferralCode
           ? _value.referrerReferralCode
           : referrerReferralCode // ignore: cast_nullable_to_non_nullable
@@ -468,7 +455,6 @@ class _$AccountImpl implements _Account {
       required this.hasBeenReferred,
       required this.hasGamePackage,
       required this.referral_code,
-      required this.referral_count,
       required this.referrerReferralCode,
       required this.id,
       required this.nickname,
@@ -509,8 +495,6 @@ class _$AccountImpl implements _Account {
   @override
   final String referral_code;
   @override
-  final int referral_count;
-  @override
   final String referrerReferralCode;
   @override
   final int id;
@@ -525,7 +509,7 @@ class _$AccountImpl implements _Account {
 
   @override
   String toString() {
-    return 'Account(isAnonymous: $isAnonymous, avatar: $avatar, badges: $badges, displayname: $displayname, canBeReferred: $canBeReferred, createdAt: $createdAt, email: $email, hasBeenReferred: $hasBeenReferred, hasGamePackage: $hasGamePackage, referral_code: $referral_code, referral_count: $referral_count, referrerReferralCode: $referrerReferralCode, id: $id, nickname: $nickname, username: $username, profileUrl: $profileUrl, status: $status)';
+    return 'Account(isAnonymous: $isAnonymous, avatar: $avatar, badges: $badges, displayname: $displayname, canBeReferred: $canBeReferred, createdAt: $createdAt, email: $email, hasBeenReferred: $hasBeenReferred, hasGamePackage: $hasGamePackage, referral_code: $referral_code, referrerReferralCode: $referrerReferralCode, id: $id, nickname: $nickname, username: $username, profileUrl: $profileUrl, status: $status)';
   }
 
   @override
@@ -550,8 +534,6 @@ class _$AccountImpl implements _Account {
                 other.hasGamePackage == hasGamePackage) &&
             (identical(other.referral_code, referral_code) ||
                 other.referral_code == referral_code) &&
-            (identical(other.referral_count, referral_count) ||
-                other.referral_count == referral_count) &&
             (identical(other.referrerReferralCode, referrerReferralCode) ||
                 other.referrerReferralCode == referrerReferralCode) &&
             (identical(other.id, id) || other.id == id) &&
@@ -578,7 +560,6 @@ class _$AccountImpl implements _Account {
       hasBeenReferred,
       hasGamePackage,
       referral_code,
-      referral_count,
       referrerReferralCode,
       id,
       nickname,
@@ -612,7 +593,6 @@ abstract class _Account implements Account {
       required final bool hasBeenReferred,
       required final bool hasGamePackage,
       required final String referral_code,
-      required final int referral_count,
       required final String referrerReferralCode,
       required final int id,
       required final String nickname,
@@ -642,8 +622,6 @@ abstract class _Account implements Account {
   bool get hasGamePackage;
   @override
   String get referral_code;
-  @override
-  int get referral_count;
   @override
   String get referrerReferralCode;
   @override

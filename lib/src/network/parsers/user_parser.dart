@@ -31,9 +31,13 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
   final creditQuery = await CreditQuery().execute();
   var prospectsCount = 0;
   var newReferralsCount = 0;
+  var referralValidCount = 0;
   try {
     final referralQueryOld = await ReferralListQuery(converted: false, limit: 5, page: 1, campaignId: "1").execute();
     final referralQueryNew = await ReferralListQuery(converted: false, limit: 5, page: 1, campaignId: "2").execute();
+    final referralValidOld = await ReferralCountQuery(campaignId: "1").execute();
+    final referralValidNew = await ReferralCountQuery(campaignId: "2").execute();
+    referralValidCount = referralValidOld.referralCountByCampaign + referralValidNew.referralCountByCampaign;
     prospectsCount = referralQueryOld.prospectsCount + referralQueryNew.prospectsCount;
     final newReferral = await ReferralCountQuery(campaignId: "2").execute();
     newReferralsCount = newReferral.referralCountByCampaign;
@@ -167,7 +171,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     rsiToken: rsiTokenFinal,
     profileImage: userImage,
     referralCode: accountQuery.account.referral_code,
-    referralCount: accountQuery.account.referral_count,
+    referralCount: referralValidCount,
     referralProspectCount: prospectsCount,
     usd: userCredit,
     uec: userUEC,

@@ -34,11 +34,11 @@ class AccountQuery {
       email
       hasBeenReferred
       hasGamePackage
+      hasReferred
       id
       nickname
       profileUrl
       referral_code
-      referral_count
       referrerReferralCode
       roles {
         name
