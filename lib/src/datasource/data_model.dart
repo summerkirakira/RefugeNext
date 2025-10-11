@@ -23,10 +23,12 @@ import '../repo/buyback.dart';
 import '../repo/ship_upgrade.dart';
 import '../repo/translation.dart';
 import '../repo/ship_alias.dart';
+import '../repo/game_log.dart';
 import 'package:dio/dio.dart';
 import '../network/parsers/hangar_parser.dart';
 import '../funcs/toast.dart';
 import '../funcs/login.dart';
+import '../funcs/game_log_parser.dart';
 import '../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
@@ -38,6 +40,7 @@ import 'package:refuge_next/src/funcs/theme.dart' show ThemeManager, FlexSchemeH
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 
 import 'models/hangar/hangar_log.dart';
+import 'models/game_log.dart';
 
 
 enum HangarItemType {
@@ -205,6 +208,7 @@ class MainDataModel extends ChangeNotifier {
   final shipAliasRepo = ShipAliasRepo();
   final hangarLogRepo = HangarLogRepo();
   final shipInfoRepo = ShipInfoRepo();
+  final gameLogRepo = GameLogRepo();
 
 
   RefugeVersionProperty? get property => CirnoAuth.instance?.property;
@@ -384,6 +388,91 @@ class MainDataModel extends ChangeNotifier {
   Future<void> refreshHangarLogs() async {
     _hangarLogs = await hangarLogRepo.refreshHangarLogs();
     notifyListeners();
+  }
+
+  // Game Log 相关方法
+  List<GameLog> _gameLogs = [];
+  List<GameLog> get gameLogs => _gameLogs;
+
+  // 从文本解析并保存游戏日志
+  Future<void> parseAndSaveGameLogs(String logText) async {
+    final logs = GameLogParser.parseLogText(logText);
+    if (logs.isNotEmpty) {
+      await gameLogRepo.insertLogs(logs);
+      _gameLogs = await gameLogRepo.getRecentLogs(100); // 获取最近100条日志
+      notifyListeners();
+    }
+  }
+
+  // 获取最近的游戏日志
+  Future<void> loadRecentGameLogs([int count = 100]) async {
+    _gameLogs = await gameLogRepo.getRecentLogs(count);
+    notifyListeners();
+  }
+
+  // 根据时间范围获取游戏日志
+  Future<void> loadGameLogsByTimeRange(DateTime startTime, DateTime endTime) async {
+    _gameLogs = await gameLogRepo.getLogsByTimeRange(
+      startTime: startTime,
+      endTime: endTime,
+    );
+    notifyListeners();
+  }
+
+  // 根据玩家ID获取游戏日志
+  Future<void> loadGameLogsByPlayer(String playerId) async {
+    _gameLogs = await gameLogRepo.getLogsByPlayerId(playerId: playerId);
+    notifyListeners();
+  }
+
+  // 根据类型获取游戏日志
+  Future<void> loadGameLogsByType(String logType, {String? subType}) async {
+    _gameLogs = await gameLogRepo.getLogsByType(
+      logType: logType,
+      subType: subType,
+    );
+    notifyListeners();
+  }
+
+  // 搜索游戏日志
+  Future<void> searchGameLogs(String keyword) async {
+    _gameLogs = await gameLogRepo.searchLogs(keyword: keyword);
+    notifyListeners();
+  }
+
+  // 获取日志统计信息
+  Future<Map<String, dynamic>> getGameLogStatistics({
+    DateTime? startTime,
+    DateTime? endTime,
+  }) async {
+    return await gameLogRepo.getStatistics(
+      startTime: startTime,
+      endTime: endTime,
+    );
+  }
+
+  // 清理旧的游戏日志
+  Future<int> clearOldGameLogs(DateTime beforeDate) async {
+    final deletedCount = await gameLogRepo.clearOldLogs(beforeDate);
+    await loadRecentGameLogs(); // 重新加载日志
+    return deletedCount;
+  }
+
+  // 导出游戏日志
+  Future<String> exportGameLogs({
+    DateTime? startTime,
+    DateTime? endTime,
+  }) async {
+    return await gameLogRepo.exportLogsToJson(
+      startTime: startTime,
+      endTime: endTime,
+    );
+  }
+
+  // 导入游戏日志
+  Future<void> importGameLogs(String jsonString) async {
+    await gameLogRepo.importLogsFromJson(jsonString);
+    await loadRecentGameLogs(); // 重新加载日志
   }
 
   HangarItem? getHangarItemById(int id) {
