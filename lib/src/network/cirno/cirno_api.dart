@@ -10,12 +10,14 @@ import 'property/property.dart';
 import 'dart:convert';
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
 import 'package:refuge_next/src/datasource/models/cirno/property.dart';
+import 'package:refuge_next/src/datasource/models/cirno/account.dart';
+import 'package:refuge_next/src/repo/refuge_account.dart';
 
 
 class CirnoApiClient {
   static final CirnoApiClient _instance = CirnoApiClient._internal();
   late final Dio _dio;
-  final String baseUrl = "https://biaoju.site:6188/";
+  final String baseUrl = "http://192.168.0.128:6088/";
 
 
   CirnoApiClient._internal() {
@@ -27,10 +29,17 @@ class CirnoApiClient {
         };
 
     _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
+      onRequest: (options, handler) async {
         options.headers["User-Agent"] =
             "RefugeNext/1.0.0 (iPhone; iOS 14.5; Scale/2.00)";
         options.headers["cirno-token"] = CirnoAuth.instance!.uuid;
+
+        // 自动添加 JWT token（如果已登录）
+        final jwtToken = await RefugeAccountRepo().getJwtToken();
+        if (jwtToken != null && jwtToken.isNotEmpty) {
+          options.headers["Authorization"] = "Bearer $jwtToken";
+        }
+
         handler.next(options);
       },
     ));
@@ -109,6 +118,100 @@ class CirnoApiClient {
       'primaryUser': message,
     };
     await basicPost(endpoint: 'client/info', data: data);
+  }
+
+  // ==================== 避难所账号相关 API ====================
+
+  /// 注册账号
+  Future<void> registerAccount({
+    required String email,
+    required String password,
+  }) async {
+    final request = AccountRegisterRequest(
+      email: email,
+      password: password,
+    );
+    await basicPost(endpoint: 'account/register', data: request.toJson());
+  }
+
+  /// 登录账号（自动保存 JWT token）
+  Future<AccountLoginResponse> loginAccount({
+    required String email,
+    required String password,
+  }) async {
+    final request = AccountLoginRequest(
+      email: email,
+      password: password,
+    );
+    final response = await basicPost(endpoint: 'account/login', data: request.toJson());
+
+    final loginResponse = AccountLoginResponse.fromJson(response.data);
+
+    // 自动保存 JWT token 和邮箱
+    await RefugeAccountRepo().saveLoginInfo(
+      token: loginResponse.accessToken,
+      email: loginResponse.email,
+    );
+
+    return loginResponse;
+  }
+
+  /// 绑定当前设备到账号
+  Future<void> bindDeviceToAccount() async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    await basicPost(endpoint: 'account/bind', data: {});
+  }
+
+  /// 获取账号信息
+  Future<AccountInfoResponse> getAccountInfo() async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    final response = await _dio.get("${baseUrl}account/info");
+    return AccountInfoResponse.fromJson(response.data);
+  }
+
+  /// 解绑设备
+  Future<void> unbindDevice(String uuid) async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    await _dio.delete("${baseUrl}account/unbind/$uuid");
+  }
+
+  /// 批量添加游戏日志
+  Future<GameLogResult> addGameLogBatch(List<GameLogRequest> logs) async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    final request = GameLogBatchRequest(logs: logs);
+    final response = await basicPost(endpoint: 'gamelog/add', data: request.toJson());
+    return GameLogResult.fromJson(response.data);
+  }
+
+  /// 查询游戏日志
+  Future<Map<String, dynamic>> queryGameLogs({
+    String? logType,
+    String? startTime,
+    String? endTime,
+    int page = 0,
+    int perPage = 20,
+  }) async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'per_page': perPage,
+    };
+
+    if (logType != null) queryParams['log_type'] = logType;
+    if (startTime != null) queryParams['start_time'] = startTime;
+    if (endTime != null) queryParams['end_time'] = endTime;
+
+    final response = await _dio.get(
+      "${baseUrl}gamelog/query",
+      queryParameters: queryParams,
+    );
+
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// 登出（清除本地 JWT token）
+  Future<void> logout() async {
+    await RefugeAccountRepo().clearAll();
   }
 
 
