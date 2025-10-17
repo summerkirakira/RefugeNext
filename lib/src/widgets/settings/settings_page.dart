@@ -325,7 +325,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           showToast(message: "请先设置游戏目录");
                           return;
                         }
-                        await dataModel.importRecentGameLogs(1000);
+
+                        // 调用合并后的导入方法
+                        await dataModel.importAllGameLogs();
                       },
                       icons: Icons.file_download_rounded,
                       iconStyle: IconStyle(
@@ -334,35 +336,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         backgroundColor: Colors.indigo,
                       ),
                       title: '导入游戏日志',
-                      subtitle: "导入最近1000行游戏日志",
-                    ),
-                    SettingsItem(
-                      onTap: () async {
-                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
-                        if (dataModel.gameDirectory == null) {
-                          showToast(message: "请先设置游戏目录");
-                          return;
-                        }
-
-                        final result = await dataModel.importHistoricalGameLogs();
-                        final files = result['files'] ?? 0;
-                        final inserted = result['inserted'] ?? 0;
-                        final skipped = result['skipped'] ?? 0;
-
-                        if (files > 0) {
-                          showToast(
-                            message: "已处理 $files 个文件，导入 $inserted 条新日志，跳过 $skipped 条重复"
-                          );
-                        }
-                      },
-                      icons: Icons.history_rounded,
-                      iconStyle: IconStyle(
-                        iconsColor: Colors.white,
-                        withBackground: true,
-                        backgroundColor: Colors.amber,
-                      ),
-                      title: '导入历史日志',
-                      subtitle: "从LogBackups文件夹导入所有历史日志",
+                      subtitle: "导入当前日志&历史日志",
                     ),
                     SettingsItem(
                       onTap: () {
@@ -377,21 +351,43 @@ class _SettingsPageState extends State<SettingsPage> {
                       title: '查看日志',
                       subtitle: "浏览和搜索游戏日志",
                     ),
+                    // SettingsItem(
+                    //   onTap: () async {
+                    //     final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                    //     final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+                    //     final deletedCount = await dataModel.clearOldGameLogs(thirtyDaysAgo);
+                    //     showToast(message: "已清理 $deletedCount 条旧日志");
+                    //   },
+                    //   icons: Icons.delete_sweep_rounded,
+                    //   iconStyle: IconStyle(
+                    //     iconsColor: Colors.white,
+                    //     withBackground: true,
+                    //     backgroundColor: Colors.red,
+                    //   ),
+                    //   title: '清理旧日志',
+                    //   subtitle: "清理30天前的游戏日志",
+                    // ),
                     SettingsItem(
                       onTap: () async {
                         final dataModel = Provider.of<MainDataModel>(context, listen: false);
-                        final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
-                        final deletedCount = await dataModel.clearOldGameLogs(thirtyDaysAgo);
-                        showToast(message: "已清理 $deletedCount 条旧日志");
+                        final processedCount = await dataModel.gameLogRepo.getProcessedFileCount();
+
+                        if (processedCount == 0) {
+                          showToast(message: "当前没有已处理的历史日志记录");
+                          return;
+                        }
+
+                        await dataModel.gameLogRepo.clearProcessedFiles();
+                        showToast(message: "已清空 $processedCount 个历史日志文件的处理记录\n下次导入时将重新处理所有历史日志");
                       },
-                      icons: Icons.delete_sweep_rounded,
+                      icons: Icons.refresh_rounded,
                       iconStyle: IconStyle(
                         iconsColor: Colors.white,
                         withBackground: true,
-                        backgroundColor: Colors.red,
+                        backgroundColor: Colors.deepPurple,
                       ),
-                      title: '清理旧日志',
-                      subtitle: "清理30天前的游戏日志",
+                      title: '重置处理记录',
+                      subtitle: "清空历史日志处理记录，下次将重新导入所有历史日志",
                     ),
                     // SettingsItem(
                     //   onTap: () async {

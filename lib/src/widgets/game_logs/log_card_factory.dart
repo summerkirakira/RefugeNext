@@ -175,7 +175,7 @@ class LogCardFactory {
       case LogTypes.inventory:
         return '库存';
       case LogTypes.attachment:
-        return '装备';
+        return '装备切换';
       case LogTypes.login:
         return '登录';
       case LogTypes.initiateLogin:
@@ -193,13 +193,13 @@ class LogCardFactory {
 
       // 游戏流程相关
       case LogTypes.spawnFlow:
-        return '生成流程';
+        return '重生状态';
       case LogTypes.connectionFlow:
         return '连接流程';
       case LogTypes.vehicleControlFlow:
         return '载具控制';
       case LogTypes.jumpDriveStateChanged:
-        return '跃迁驱动';
+        return '跃迁状态';
 
       // 战斗与事件
       case LogTypes.vehicleDestruction:
@@ -213,13 +213,13 @@ class LogCardFactory {
       case LogTypes.missionEnded:
         return '任务结束';
       case LogTypes.endMission:
-        return '结束任务';
+        return '任务结束';
 
       // 系统相关
       case LogTypes.authorityChanged:
         return '权限变更';
       case LogTypes.systemQuit:
-        return '系统退出';
+        return '退出游戏';
 
       default:
         return logType;

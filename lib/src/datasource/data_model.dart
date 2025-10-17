@@ -627,6 +627,130 @@ class MainDataModel extends ChangeNotifier {
     }
   }
 
+  // 导入所有游戏日志（当前日志 + 未处理的历史日志）
+  Future<Map<String, int>> importAllGameLogs() async {
+    if (_gameDirectory == null) {
+      showToast(message: "请先设置游戏目录");
+      return {
+        'current_inserted': 0,
+        'current_skipped': 0,
+        'historical_files': 0,
+        'historical_inserted': 0,
+        'historical_skipped': 0,
+        'skipped_processed_files': 0,
+      };
+    }
+
+    if (!GameLogService.isValidGameDirectory(_gameDirectory!)) {
+      showToast(message: "无效的游戏目录");
+      return {
+        'current_inserted': 0,
+        'current_skipped': 0,
+        'historical_files': 0,
+        'historical_inserted': 0,
+        'historical_skipped': 0,
+        'skipped_processed_files': 0,
+      };
+    }
+
+    showToast(message: "开始导入游戏日志...");
+
+    int currentInserted = 0;
+    int currentSkipped = 0;
+    int historicalFilesProcessed = 0;
+    int historicalInserted = 0;
+    int historicalSkipped = 0;
+    int skippedProcessedFiles = 0;
+
+    try {
+      // 第一步：导入当前 Game.log 的全部内容
+      showToast(message: "正在读取当前游戏日志...");
+      final currentLogContent = await GameLogService.readFullGameLog(_gameDirectory!);
+
+      if (currentLogContent != null && currentLogContent.isNotEmpty) {
+        final currentLogs = GameLogParser.parseLogText(currentLogContent);
+        if (currentLogs.isNotEmpty) {
+          final currentResult = await gameLogRepo.insertLogs(currentLogs);
+          currentInserted = currentResult['inserted'] ?? 0;
+          currentSkipped = currentResult['skipped'] ?? 0;
+          print('Current log: inserted=$currentInserted, skipped=$currentSkipped');
+        }
+      }
+
+      // 第二步：扫描并导入历史日志
+      showToast(message: "正在扫描历史日志...");
+      final historicalLogs = await GameLogService.batchReadHistoricalLogs(
+        _gameDirectory!,
+        onProgress: (current, total, fileName) {
+          print('Scanning $current/$total: $fileName');
+        },
+      );
+
+      if (historicalLogs.isNotEmpty) {
+        showToast(message: "找到 ${historicalLogs.length} 个历史日志文件，正在检查处理状态...");
+
+        for (final logData in historicalLogs) {
+          final fileName = logData['file_name'] as String;
+
+          // 检查是否已处理过
+          final isProcessed = await gameLogRepo.isFileProcessed(fileName);
+          if (isProcessed) {
+            skippedProcessedFiles++;
+            print('Skipping already processed file: $fileName');
+            continue;
+          }
+
+          // 处理未处理的历史文件
+          print('Processing new historical file: $fileName');
+          final content = logData['content'] as String;
+          final logs = GameLogParser.parseLogText(content);
+
+          if (logs.isNotEmpty) {
+            final result = await gameLogRepo.insertLogs(logs);
+            historicalInserted += (result['inserted'] ?? 0);
+            historicalSkipped += (result['skipped'] ?? 0);
+            historicalFilesProcessed++;
+
+            // 立即标记为已处理
+            await gameLogRepo.markFileAsProcessed(fileName);
+            print('Marked as processed: $fileName');
+          }
+        }
+      }
+
+      // 重新加载日志
+      await loadRecentGameLogs(100);
+
+      final totalNewLogs = currentInserted + historicalInserted;
+      final message = "导入完成！\n"
+          "当前日志: 新增 $currentInserted 条\n"
+          "历史日志: 处理 $historicalFilesProcessed 个文件，新增 $historicalInserted 条\n"
+          "已跳过 $skippedProcessedFiles 个已处理的历史文件";
+
+      showToast(message: message);
+
+      return {
+        'current_inserted': currentInserted,
+        'current_skipped': currentSkipped,
+        'historical_files': historicalFilesProcessed,
+        'historical_inserted': historicalInserted,
+        'historical_skipped': historicalSkipped,
+        'skipped_processed_files': skippedProcessedFiles,
+      };
+    } catch (e) {
+      print('Error importing all game logs: $e');
+      showToast(message: "导入日志时出错: $e");
+      return {
+        'current_inserted': currentInserted,
+        'current_skipped': currentSkipped,
+        'historical_files': historicalFilesProcessed,
+        'historical_inserted': historicalInserted,
+        'historical_skipped': historicalSkipped,
+        'skipped_processed_files': skippedProcessedFiles,
+      };
+    }
+  }
+
   // 获取历史日志文件数量
   Future<int> getHistoricalLogCount() async {
     if (_gameDirectory == null) return 0;
@@ -652,17 +776,9 @@ class MainDataModel extends ChangeNotifier {
     int limit = 20,
     int offset = 0,
   }) async {
-    // 如果有搜索关键字，使用搜索方法
-    if (searchKeyword != null && searchKeyword.isNotEmpty) {
-      return await gameLogRepo.searchLogs(
-        keyword: searchKeyword,
-        limit: limit,
-        offset: offset,
-      );
-    }
-
-    // 否则使用复杂查询
+    // 统一使用 queryLogs 方法，支持搜索关键字和所有filter同时生效
     return await gameLogRepo.queryLogs(
+      keyword: searchKeyword,
       logType: logType,
       subType: subType,
       playerId: playerId,

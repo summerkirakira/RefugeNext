@@ -44,6 +44,28 @@ class GameLogService {
     }
   }
 
+  // 读取完整游戏日志文件
+  static Future<String?> readFullGameLog(String gameDir) async {
+    try {
+      final logPath = getGameLogPath(gameDir);
+      final logFile = File(logPath);
+
+      if (!logFile.existsSync()) {
+        return null;
+      }
+
+      final bytes = await logFile.readAsBytes();
+      // 跳过 UTF-8 BOM 标记
+      final start = bytes.length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
+
+      final content = utf8.decode(bytes.sublist(start), allowMalformed: true);
+      return content;
+    } catch (e) {
+      print('Error reading full game log: $e');
+      return null;
+    }
+  }
+
   // 读取最后N行日志
   static Future<String?> readLastNLines(String gameDir, int n) async {
     try {

@@ -201,8 +201,8 @@ class _LogFiltersState extends State<LogFilters> {
           const SizedBox(height: 12),
 
           // 结果过滤
-          _buildResultFilter(),
-          const SizedBox(height: 12),
+          // _buildResultFilter(),
+          // const SizedBox(height: 12),
 
           // 日期范围选择
           _buildDateRangeFilter(),
@@ -228,16 +228,16 @@ class _LogFiltersState extends State<LogFilters> {
   Widget _buildLogTypeFilter() {
     final logTypes = [
       // 库存与装备
-      LogTypes.inventory,
+      // LogTypes.inventory,
       LogTypes.attachment,
 
       // 登录相关
       LogTypes.initiateLogin,
-      LogTypes.asyncLoginCallback,
+      // LogTypes.asyncLoginCallback,
 
       // 游戏流程
       LogTypes.spawnFlow,
-      LogTypes.connectionFlow,
+      // LogTypes.connectionFlow,
       LogTypes.vehicleControlFlow,
       LogTypes.jumpDriveStateChanged,
 
@@ -246,13 +246,13 @@ class _LogFiltersState extends State<LogFilters> {
       LogTypes.actorDeath,
 
       // 任务相关
-      LogTypes.objectiveUpserted,
-      LogTypes.missionEnded,
+      // LogTypes.objectiveUpserted,
+      // LogTypes.missionEnded,
       LogTypes.endMission,
 
       // 系统相关
       LogTypes.gameVersion,
-      LogTypes.authorityChanged,
+      // LogTypes.authorityChanged,
       LogTypes.systemQuit,
     ];
 

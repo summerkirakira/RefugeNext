@@ -52,7 +52,7 @@ class GameLogParser {
 
       // 提取日志级别
       final logLevelMatch = _logLevelPattern.firstMatch(logLine);
-      final logLevel = logLevelMatch?.group(1) ?? 'Debug';
+      final logLevel = logLevelMatch?.group(1) ?? 'Debug'; 
 
 
 

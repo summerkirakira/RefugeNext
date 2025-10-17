@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:refuge_next/src/datasource/models/game_log.dart';
 import 'package:refuge_next/src/services/database_service.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameLogRepo {
   static final GameLogRepo _instance = GameLogRepo._internal();
@@ -207,6 +208,7 @@ class GameLogRepo {
 
   // 复杂查询
   Future<List<GameLog>> queryLogs({
+    String? keyword,
     String? logType,
     String? subType,
     String? playerId,
@@ -222,6 +224,14 @@ class GameLogRepo {
 
     List<String> conditions = [];
     List<dynamic> args = [];
+
+    // 关键字搜索（搜索content、entity_name、player_name字段）
+    if (keyword != null && keyword.isNotEmpty) {
+      conditions.add('(content LIKE ? OR entity_name LIKE ? OR player_name LIKE ?)');
+      args.add('%$keyword%');
+      args.add('%$keyword%');
+      args.add('%$keyword%');
+    }
 
     if (logType != null) {
       conditions.add('log_type = ?');
@@ -461,5 +471,44 @@ class GameLogRepo {
   // 重置解析状态（用于异常情况下的状态恢复）
   void resetParsingState() {
     _isParsing = false;
+  }
+
+  // ==================== 历史日志文件处理记录管理 ====================
+
+  static const String _processedFilesKey = 'app.game_logs.processed_files';
+
+  // 标记历史日志文件为已处理
+  Future<void> markFileAsProcessed(String fileName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final processedFiles = await getProcessedFiles();
+
+    if (!processedFiles.contains(fileName)) {
+      processedFiles.add(fileName);
+      await prefs.setStringList(_processedFilesKey, processedFiles);
+    }
+  }
+
+  // 检查历史日志文件是否已处理
+  Future<bool> isFileProcessed(String fileName) async {
+    final processedFiles = await getProcessedFiles();
+    return processedFiles.contains(fileName);
+  }
+
+  // 获取所有已处理的历史日志文件列表
+  Future<List<String>> getProcessedFiles() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_processedFilesKey) ?? [];
+  }
+
+  // 清空已处理文件记录（用于重新导入所有历史日志）
+  Future<void> clearProcessedFiles() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_processedFilesKey);
+  }
+
+  // 获取已处理文件数量
+  Future<int> getProcessedFileCount() async {
+    final processedFiles = await getProcessedFiles();
+    return processedFiles.length;
   }
 }
