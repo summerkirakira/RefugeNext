@@ -33,6 +33,8 @@ import '../services/game_log_service.dart';
 import '../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
+import '../network/cirno/cirno_api.dart';
+import '../datasource/models/cirno/account.dart';
 
 import 'package:refuge_next/src/funcs/initial.dart' show startup;
 import 'package:refuge_next/src/funcs/cirno_auth.dart' show CirnoAuth;
@@ -199,6 +201,20 @@ class MainDataModel extends ChangeNotifier {
       _upgradeSteps.add(steps);
     }
   }
+
+  // 可上传的日志类型白名单（排除包含 Flow 的类型）
+  static const List<String> _uploadableLogTypes = [
+    'Game Version',
+    // 'InitiateLogin',
+    // 'AttachmentReceived',
+    'Jump Drive State Changed',
+    'Vehicle Destruction',
+    'Actor Death',
+    'EndMission',
+    'SystemQuit',
+    'CSessionManager::OnClientSpawned',
+    'AccountLoginCharacterStatus_Character',
+  ];
 
   final hangarRepo = HangarRepo();
   final userRepo = UserRepo();
@@ -793,6 +809,355 @@ class MainDataModel extends ChangeNotifier {
   // 获取日志总数（用于判断是否还有更多日志）
   Future<int> getGameLogCount() async {
     return await gameLogRepo.getLogCount();
+  }
+
+  // 上传游戏日志到服务器
+  Future<Map<String, dynamic>> uploadGameLogsToServer() async {
+    try {
+      // 第一步：刷新本地日志
+      showToast(message: "正在刷新本地日志...");
+      final importResult = await importAllGameLogs();
+
+      // 第二步：获取服务器同步信息
+      showToast(message: "正在获取服务器同步信息...");
+      final cirnoApi = CirnoApiClient();
+      final syncInfo = await cirnoApi.getGameLogSyncInfo();
+
+      // 第三步：确定需要上传的日志
+      List<GameLog> logsToUpload;
+
+      if (syncInfo.latestLogTime != null && syncInfo.latestLogTime!.isNotEmpty) {
+        // 如果服务器有日志，只上传服务器最新时间之后的日志
+        final latestServerTime = DateTime.parse(syncInfo.latestLogTime!);
+        showToast(message: "查询 ${latestServerTime.toLocal()} 之后的日志...");
+        logsToUpload = await gameLogRepo.getLogsAfter(afterTime: latestServerTime);
+      } else {
+        // 如果服务器没有日志，上传所有本地日志
+        showToast(message: "服务器无日志记录，准备上传所有本地日志...");
+        logsToUpload = await gameLogRepo.getAllLogs();
+      }
+
+      // 过滤掉不需要上传的日志类型（排除 Flow 类型）
+      final totalLogsBeforeFilter = logsToUpload.length;
+      logsToUpload = logsToUpload
+          .where((log) => _uploadableLogTypes.contains(log.logType))
+          .toList();
+
+      final filteredCount = totalLogsBeforeFilter - logsToUpload.length;
+      if (filteredCount > 0) {
+        showToast(message: "已过滤 $filteredCount 条 Flow 类型日志");
+      }
+
+      if (logsToUpload.isEmpty) {
+        showToast(message: "过滤后没有需要上传的日志");
+        return {
+          'success': true,
+          'uploaded': 0,
+          'duplicated': 0,
+          'server_total': syncInfo.totalLogs,
+          'filtered': filteredCount,
+        };
+      }
+
+      // 第四步：转换为上传格式
+      final logsToUploadRequests = logsToUpload.map((log) {
+        return GameLogRequest(
+          logTime: log.timestamp.toIso8601String(),
+          gameAccountName: log.account,
+          logType: log.logType,
+          content: log.content,
+        );
+      }).toList();
+
+      // 第五步：批量上传
+      showToast(message: "正在上传 ${logsToUploadRequests.length} 条日志...");
+      final uploadResult = await cirnoApi.addGameLogBatch(logsToUploadRequests);
+
+      final message = "上传完成！\n"
+          "新增: ${uploadResult.inserted} 条\n"
+          "重复: ${uploadResult.duplicated} 条\n"
+          "${filteredCount > 0 ? '已过滤: $filteredCount 条 Flow 日志\n' : ''}"
+          "服务器总计: ${syncInfo.totalLogs + uploadResult.inserted} 条";
+
+      showToast(message: message);
+
+      return {
+        'success': true,
+        'uploaded': uploadResult.inserted,
+        'duplicated': uploadResult.duplicated,
+        'filtered': filteredCount,
+        'server_total': syncInfo.totalLogs + uploadResult.inserted,
+        'local_total': await gameLogRepo.getLogCount(),
+      };
+    } catch (e) {
+      print('Error uploading game logs: $e');
+      showToast(message: "上传游戏日志时出错: $e");
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // 从服务器下载游戏日志
+  Future<Map<String, dynamic>> downloadGameLogsFromServer() async {
+    try {
+      final cirnoApi = CirnoApiClient();
+
+      // 第一步：获取本地最新日志时间
+      showToast(message: "正在检查本地日志...");
+      final localLatestTime = await gameLogRepo.getLatestLogTime();
+
+      // 第二步：获取服务器同步信息
+      showToast(message: "正在获取服务器同步信息...");
+      final syncInfo = await cirnoApi.getGameLogSyncInfo();
+
+      if (syncInfo.latestLogTime == null || syncInfo.latestLogTime!.isEmpty) {
+        showToast(message: "服务器暂无日志数据");
+        return {
+          'success': true,
+          'downloaded': 0,
+          'inserted': 0,
+          'server_total': 0,
+        };
+      }
+
+      final serverLatestTime = DateTime.parse(syncInfo.latestLogTime!);
+
+      // 第三步：比较时间，判断是否需要同步
+      if (localLatestTime != null && !serverLatestTime.isAfter(localLatestTime)) {
+        showToast(message: "本地日志已是最新");
+        return {
+          'success': true,
+          'downloaded': 0,
+          'inserted': 0,
+          'server_total': syncInfo.totalLogs,
+          'local_total': await gameLogRepo.getLogCount(),
+        };
+      }
+
+      // 第四步：分页查询服务器日志
+      showToast(message: "正在从服务器拉取日志...");
+      final List<GameLog> downloadedLogs = [];
+      int page = 0;
+      const int perPage = 2000; // 每页2000条
+      bool hasMore = true;
+
+      while (hasMore) {
+        final queryResult = await cirnoApi.queryGameLogs(
+          startTime: localLatestTime?.toIso8601String(),
+          page: page,
+          perPage: perPage,
+        );
+
+        // 解析服务器响应
+        final logs = queryResult['logs'] as List<dynamic>? ?? [];
+
+        if (logs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        // 转换为 GameLog 对象
+        for (final logData in logs) {
+          try {
+            final gameLog = GameLog.fromServerResponse(logData as Map<String, dynamic>);
+            downloadedLogs.add(gameLog);
+          } catch (e) {
+            print('Error parsing log from server: $e');
+            // 继续处理其他日志
+          }
+        }
+
+        // 检查是否还有更多数据
+        final total = queryResult['total'] as int? ?? 0;
+        final currentCount = (page + 1) * perPage;
+        hasMore = currentCount < total;
+        page++;
+
+        // 显示进度
+        if (hasMore) {
+          showToast(message: "已拉取 ${downloadedLogs.length} 条，继续...");
+        }
+      }
+
+      if (downloadedLogs.isEmpty) {
+        showToast(message: "服务器没有新日志");
+        return {
+          'success': true,
+          'downloaded': 0,
+          'inserted': 0,
+          'server_total': syncInfo.totalLogs,
+          'local_total': await gameLogRepo.getLogCount(),
+        };
+      }
+
+      // 第五步：插入到本地数据库
+      showToast(message: "正在保存 ${downloadedLogs.length} 条日志到本地...");
+      final insertResult = await gameLogRepo.insertLogs(downloadedLogs);
+      final inserted = insertResult['inserted'] ?? 0;
+      final skipped = insertResult['skipped'] ?? 0;
+
+      // 重新加载日志
+      await loadRecentGameLogs(100);
+
+      final message = "下载完成！\n"
+          "从服务器拉取: ${downloadedLogs.length} 条\n"
+          "新增: $inserted 条\n"
+          "重复: $skipped 条\n"
+          "本地总计: ${await gameLogRepo.getLogCount()} 条";
+
+      showToast(message: message);
+
+      return {
+        'success': true,
+        'downloaded': downloadedLogs.length,
+        'inserted': inserted,
+        'skipped': skipped,
+        'server_total': syncInfo.totalLogs,
+        'local_total': await gameLogRepo.getLogCount(),
+      };
+    } catch (e) {
+      print('Error downloading game logs: $e');
+      showToast(message: "下载游戏日志时出错: $e");
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // 智能同步游戏日志（双向同步）
+  Future<Map<String, dynamic>> syncGameLogsWithServer() async {
+    try {
+      final cirnoApi = CirnoApiClient();
+
+      showToast(message: "开始同步日志...");
+
+      // 第一步：获取本地和服务器的同步信息
+      final localLatestTime = await gameLogRepo.getLatestLogTime();
+      final syncInfo = await cirnoApi.getGameLogSyncInfo();
+
+      int totalDownloaded = 0;
+      int totalUploaded = 0;
+      int downloadedInserted = 0;
+      int uploadedInserted = 0;
+
+      // 第二步：判断是否需要从服务器下载
+      bool needDownload = false;
+      if (syncInfo.latestLogTime != null && syncInfo.latestLogTime!.isNotEmpty) {
+        final serverLatestTime = DateTime.parse(syncInfo.latestLogTime!);
+        if (localLatestTime == null || serverLatestTime.isAfter(localLatestTime)) {
+          needDownload = true;
+        }
+      }
+
+      // 第三步：如果需要，先下载服务器的新日志
+      if (needDownload) {
+        showToast(message: "正在从服务器下载新日志...");
+        final downloadResult = await downloadGameLogsFromServer();
+
+        if (downloadResult['success'] == true) {
+          totalDownloaded = downloadResult['downloaded'] ?? 0;
+          downloadedInserted = downloadResult['inserted'] ?? 0;
+        }
+      }
+
+      // 第四步：刷新本地日志（导入游戏目录中的最新日志）
+      showToast(message: "正在刷新本地日志...");
+      await importAllGameLogs();
+
+      // 第五步：重新获取本地最新时间和服务器同步信息
+      final updatedLocalLatestTime = await gameLogRepo.getLatestLogTime();
+      final updatedSyncInfo = await cirnoApi.getGameLogSyncInfo();
+
+      // 第六步：判断是否需要上传到服务器
+      bool needUpload = false;
+      if (updatedLocalLatestTime != null) {
+        if (updatedSyncInfo.latestLogTime == null || updatedSyncInfo.latestLogTime!.isEmpty) {
+          // 服务器没有日志，需要上传
+          needUpload = true;
+        } else {
+          final serverLatestTime = DateTime.parse(updatedSyncInfo.latestLogTime!);
+          if (updatedLocalLatestTime.isAfter(serverLatestTime)) {
+            // 本地有更新的日志，需要上传
+            needUpload = true;
+          }
+        }
+      }
+
+      // 第七步：如果需要，上传本地新日志到服务器
+      if (needUpload) {
+        showToast(message: "正在上传本地新日志到服务器...");
+
+        // 获取需要上传的日志
+        List<GameLog> logsToUpload;
+        if (updatedSyncInfo.latestLogTime != null && updatedSyncInfo.latestLogTime!.isNotEmpty) {
+          final serverLatestTime = DateTime.parse(updatedSyncInfo.latestLogTime!);
+          logsToUpload = await gameLogRepo.getLogsAfter(afterTime: serverLatestTime);
+        } else {
+          logsToUpload = await gameLogRepo.getAllLogs();
+        }
+
+        // 过滤日志类型
+        final beforeFilter = logsToUpload.length;
+        logsToUpload = logsToUpload
+            .where((log) => _uploadableLogTypes.contains(log.logType))
+            .toList();
+        final filtered = beforeFilter - logsToUpload.length;
+
+        if (logsToUpload.isNotEmpty) {
+          // 转换为上传格式
+          final logsToUploadRequests = logsToUpload.map((log) {
+            return GameLogRequest(
+              logTime: log.timestamp.toIso8601String(),
+              gameAccountName: log.account,
+              logType: log.logType,
+              content: log.content,
+            );
+          }).toList();
+
+          // 批量上传
+          final uploadResult = await cirnoApi.addGameLogBatch(logsToUploadRequests);
+          totalUploaded = logsToUpload.length;
+          uploadedInserted = uploadResult.inserted;
+        }
+      }
+
+      // 第八步：显示同步结果
+      final localTotal = await gameLogRepo.getLogCount();
+
+      String resultMessage = "同步完成！\n";
+      if (totalDownloaded > 0) {
+        resultMessage += "从服务器下载: $totalDownloaded 条 (新增: $downloadedInserted)\n";
+      }
+      if (totalUploaded > 0) {
+        resultMessage += "上传到服务器: $totalUploaded 条 (新增: $uploadedInserted)\n";
+      }
+      if (totalDownloaded == 0 && totalUploaded == 0) {
+        resultMessage += "日志已是最新状态\n";
+      }
+      resultMessage += "本地总计: $localTotal 条";
+
+      showToast(message: resultMessage);
+
+      return {
+        'success': true,
+        'downloaded': totalDownloaded,
+        'downloaded_inserted': downloadedInserted,
+        'uploaded': totalUploaded,
+        'uploaded_inserted': uploadedInserted,
+        'local_total': localTotal,
+        'server_total': updatedSyncInfo.totalLogs + uploadedInserted,
+      };
+    } catch (e) {
+      print('Error syncing game logs: $e');
+      showToast(message: "同步游戏日志时出错: $e");
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
   }
 
   HangarItem? getHangarItemById(int id) {

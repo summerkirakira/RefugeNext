@@ -59,6 +59,38 @@ class GameLog with _$GameLog {
       account: map['account'] as String?,
     );
   }
+
+  // 从服务器响应创建GameLog对象
+  factory GameLog.fromServerResponse(Map<String, dynamic> serverData) {
+    final content = serverData['content'] as String? ?? '';
+    final logType = serverData['log_type'] as String;
+    final timestamp = DateTime.parse(serverData['log_time'] as String);
+    final account = serverData['game_account_name'] as String?;
+
+    // 使用解析器从content中提取额外信息
+    final parsedData = GameLogParser.parseData(logType, content);
+
+    return GameLog(
+      timestamp: timestamp,
+      logLevel: 'Notice',  // 服务器不提供此字段，使用默认值
+      logType: logType,
+      subType: parsedData['sub_type'] as String?,
+      playerId: parsedData['player_id'] as String?,
+      playerName: parsedData['player_name'] as String?,
+      requestId: parsedData['request_id'] as int?,
+      entityId: parsedData['entity_id'] as String?,
+      entityName: parsedData['entity_name'] as String?,
+      entityClass: parsedData['entity_class'] as String?,
+      location: parsedData['location'] as String?,
+      inventoryId: parsedData['inventory_id'] as String?,
+      action: parsedData['action'] as String?,
+      result: parsedData['result'] as String?,
+      elapsed: parsedData['elapsed'] as double?,
+      content: content,
+      parsedData: parsedData.isNotEmpty ? parsedData : null,
+      account: account,
+    );
+  }
 }
 
 // 扩展方法，用于转换为数据库map

@@ -107,6 +107,25 @@ class GameLogRepo {
     return maps.map((map) => GameLog.fromDatabase(map)).toList();
   }
 
+  // 获取指定时间之后的所有日志
+  Future<List<GameLog>> getLogsAfter({
+    required DateTime afterTime,
+    int? limit,
+    int? offset,
+  }) async {
+    final db = await DatabaseService.instance.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'game_logs',
+      where: 'timestamp > ?',
+      whereArgs: [afterTime.millisecondsSinceEpoch],
+      orderBy: 'timestamp ASC', // 按时间升序，便于上传
+      limit: limit,
+      offset: offset,
+    );
+
+    return maps.map((map) => GameLog.fromDatabase(map)).toList();
+  }
+
   // 根据玩家ID查询日志
   Future<List<GameLog>> getLogsByPlayerId({
     required String playerId,
@@ -363,6 +382,23 @@ class GameLogRepo {
     );
 
     return maps.map((map) => GameLog.fromDatabase(map)).toList();
+  }
+
+  // 获取本地数据库中最新的日志时间
+  Future<DateTime?> getLatestLogTime() async {
+    final db = await DatabaseService.instance.database;
+    final result = await db.query(
+      'game_logs',
+      columns: ['timestamp'],
+      orderBy: 'timestamp DESC',
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return DateTime.fromMillisecondsSinceEpoch(result.first['timestamp'] as int);
   }
 
   // 导出日志到JSON

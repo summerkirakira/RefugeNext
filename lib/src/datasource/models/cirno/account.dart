@@ -221,3 +221,32 @@ class GameLogResult {
     };
   }
 }
+
+/// 游戏日志同步信息响应
+class GameLogSyncInfoResponse {
+  final String? latestLogTime;
+  final int totalLogs;
+  final String? oldestLogTime;
+
+  GameLogSyncInfoResponse({
+    this.latestLogTime,
+    required this.totalLogs,
+    this.oldestLogTime,
+  });
+
+  factory GameLogSyncInfoResponse.fromJson(Map<String, dynamic> json) {
+    return GameLogSyncInfoResponse(
+      latestLogTime: json['latest_log_time'] as String?,
+      totalLogs: json['total_logs'] as int,
+      oldestLogTime: json['oldest_log_time'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (latestLogTime != null) 'latest_log_time': latestLogTime,
+      'total_logs': totalLogs,
+      if (oldestLogTime != null) 'oldest_log_time': oldestLogTime,
+    };
+  }
+}

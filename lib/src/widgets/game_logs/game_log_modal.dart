@@ -21,6 +21,8 @@ class GameLogModal {
   }
 
   static WoltModalSheetPage _buildMainPage(BuildContext context) {
+    final contentKey = GlobalKey<_GameLogContentState>();
+
     return WoltModalSheetPage(
       backgroundColor: Theme.of(context).colorScheme.surface,
       hasSabGradient: false,
@@ -31,16 +33,25 @@ class GameLogModal {
             ),
       ),
       isTopBarLayerAlwaysVisible: true,
-      trailingNavBarWidget: IconButton(
-        icon: const Icon(Icons.close),
-        onPressed: () => Navigator.of(context).pop(),
+      trailingNavBarWidget: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _SyncButton(contentKey: contentKey),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
-      child: _GameLogContent(),
+      child: _GameLogContent(key: contentKey),
     );
   }
 }
 
 class _GameLogContent extends StatefulWidget {
+  const _GameLogContent({Key? key}) : super(key: key);
+
   @override
   State<_GameLogContent> createState() => _GameLogContentState();
 }
@@ -360,6 +371,69 @@ class _GameLogContentState extends State<_GameLogContent> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 同步日志按钮
+class _SyncButton extends StatefulWidget {
+  final GlobalKey<_GameLogContentState> contentKey;
+
+  const _SyncButton({required this.contentKey});
+
+  @override
+  State<_SyncButton> createState() => _SyncButtonState();
+}
+
+class _SyncButtonState extends State<_SyncButton> {
+  bool _isSyncing = false;
+
+  Future<void> _syncLogs() async {
+    if (_isSyncing) return;
+
+    setState(() {
+      _isSyncing = true;
+    });
+
+    try {
+      final dataModel = Provider.of<MainDataModel>(context, listen: false);
+      await dataModel.syncGameLogsWithServer();
+
+      // 同步完成后刷新日志列表
+      widget.contentKey.currentState?._loadInitialLogs();
+    } catch (e) {
+      print('Error syncing logs: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isSyncing) {
+      return Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return IconButton(
+      icon: const Icon(Icons.sync),
+      tooltip: '同步日志',
+      onPressed: _syncLogs,
     );
   }
 }

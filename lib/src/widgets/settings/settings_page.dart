@@ -18,6 +18,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../services/game_log_service.dart';
 import '../game_logs/game_log_modal.dart';
+import '../user_info/refuge_account_modal.dart';
+import '../user_info/refuge_account_detail_page.dart';
+import '../../repo/refuge_account.dart';
 
 
 Color cardBackgroundColor(BuildContext context) {
@@ -415,6 +418,32 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsGroup(
                 settingsGroupTitle: "关于",
                 items: [
+                  SettingsItem(
+                    onTap: () async {
+                      // 检查是否已登录
+                      final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
+
+                      if (isLoggedIn) {
+                        // 已登录，导航到账户详情页面
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const RefugeAccountDetailPage(),
+                          ),
+                        );
+                      } else {
+                        // 未登录，显示登录/注册 Modal
+                        showRefugeAccountModal(context);
+                      }
+                    },
+                    icons: Icons.cloud_outlined,
+                    iconStyle: IconStyle(
+                      iconsColor: Colors.white,
+                      withBackground: true,
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                    title: "避难所账号",
+                    subtitle: "登录/注册避难所账号（测试）",
+                  ),
                   SettingsItem(
                     onTap: () {
                       // copy group id to clipboard

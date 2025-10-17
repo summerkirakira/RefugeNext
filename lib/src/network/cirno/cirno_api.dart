@@ -209,6 +209,13 @@ class CirnoApiClient {
     return response.data as Map<String, dynamic>;
   }
 
+  /// 获取游戏日志同步信息
+  Future<GameLogSyncInfoResponse> getGameLogSyncInfo() async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    final response = await _dio.get("${baseUrl}gamelog/sync-info");
+    return GameLogSyncInfoResponse.fromJson(response.data);
+  }
+
   /// 登出（清除本地 JWT token）
   Future<void> logout() async {
     await RefugeAccountRepo().clearAll();

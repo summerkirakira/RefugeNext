@@ -8,6 +8,7 @@
 - 设备绑定管理
 - 游戏日志上传与查询
 - 所有需要认证的请求自动携带 JWT
+- **UI 组件: 登录/注册 Modal**（新增）
 
 ## 核心组件
 
@@ -29,7 +30,97 @@
 - 拦截器自动为所有请求添加 JWT（如果已登录）
 - 提供完整的账号相关 API
 
-## 使用示例
+### 4. UI 组件 (`lib/src/widgets/user_info/refuge_account_modal.dart`)
+- 登录/注册 Modal 弹窗
+- Tab 切换（登录/注册模式）
+- 完整的表单验证和错误处理
+- 自动设备绑定
+- Material Design 风格，与项目 UI 一致
+
+## UI 组件使用（推荐）
+
+### 显示登录/注册 Modal
+
+这是最简单的使用方式，只需一行代码：
+
+```dart
+import 'package:refuge_next/src/widgets/user_info/refuge_account_modal.dart';
+
+// 在任何地方调用以显示 Modal
+showRefugeAccountModal(context);
+```
+
+### 完整示例：集成到用户页面
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:refuge_next/src/widgets/user_info/refuge_account_modal.dart';
+import 'package:refuge_next/src/repo/refuge_account.dart';
+
+class UserSettingsPage extends StatefulWidget {
+  @override
+  _UserSettingsPageState createState() => _UserSettingsPageState();
+}
+
+class _UserSettingsPageState extends State<UserSettingsPage> {
+  bool _isLoggedIn = false;
+  String? _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
+    final email = await RefugeAccountRepo().getAccountEmail();
+
+    setState(() {
+      _isLoggedIn = isLoggedIn;
+      _email = email;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        // 避难所账号卡片
+        Card(
+          margin: EdgeInsets.all(16),
+          child: ListTile(
+            leading: Icon(
+              Icons.cloud_outlined,
+              size: 40,
+              color: _isLoggedIn ? Colors.green : Colors.grey,
+            ),
+            title: Text('避难所账号'),
+            subtitle: Text(
+              _isLoggedIn
+                ? '已登录: $_email'
+                : '登录以同步游戏日志和数据',
+            ),
+            trailing: Icon(Icons.arrow_forward_ios),
+            onTap: () async {
+              if (!_isLoggedIn) {
+                // 显示登录/注册 Modal
+                await showRefugeAccountModal(context);
+                // Modal 关闭后刷新登录状态
+                _checkLoginStatus();
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+
+详细的 UI 使用文档请参考: [REFUGE_ACCOUNT_MODAL_USAGE.md](REFUGE_ACCOUNT_MODAL_USAGE.md)
+
+## API 使用示例
 
 ### 注册账号
 ```dart
