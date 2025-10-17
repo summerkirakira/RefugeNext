@@ -29,6 +29,7 @@ import '../network/parsers/hangar_parser.dart';
 import '../funcs/toast.dart';
 import '../funcs/login.dart';
 import '../funcs/game_log_parser.dart';
+import '../services/game_log_service.dart';
 import '../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
@@ -229,6 +230,7 @@ class MainDataModel extends ChangeNotifier {
   Future<void> initialize() async {
     await initUser();
     await loadShowRefreshButtonSetting();
+    await loadGameDirectory();
     await translationRepo.readTranslation();
     await shipAliasRepo.getShipAliases();
     readHangarItems();
@@ -394,11 +396,87 @@ class MainDataModel extends ChangeNotifier {
   List<GameLog> _gameLogs = [];
   List<GameLog> get gameLogs => _gameLogs;
 
+  // 游戏目录相关
+  String? _gameDirectory;
+  String? get gameDirectory => _gameDirectory;
+
+  Future<void> loadGameDirectory() async {
+    final prefs = await SharedPreferences.getInstance();
+    _gameDirectory = prefs.getString('app.settings.gameDirectory');
+    notifyListeners();
+  }
+
+  Future<void> setGameDirectory(String? directory) async {
+    _gameDirectory = directory;
+    final prefs = await SharedPreferences.getInstance();
+    if (directory != null) {
+      await prefs.setString('app.settings.gameDirectory', directory);
+    } else {
+      await prefs.remove('app.settings.gameDirectory');
+    }
+    notifyListeners();
+  }
+
+  // 从游戏目录导入日志
+  Future<bool> importGameLogs() async {
+    if (_gameDirectory == null) {
+      showToast(message: "请先设置游戏目录");
+      return false;
+    }
+
+    if (!GameLogService.isValidGameDirectory(_gameDirectory!)) {
+      showToast(message: "无效的游戏目录");
+      return false;
+    }
+
+    final logContent = await GameLogService.readGameLog(_gameDirectory!);
+    if (logContent == null || logContent.isEmpty) {
+      showToast(message: "未找到游戏日志文件");
+      return false;
+    }
+
+    await parseAndSaveGameLogs(logContent);
+    showToast(message: "游戏日志导入成功");
+    return true;
+  }
+
+  // 导入最近的N行日志
+  Future<bool> importRecentGameLogs(int lines) async {
+    if (_gameDirectory == null) {
+      showToast(message: "请先设置游戏目录");
+      return false;
+    }
+
+    if (!GameLogService.isValidGameDirectory(_gameDirectory!)) {
+      showToast(message: "无效的游戏目录");
+      return false;
+    }
+
+    final logContent = await GameLogService.readLastNLines(_gameDirectory!, lines);
+    if (logContent == null || logContent.isEmpty) {
+      showToast(message: "未找到游戏日志");
+      return false;
+    }
+
+    await parseAndSaveGameLogs(logContent);
+    showToast(message: "导入了最近 $lines 行日志");
+    return true;
+  }
+
   // 从文本解析并保存游戏日志
   Future<void> parseAndSaveGameLogs(String logText) async {
     final logs = GameLogParser.parseLogText(logText);
     if (logs.isNotEmpty) {
-      await gameLogRepo.insertLogs(logs);
+      final result = await gameLogRepo.insertLogs(logs);
+      final inserted = result['inserted'] ?? 0;
+      final skipped = result['skipped'] ?? 0;
+
+      if (skipped > 0) {
+        showToast(message: "成功导入 $inserted 条新日志，跳过 $skipped 条重复");
+      } else {
+        showToast(message: "成功导入 $inserted 条日志");
+      }
+
       _gameLogs = await gameLogRepo.getRecentLogs(100); // 获取最近100条日志
       notifyListeners();
     }
@@ -469,10 +547,136 @@ class MainDataModel extends ChangeNotifier {
     );
   }
 
-  // 导入游戏日志
-  Future<void> importGameLogs(String jsonString) async {
-    await gameLogRepo.importLogsFromJson(jsonString);
-    await loadRecentGameLogs(); // 重新加载日志
+  // 清理重复日志
+  Future<int> removeDuplicateGameLogs() async {
+    final deletedCount = await gameLogRepo.removeDuplicates();
+    if (deletedCount > 0) {
+      await loadRecentGameLogs(); // 重新加载日志
+    }
+    return deletedCount;
+  }
+
+  // 获取重复日志数量
+  Future<int> getDuplicateLogCount() async {
+    return await gameLogRepo.getDuplicateCount();
+  }
+
+  // 导入历史日志
+  Future<Map<String, int>> importHistoricalGameLogs() async {
+    if (_gameDirectory == null) {
+      showToast(message: "请先设置游戏目录");
+      return {'files': 0, 'inserted': 0, 'skipped': 0};
+    }
+
+    if (!GameLogService.isValidGameDirectory(_gameDirectory!)) {
+      showToast(message: "无效的游戏目录");
+      return {'files': 0, 'inserted': 0, 'skipped': 0};
+    }
+
+    showToast(message: "正在扫描历史日志...");
+
+    int totalInserted = 0;
+    int totalSkipped = 0;
+    int filesProcessed = 0;
+
+    try {
+      final historicalLogs = await GameLogService.batchReadHistoricalLogs(
+        _gameDirectory!,
+        onProgress: (current, total, fileName) {
+          // 可以在这里更新UI显示进度
+          print('Processing $current/$total: $fileName');
+        },
+      );
+
+      if (historicalLogs.isEmpty) {
+        showToast(message: "未找到历史日志文件");
+        return {'files': 0, 'inserted': 0, 'skipped': 0};
+      }
+
+      showToast(message: "找到 ${historicalLogs.length} 个历史日志文件，开始导入...");
+
+      // 批量导入每个文件的日志
+      for (final logData in historicalLogs) {
+        final content = logData['content'] as String;
+        final logs = GameLogParser.parseLogText(content);
+
+        if (logs.isNotEmpty) {
+          final result = await gameLogRepo.insertLogs(logs);
+          totalInserted += (result['inserted'] ?? 0);
+          totalSkipped += (result['skipped'] ?? 0);
+          filesProcessed++;
+        }
+      }
+
+      // 重新加载日志
+      await loadRecentGameLogs(100);
+
+      return {
+        'files': filesProcessed,
+        'inserted': totalInserted,
+        'skipped': totalSkipped,
+      };
+    } catch (e) {
+      print('Error importing historical logs: $e');
+      showToast(message: "导入历史日志时出错: $e");
+      return {
+        'files': filesProcessed,
+        'inserted': totalInserted,
+        'skipped': totalSkipped,
+      };
+    }
+  }
+
+  // 获取历史日志文件数量
+  Future<int> getHistoricalLogCount() async {
+    if (_gameDirectory == null) return 0;
+    if (!GameLogService.isValidGameDirectory(_gameDirectory!)) return 0;
+
+    try {
+      final files = await GameLogService.scanHistoricalLogs(_gameDirectory!);
+      return files.length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // 分页查询游戏日志（用于日志查看器）
+  Future<List<GameLog>> queryGameLogsWithPagination({
+    String? searchKeyword,
+    String? logType,
+    String? subType,
+    String? playerId,
+    DateTime? startTime,
+    DateTime? endTime,
+    String? result,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    // 如果有搜索关键字，使用搜索方法
+    if (searchKeyword != null && searchKeyword.isNotEmpty) {
+      return await gameLogRepo.searchLogs(
+        keyword: searchKeyword,
+        limit: limit,
+        offset: offset,
+      );
+    }
+
+    // 否则使用复杂查询
+    return await gameLogRepo.queryLogs(
+      logType: logType,
+      subType: subType,
+      playerId: playerId,
+      startTime: startTime,
+      endTime: endTime,
+      result: result,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  // 获取日志总数（用于判断是否还有更多日志）
+  Future<int> getGameLogCount() async {
+    return await gameLogRepo.getLogCount();
   }
 
   HangarItem? getHangarItemById(int id) {

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:convert';
+import 'package:refuge_next/src/funcs/game_log_parser.dart';
 
 part 'game_log.freezed.dart';
 part 'game_log.g.dart';
@@ -26,6 +27,7 @@ class GameLog with _$GameLog {
     double? elapsed,  // 耗时（秒）
     required String content,  // 完整日志内容
     Map<String, dynamic>? parsedData,  // 解析后的额外数据
+    String? account,  // 账户信息 (格式: handle#accountId)
   }) = _GameLog;
 
   factory GameLog.fromJson(Map<String, dynamic> json) =>
@@ -54,6 +56,7 @@ class GameLog with _$GameLog {
       parsedData: map['parsed_data'] != null
           ? Map<String, dynamic>.from(jsonDecode(map['parsed_data'] as String))
           : null,
+      account: map['account'] as String?,
     );
   }
 }
@@ -80,12 +83,19 @@ extension GameLogExtension on GameLog {
       'elapsed': elapsed,
       'content': content,
       'parsed_data': parsedData != null ? jsonEncode(parsedData) : null,
+      'account': account,
     };
+  }
+
+  /// 动态解析特定数据（从原始日志内容）
+  Map<String, dynamic> get parsedDataDynamic {
+    return GameLogParser.parseData(logType, content);
   }
 }
 
 // 日志类型枚举
 class LogTypes {
+  // 原有的常量（保持向后兼容）
   static const String storeItem = 'StoreItem';
   static const String inventoryManagement = 'InventoryManagement';
   static const String inventoryManagementRequest = 'InventoryManagementRequest';
@@ -93,6 +103,36 @@ class LogTypes {
   static const String onInventoryStoreItem = 'OnInventoryStoreItem';
   static const String inventoryTokenFlow = 'Inventory Token Flow';
   static const String takeItemValidation = 'Take Item Validation';
+
+  // 新增的常量（用于日志查看器）
+  static const String inventory = 'Inventory Token Flow';  // 库存相关
+  static const String attachment = 'AttachmentReceived';  // 装备相关
+  static const String login = 'Login';  // 登录相关（通用）
+  static const String initiateLogin = 'InitiateLogin';  // 发起登录
+  static const String asyncLoginCallback = 'AsyncLoginCallback';  // 登录回调
+  static const String gameVersion = 'Game Version';  // 游戏版本
+  static const String physics = 'Physics';  // 物理相关
+  static const String error = 'Error';  // 错误
+  static const String warning = 'Warning';  // 警告
+
+  // 游戏流程相关
+  static const String spawnFlow = 'Spawn Flow';  // 生成流程
+  static const String connectionFlow = 'Connection Flow';  // 连接流程
+  static const String vehicleControlFlow = 'Vehicle Control Flow';  // 载具控制流程
+  static const String jumpDriveStateChanged = 'Jump Drive State Changed';  // 跃迁驱动状态改变
+
+  // 战斗与事件
+  static const String vehicleDestruction = 'Vehicle Destruction';  // 载具摧毁
+  static const String actorDeath = 'Actor Death';  // 角色死亡
+
+  // 任务相关
+  static const String objectiveUpserted = 'ObjectiveUpserted';  // 目标更新
+  static const String missionEnded = 'MissionEnded';  // 任务结束
+  static const String endMission = 'EndMission';  // 结束任务
+
+  // 系统相关
+  static const String authorityChanged = 'Authority Changed';  // 权限变更
+  static const String systemQuit = 'SystemQuit';  // 系统退出
 }
 
 // 日志级别枚举

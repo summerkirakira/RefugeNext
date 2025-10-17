@@ -15,6 +15,9 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import './theme_settings/color_pick_bottomsheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../services/game_log_service.dart';
+import '../game_logs/game_log_modal.dart';
 
 
 Color cardBackgroundColor(BuildContext context) {
@@ -72,6 +75,34 @@ class _SettingsPageState extends State<SettingsPage> {
     final handle = Provider.of<MainDataModel>(context).currentUser!.handle;
     final nickName = Provider.of<MainDataModel>(context).currentUser!.name;
     return "$handle\n$nickName";
+  }
+
+  Future<void> selectGameDirectory(BuildContext context) async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: '选择Star Citizen游戏目录',
+    );
+
+    if (selectedDirectory != null) {
+      if (!GameLogService.isValidGameDirectory(selectedDirectory)) {
+        showToast(message: "无效的游戏目录，请选择Star Citizen根目录");
+        return;
+      }
+
+      await Provider.of<MainDataModel>(context, listen: false)
+          .setGameDirectory(selectedDirectory);
+      showToast(message: "游戏目录已设置");
+    }
+  }
+
+  Future<void> autoFindGameDirectory(BuildContext context) async {
+    final gameDir = await GameLogService.findGameDirectory();
+    if (gameDir != null) {
+      await Provider.of<MainDataModel>(context, listen: false)
+          .setGameDirectory(gameDir);
+      showToast(message: "已自动找到游戏目录: $gameDir");
+    } else {
+      showToast(message: "未找到游戏目录，请手动选择");
+    }
   }
 
 
@@ -255,7 +286,135 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: "更了解避难所",
                   ),
                 ],
-              ), 
+              ),
+              // 游戏设置 - 仅Windows显示
+              if (Platform.isWindows)
+                SettingsGroup(
+                  settingsGroupTitle: "游戏",
+                  items: [
+                    SettingsItem(
+                      onTap: () async {
+                        await selectGameDirectory(context);
+                      },
+                      icons: Icons.folder_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.orange,
+                      ),
+                      title: '游戏目录',
+                      subtitle: Provider.of<MainDataModel>(context).gameDirectory ?? "未设置",
+                    ),
+                    // SettingsItem(
+                    //   onTap: () async {
+                    //     await autoFindGameDirectory(context);
+                    //   },
+                    //   icons: Icons.search_rounded,
+                    //   iconStyle: IconStyle(
+                    //     iconsColor: Colors.white,
+                    //     withBackground: true,
+                    //     backgroundColor: Colors.teal,
+                    //   ),
+                    //   title: '自动查找游戏目录',
+                    //   subtitle: "自动搜索常见安装位置",
+                    // ),
+                    SettingsItem(
+                      onTap: () async {
+                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                        if (dataModel.gameDirectory == null) {
+                          showToast(message: "请先设置游戏目录");
+                          return;
+                        }
+                        await dataModel.importRecentGameLogs(1000);
+                      },
+                      icons: Icons.file_download_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.indigo,
+                      ),
+                      title: '导入游戏日志',
+                      subtitle: "导入最近1000行游戏日志",
+                    ),
+                    SettingsItem(
+                      onTap: () async {
+                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                        if (dataModel.gameDirectory == null) {
+                          showToast(message: "请先设置游戏目录");
+                          return;
+                        }
+
+                        final result = await dataModel.importHistoricalGameLogs();
+                        final files = result['files'] ?? 0;
+                        final inserted = result['inserted'] ?? 0;
+                        final skipped = result['skipped'] ?? 0;
+
+                        if (files > 0) {
+                          showToast(
+                            message: "已处理 $files 个文件，导入 $inserted 条新日志，跳过 $skipped 条重复"
+                          );
+                        }
+                      },
+                      icons: Icons.history_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.amber,
+                      ),
+                      title: '导入历史日志',
+                      subtitle: "从LogBackups文件夹导入所有历史日志",
+                    ),
+                    SettingsItem(
+                      onTap: () {
+                        GameLogModal.show(context);
+                      },
+                      icons: Icons.view_list_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.green,
+                      ),
+                      title: '查看日志',
+                      subtitle: "浏览和搜索游戏日志",
+                    ),
+                    SettingsItem(
+                      onTap: () async {
+                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                        final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+                        final deletedCount = await dataModel.clearOldGameLogs(thirtyDaysAgo);
+                        showToast(message: "已清理 $deletedCount 条旧日志");
+                      },
+                      icons: Icons.delete_sweep_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.red,
+                      ),
+                      title: '清理旧日志',
+                      subtitle: "清理30天前的游戏日志",
+                    ),
+                    // SettingsItem(
+                    //   onTap: () async {
+                    //     final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                    //     final dupCount = await dataModel.getDuplicateLogCount();
+                    //     if (dupCount == 0) {
+                    //       showToast(message: "没有发现重复日志");
+                    //       return;
+                    //     }
+                    //     final deletedCount = await dataModel.removeDuplicateGameLogs();
+                    //     showToast(message: "已清理 $deletedCount 条重复日志");
+                    //   },
+                    //   icons: Icons.auto_fix_high_rounded,
+                    //   iconStyle: IconStyle(
+                    //     iconsColor: Colors.white,
+                    //     withBackground: true,
+                    //     backgroundColor: Colors.deepPurple,
+                    //   ),
+                    //   title: '清理重复日志',
+                    //   subtitle: "删除重复的游戏日志记录",
+                    // ),
+                  ],
+                ),
               // You can add a settings title
               SettingsGroup(
                 settingsGroupTitle: "关于",

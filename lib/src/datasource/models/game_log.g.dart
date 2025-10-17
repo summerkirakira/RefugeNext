@@ -26,6 +26,7 @@ _$GameLogImpl _$$GameLogImplFromJson(Map<String, dynamic> json) =>
       elapsed: (json['elapsed'] as num?)?.toDouble(),
       content: json['content'] as String,
       parsedData: json['parsed_data'] as Map<String, dynamic>?,
+      account: json['account'] as String?,
     );
 
 Map<String, dynamic> _$$GameLogImplToJson(_$GameLogImpl instance) =>
@@ -48,4 +49,5 @@ Map<String, dynamic> _$$GameLogImplToJson(_$GameLogImpl instance) =>
       'elapsed': instance.elapsed,
       'content': instance.content,
       'parsed_data': instance.parsedData,
+      'account': instance.account,
     };

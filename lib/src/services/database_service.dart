@@ -36,7 +36,7 @@ class DatabaseService {
     // 打开数据库
     return await openDatabase(
       dbPath,
-      version: 1,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -63,7 +63,8 @@ class DatabaseService {
         result TEXT,
         elapsed REAL,
         content TEXT NOT NULL,
-        parsed_data TEXT
+        parsed_data TEXT,
+        account TEXT
       )
     ''');
 
@@ -73,11 +74,21 @@ class DatabaseService {
     await db.execute('CREATE INDEX idx_log_type ON game_logs(log_type)');
     await db.execute('CREATE INDEX idx_request_id ON game_logs(request_id)');
     await db.execute('CREATE INDEX idx_entity_id ON game_logs(entity_id)');
+
+    // 创建唯一索引防止重复日志
+    await db.execute('CREATE UNIQUE INDEX idx_unique_log ON game_logs(timestamp, content)');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // 处理数据库升级
-    // 未来可能需要的迁移逻辑
+    if (oldVersion < 2) {
+      // 升级到v2：添加唯一索引防止重复日志
+      await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_log ON game_logs(timestamp, content)');
+    }
+    if (oldVersion < 3) {
+      // 升级到v3：添加account字段
+      await db.execute('ALTER TABLE game_logs ADD COLUMN account TEXT');
+    }
   }
 
   // 关闭数据库连接

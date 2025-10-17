@@ -10,6 +10,12 @@ class GameLogRepo {
 
   factory GameLogRepo() => _instance;
 
+  // 防抖机制：标记是否正在解析日志
+  bool _isParsing = false;
+
+  // 获取当前是否正在解析
+  bool get isParsing => _isParsing;
+
   // 插入单条日志
   Future<int> insertLog(GameLog log) async {
     final db = await DatabaseService.instance.database;
@@ -20,20 +26,50 @@ class GameLogRepo {
     );
   }
 
-  // 批量插入日志
-  Future<void> insertLogs(List<GameLog> logs) async {
-    final db = await DatabaseService.instance.database;
-    final batch = db.batch();
-
-    for (final log in logs) {
-      batch.insert(
-        'game_logs',
-        log.toDatabase(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+  // 批量插入日志（带去重和防抖）
+  Future<Map<String, int>> insertLogs(List<GameLog> logs) async {
+    // 防抖检查：如果正在解析，直接返回
+    if (_isParsing) {
+      return {
+        'inserted': 0,
+        'skipped': logs.length,
+        'total': logs.length,
+        'ignored': logs.length, // 因防抖被忽略的数量
+      };
     }
 
-    await batch.commit(noResult: true);
+    // 设置解析状态
+    _isParsing = true;
+
+    try {
+      final db = await DatabaseService.instance.database;
+
+      int inserted = 0;
+      int skipped = 0;
+
+      // 逐条插入以统计结果
+      for (final log in logs) {
+        try {
+          await db.insert(
+            'game_logs',
+            log.toDatabase(),
+            conflictAlgorithm: ConflictAlgorithm.ignore, // 忽略重复项
+          );
+          inserted++;
+        } catch (e) {
+          skipped++;
+        }
+      }
+
+      return {
+        'inserted': inserted,
+        'skipped': skipped,
+        'total': logs.length,
+      };
+    } finally {
+      // 确保无论成功还是失败都重置状态
+      _isParsing = false;
+    }
   }
 
   // 获取所有日志
@@ -343,5 +379,87 @@ class GameLogRepo {
     final List<dynamic> jsonList = jsonDecode(jsonString);
     final logs = jsonList.map((json) => GameLog.fromJson(json)).toList();
     await insertLogs(logs);
+  }
+
+  // 清理重复日志（保留最早的记录）
+  Future<int> removeDuplicates() async {
+    final db = await DatabaseService.instance.database;
+
+    // 查找重复的日志（相同的timestamp和content）
+    final duplicates = await db.rawQuery('''
+      SELECT timestamp, content, MIN(id) as keep_id
+      FROM game_logs
+      GROUP BY timestamp, content
+      HAVING COUNT(*) > 1
+    ''');
+
+    if (duplicates.isEmpty) {
+      return 0;
+    }
+
+    int deletedCount = 0;
+
+    // 删除重复的日志，保留最早的
+    for (final dup in duplicates) {
+      final timestamp = dup['timestamp'] as int;
+      final content = dup['content'] as String;
+      final keepId = dup['keep_id'] as int;
+
+      final deleted = await db.delete(
+        'game_logs',
+        where: 'timestamp = ? AND content = ? AND id != ?',
+        whereArgs: [timestamp, content, keepId],
+      );
+
+      deletedCount += deleted;
+    }
+
+    return deletedCount;
+  }
+
+  // 获取重复日志的数量
+  Future<int> getDuplicateCount() async {
+    final db = await DatabaseService.instance.database;
+
+    final result = await db.rawQuery('''
+      SELECT SUM(count - 1) as dup_count
+      FROM (
+        SELECT COUNT(*) as count
+        FROM game_logs
+        GROUP BY timestamp, content
+        HAVING count > 1
+      )
+    ''');
+
+    return (result.first['dup_count'] as int?) ?? 0;
+  }
+
+  // 检查日志是否已存在
+  Future<bool> logExists(DateTime timestamp, String content) async {
+    final db = await DatabaseService.instance.database;
+
+    final result = await db.query(
+      'game_logs',
+      where: 'timestamp = ? AND content = ?',
+      whereArgs: [timestamp.millisecondsSinceEpoch, content],
+      limit: 1,
+    );
+
+    return result.isNotEmpty;
+  }
+
+  // 手动设置解析状态为开始（用于外部控制防抖）
+  void startParsing() {
+    _isParsing = true;
+  }
+
+  // 手动设置解析状态为结束（用于外部控制防抖）
+  void endParsing() {
+    _isParsing = false;
+  }
+
+  // 重置解析状态（用于异常情况下的状态恢复）
+  void resetParsingState() {
+    _isParsing = false;
   }
 }

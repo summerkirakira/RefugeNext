@@ -44,7 +44,9 @@ mixin _$GameLog {
       throw _privateConstructorUsedError; // 操作结果 (Succeed, Failed等)
   double? get elapsed => throw _privateConstructorUsedError; // 耗时（秒）
   String get content => throw _privateConstructorUsedError; // 完整日志内容
-  Map<String, dynamic>? get parsedData => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get parsedData =>
+      throw _privateConstructorUsedError; // 解析后的额外数据
+  String? get account => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -74,7 +76,8 @@ abstract class $GameLogCopyWith<$Res> {
       String? result,
       double? elapsed,
       String content,
-      Map<String, dynamic>? parsedData});
+      Map<String, dynamic>? parsedData,
+      String? account});
 }
 
 /// @nodoc
@@ -108,6 +111,7 @@ class _$GameLogCopyWithImpl<$Res, $Val extends GameLog>
     Object? elapsed = freezed,
     Object? content = null,
     Object? parsedData = freezed,
+    Object? account = freezed,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -182,6 +186,10 @@ class _$GameLogCopyWithImpl<$Res, $Val extends GameLog>
           ? _value.parsedData
           : parsedData // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>?,
+      account: freezed == account
+          ? _value.account
+          : account // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -211,7 +219,8 @@ abstract class _$$GameLogImplCopyWith<$Res> implements $GameLogCopyWith<$Res> {
       String? result,
       double? elapsed,
       String content,
-      Map<String, dynamic>? parsedData});
+      Map<String, dynamic>? parsedData,
+      String? account});
 }
 
 /// @nodoc
@@ -243,6 +252,7 @@ class __$$GameLogImplCopyWithImpl<$Res>
     Object? elapsed = freezed,
     Object? content = null,
     Object? parsedData = freezed,
+    Object? account = freezed,
   }) {
     return _then(_$GameLogImpl(
       id: freezed == id
@@ -317,6 +327,10 @@ class __$$GameLogImplCopyWithImpl<$Res>
           ? _value._parsedData
           : parsedData // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>?,
+      account: freezed == account
+          ? _value.account
+          : account // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -343,7 +357,8 @@ class _$GameLogImpl implements _GameLog {
       this.result,
       this.elapsed,
       required this.content,
-      final Map<String, dynamic>? parsedData})
+      final Map<String, dynamic>? parsedData,
+      this.account})
       : _parsedData = parsedData;
 
   factory _$GameLogImpl.fromJson(Map<String, dynamic> json) =>
@@ -411,9 +426,13 @@ class _$GameLogImpl implements _GameLog {
     return EqualUnmodifiableMapView(value);
   }
 
+// 解析后的额外数据
+  @override
+  final String? account;
+
   @override
   String toString() {
-    return 'GameLog(id: $id, timestamp: $timestamp, logLevel: $logLevel, logType: $logType, subType: $subType, playerId: $playerId, playerName: $playerName, requestId: $requestId, entityId: $entityId, entityName: $entityName, entityClass: $entityClass, location: $location, inventoryId: $inventoryId, action: $action, result: $result, elapsed: $elapsed, content: $content, parsedData: $parsedData)';
+    return 'GameLog(id: $id, timestamp: $timestamp, logLevel: $logLevel, logType: $logType, subType: $subType, playerId: $playerId, playerName: $playerName, requestId: $requestId, entityId: $entityId, entityName: $entityName, entityClass: $entityClass, location: $location, inventoryId: $inventoryId, action: $action, result: $result, elapsed: $elapsed, content: $content, parsedData: $parsedData, account: $account)';
   }
 
   @override
@@ -449,31 +468,34 @@ class _$GameLogImpl implements _GameLog {
             (identical(other.elapsed, elapsed) || other.elapsed == elapsed) &&
             (identical(other.content, content) || other.content == content) &&
             const DeepCollectionEquality()
-                .equals(other._parsedData, _parsedData));
+                .equals(other._parsedData, _parsedData) &&
+            (identical(other.account, account) || other.account == account));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      timestamp,
-      logLevel,
-      logType,
-      subType,
-      playerId,
-      playerName,
-      requestId,
-      entityId,
-      entityName,
-      entityClass,
-      location,
-      inventoryId,
-      action,
-      result,
-      elapsed,
-      content,
-      const DeepCollectionEquality().hash(_parsedData));
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        timestamp,
+        logLevel,
+        logType,
+        subType,
+        playerId,
+        playerName,
+        requestId,
+        entityId,
+        entityName,
+        entityClass,
+        location,
+        inventoryId,
+        action,
+        result,
+        elapsed,
+        content,
+        const DeepCollectionEquality().hash(_parsedData),
+        account
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -508,7 +530,8 @@ abstract class _GameLog implements GameLog {
       final String? result,
       final double? elapsed,
       required final String content,
-      final Map<String, dynamic>? parsedData}) = _$GameLogImpl;
+      final Map<String, dynamic>? parsedData,
+      final String? account}) = _$GameLogImpl;
 
   factory _GameLog.fromJson(Map<String, dynamic> json) = _$GameLogImpl.fromJson;
 
@@ -548,6 +571,8 @@ abstract class _GameLog implements GameLog {
   String get content;
   @override // 完整日志内容
   Map<String, dynamic>? get parsedData;
+  @override // 解析后的额外数据
+  String? get account;
   @override
   @JsonKey(ignore: true)
   _$$GameLogImplCopyWith<_$GameLogImpl> get copyWith =>
