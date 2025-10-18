@@ -146,6 +146,25 @@ class MainDataModel extends ChangeNotifier {
     _showRefreshButton = prefs.getBool('app.settings.showRefreshButton') ?? defaultValue;
   }
 
+  bool _enableHangarTranslation = true;
+
+  bool get enableHangarTranslation => _enableHangarTranslation;
+
+  Future<void> setEnableHangarTranslation(bool enabled) async {
+    _enableHangarTranslation = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('app.settings.enableHangarTranslation', enabled);
+    TranslationRepo().setTranslationEnabled(enabled);
+    readHangarItems();
+    notifyListeners();
+  }
+
+  Future<void> loadEnableHangarTranslationSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    _enableHangarTranslation = prefs.getBool('app.settings.enableHangarTranslation') ?? true;
+    TranslationRepo().setTranslationEnabled(_enableHangarTranslation);
+  }
+
   Map<String, List<CatalogProperty>> _catalog = {};
 
   List<CatalogProperty> getCataLog(CatalogTypes catalogType) {
@@ -253,6 +272,7 @@ class MainDataModel extends ChangeNotifier {
   Future<void> initialize() async {
     await initUser();
     await loadShowRefreshButtonSetting();
+    await loadEnableHangarTranslationSetting();
     await loadGameDirectory();
     await translationRepo.readTranslation();
     await shipAliasRepo.getShipAliases();

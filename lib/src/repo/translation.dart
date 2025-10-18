@@ -20,6 +20,14 @@ class TranslationRepo {
 
   int _postedLength = 0;
 
+  bool _translationEnabled = true;
+
+  bool get translationEnabled => _translationEnabled;
+
+  void setTranslationEnabled(bool enabled) {
+    _translationEnabled = enabled;
+  }
+
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
     return directory.path;
@@ -104,6 +112,10 @@ class TranslationRepo {
   }
 
   Future<String> getTranslation(String key) async {
+    if (!_translationEnabled) {
+      return key;
+    }
+
     final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
 
     if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
@@ -129,6 +141,9 @@ class TranslationRepo {
   }
 
   String getTranslationSync(String key) {
+    if (!_translationEnabled) {
+      return key;
+    }
 
     final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
     final keyList = finalKey.split(" - ");

@@ -358,11 +358,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       backgroundColor: Colors.green,
                     ),
                     title: '机库翻译',
-                    subtitle: "已关闭",
+                    subtitle: Provider.of<MainDataModel>(context).enableHangarTranslation ? "已开启" : "已关闭",
                     trailing: Switch.adaptive(
-                      value: true,
+                      value: Provider.of<MainDataModel>(context).enableHangarTranslation,
                       onChanged: (value) {
-                        showToast(message: "暂不支持此功能");
+                        Provider.of<MainDataModel>(context, listen: false)
+                            .setEnableHangarTranslation(value);
                       },
                     ),
                   ),
