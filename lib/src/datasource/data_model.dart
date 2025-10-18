@@ -44,6 +44,7 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 
 import 'models/hangar/hangar_log.dart';
 import 'models/game_log.dart';
+import 'models/game_log_status.dart';
 
 
 enum HangarItemType {
@@ -439,6 +440,10 @@ class MainDataModel extends ChangeNotifier {
   List<GameLog> _gameLogs = [];
   List<GameLog> get gameLogs => _gameLogs;
 
+  // 游戏日志状态
+  GameLogStatus? _gameLogStatus;
+  GameLogStatus? get gameLogStatus => _gameLogStatus;
+
   // 游戏目录相关
   String? _gameDirectory;
   String? get gameDirectory => _gameDirectory;
@@ -528,6 +533,18 @@ class MainDataModel extends ChangeNotifier {
   // 获取最近的游戏日志
   Future<void> loadRecentGameLogs([int count = 100]) async {
     _gameLogs = await gameLogRepo.getRecentLogs(count);
+    notifyListeners();
+  }
+
+  // 刷新游戏日志状态
+  Future<void> refreshGameLogStatus() async {
+    final latestTime = await gameLogRepo.getLatestLogTime();
+    final missionCount = await gameLogRepo.getMissionCompletedCount();
+    _gameLogStatus = GameLogStatus(
+      latestGameTime: latestTime,
+      lastRefreshTime: DateTime.now(),
+      missionCompletedCount: missionCount,
+    );
     notifyListeners();
   }
 

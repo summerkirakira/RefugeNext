@@ -401,6 +401,35 @@ class GameLogRepo {
     return DateTime.fromMillisecondsSinceEpoch(result.first['timestamp'] as int);
   }
 
+  // 获取指定玩家的最新日志时间
+  Future<DateTime?> getLatestLogTimeByPlayer(String playerId) async {
+    final db = await DatabaseService.instance.database;
+    final result = await db.query(
+      'game_logs',
+      columns: ['timestamp'],
+      where: 'player_id = ?',
+    whereArgs: [playerId],
+      orderBy: 'timestamp DESC',
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return DateTime.fromMillisecondsSinceEpoch(result.first['timestamp'] as int);
+  }
+
+  // 获取任务完成数（content包含<EndMission>的日志数量）
+  Future<int> getMissionCompletedCount() async {
+    final db = await DatabaseService.instance.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM game_logs WHERE content LIKE ?',
+      ['%<EndMission>%'],
+    );
+    return result.first['count'] as int;
+  }
+
   // 导出日志到JSON
   Future<String> exportLogsToJson({
     DateTime? startTime,

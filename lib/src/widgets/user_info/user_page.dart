@@ -437,6 +437,43 @@ class _UserDetailInfoState extends State<UserDetailInfo> {
   }
 }
 
+class GameLogStatusWidget extends StatefulWidget {
+  const GameLogStatusWidget({Key? key}) : super(key: key);
+
+  @override
+  _GameLogStatusWidgetState createState() => _GameLogStatusWidgetState();
+}
+
+class _GameLogStatusWidgetState extends State<GameLogStatusWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              DetailInfoItem(
+                leading: Icon(Icons.sports_esports_outlined, color: Theme.of(context).iconTheme.color),
+                title: '最近游戏时间',
+                value: Provider.of<MainDataModel>(context).gameLogStatus?.latestGameTime != null
+                    ? _formatTime(Provider.of<MainDataModel>(context).gameLogStatus!.latestGameTime!)
+                    : '暂无',
+              ),
+              SizedBox(height: 10),
+              DetailInfoItem(
+                leading: Icon(Icons.task_alt_outlined, color: Theme.of(context).iconTheme.color),
+                title: '任务完成数',
+                value: Provider.of<MainDataModel>(context).gameLogStatus?.missionCompletedCount?.toString() ?? '0',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 
 class SettingsWidget extends StatelessWidget {
   const SettingsWidget({Key? key}) : super(key: key);
@@ -474,6 +511,16 @@ class UserInfoPage extends StatefulWidget {
 
 class _UserInfoPageState extends State<UserInfoPage>
     with TickerProviderStateMixin {
+
+  @override
+  void initState() {
+    super.initState();
+    // 初始化游戏日志状态
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<MainDataModel>(context, listen: false).refreshGameLogStatus();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MainDataModel>(
@@ -496,6 +543,8 @@ class _UserInfoPageState extends State<UserInfoPage>
                       UserSimpleInfo(),
                       UserDetailInfo(),
                       Divider(),
+                      GameLogStatusWidget(),
+                      Divider(),
                       if (!(model.currentUser!.email == "934869815@qq.com"))
                         SettingsWidget()
                     ],
@@ -507,6 +556,10 @@ class _UserInfoPageState extends State<UserInfoPage>
           onRefresh: () async {
             final currentUserHangarValue = model.currentUser!.hangarValue;
             final currentValue = model.currentUser!.currentHangarValue;
+
+            // 刷新游戏日志状态
+            await model.refreshGameLogStatus();
+
             try {
               final newUser = await parseNewUser(
                   model.currentUser!.email,
