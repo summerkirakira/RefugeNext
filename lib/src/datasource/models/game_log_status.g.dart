@@ -15,6 +15,9 @@ _$GameLogStatusImpl _$$GameLogStatusImplFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['lastRefreshTime'] as String),
       missionCompletedCount: (json['missionCompletedCount'] as num?)?.toInt(),
+      playerKillCount: (json['playerKillCount'] as num?)?.toInt(),
+      playerDeathCount: (json['playerDeathCount'] as num?)?.toInt(),
+      gamePlayTimeMinutes: (json['gamePlayTimeMinutes'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$GameLogStatusImplToJson(_$GameLogStatusImpl instance) =>
@@ -22,4 +25,7 @@ Map<String, dynamic> _$$GameLogStatusImplToJson(_$GameLogStatusImpl instance) =>
       'latestGameTime': instance.latestGameTime?.toIso8601String(),
       'lastRefreshTime': instance.lastRefreshTime?.toIso8601String(),
       'missionCompletedCount': instance.missionCompletedCount,
+      'playerKillCount': instance.playerKillCount,
+      'playerDeathCount': instance.playerDeathCount,
+      'gamePlayTimeMinutes': instance.gamePlayTimeMinutes,
     };

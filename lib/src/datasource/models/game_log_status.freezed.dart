@@ -29,6 +29,15 @@ mixin _$GameLogStatus {
   /// 任务完成数（EndMission日志数量）
   int? get missionCompletedCount => throw _privateConstructorUsedError;
 
+  /// 玩家击杀数（被当前玩家击杀的次数）
+  int? get playerKillCount => throw _privateConstructorUsedError;
+
+  /// 玩家被杀数（当前玩家被杀的次数）
+  int? get playerDeathCount => throw _privateConstructorUsedError;
+
+  /// 两周内游戏时长（分钟）
+  int? get gamePlayTimeMinutes => throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $GameLogStatusCopyWith<GameLogStatus> get copyWith =>
@@ -44,7 +53,10 @@ abstract class $GameLogStatusCopyWith<$Res> {
   $Res call(
       {DateTime? latestGameTime,
       DateTime? lastRefreshTime,
-      int? missionCompletedCount});
+      int? missionCompletedCount,
+      int? playerKillCount,
+      int? playerDeathCount,
+      int? gamePlayTimeMinutes});
 }
 
 /// @nodoc
@@ -63,6 +75,9 @@ class _$GameLogStatusCopyWithImpl<$Res, $Val extends GameLogStatus>
     Object? latestGameTime = freezed,
     Object? lastRefreshTime = freezed,
     Object? missionCompletedCount = freezed,
+    Object? playerKillCount = freezed,
+    Object? playerDeathCount = freezed,
+    Object? gamePlayTimeMinutes = freezed,
   }) {
     return _then(_value.copyWith(
       latestGameTime: freezed == latestGameTime
@@ -76,6 +91,18 @@ class _$GameLogStatusCopyWithImpl<$Res, $Val extends GameLogStatus>
       missionCompletedCount: freezed == missionCompletedCount
           ? _value.missionCompletedCount
           : missionCompletedCount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      playerKillCount: freezed == playerKillCount
+          ? _value.playerKillCount
+          : playerKillCount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      playerDeathCount: freezed == playerDeathCount
+          ? _value.playerDeathCount
+          : playerDeathCount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      gamePlayTimeMinutes: freezed == gamePlayTimeMinutes
+          ? _value.gamePlayTimeMinutes
+          : gamePlayTimeMinutes // ignore: cast_nullable_to_non_nullable
               as int?,
     ) as $Val);
   }
@@ -92,7 +119,10 @@ abstract class _$$GameLogStatusImplCopyWith<$Res>
   $Res call(
       {DateTime? latestGameTime,
       DateTime? lastRefreshTime,
-      int? missionCompletedCount});
+      int? missionCompletedCount,
+      int? playerKillCount,
+      int? playerDeathCount,
+      int? gamePlayTimeMinutes});
 }
 
 /// @nodoc
@@ -109,6 +139,9 @@ class __$$GameLogStatusImplCopyWithImpl<$Res>
     Object? latestGameTime = freezed,
     Object? lastRefreshTime = freezed,
     Object? missionCompletedCount = freezed,
+    Object? playerKillCount = freezed,
+    Object? playerDeathCount = freezed,
+    Object? gamePlayTimeMinutes = freezed,
   }) {
     return _then(_$GameLogStatusImpl(
       latestGameTime: freezed == latestGameTime
@@ -123,6 +156,18 @@ class __$$GameLogStatusImplCopyWithImpl<$Res>
           ? _value.missionCompletedCount
           : missionCompletedCount // ignore: cast_nullable_to_non_nullable
               as int?,
+      playerKillCount: freezed == playerKillCount
+          ? _value.playerKillCount
+          : playerKillCount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      playerDeathCount: freezed == playerDeathCount
+          ? _value.playerDeathCount
+          : playerDeathCount // ignore: cast_nullable_to_non_nullable
+              as int?,
+      gamePlayTimeMinutes: freezed == gamePlayTimeMinutes
+          ? _value.gamePlayTimeMinutes
+          : gamePlayTimeMinutes // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -131,7 +176,12 @@ class __$$GameLogStatusImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$GameLogStatusImpl implements _GameLogStatus {
   const _$GameLogStatusImpl(
-      {this.latestGameTime, this.lastRefreshTime, this.missionCompletedCount});
+      {this.latestGameTime,
+      this.lastRefreshTime,
+      this.missionCompletedCount,
+      this.playerKillCount,
+      this.playerDeathCount,
+      this.gamePlayTimeMinutes});
 
   factory _$GameLogStatusImpl.fromJson(Map<String, dynamic> json) =>
       _$$GameLogStatusImplFromJson(json);
@@ -148,9 +198,21 @@ class _$GameLogStatusImpl implements _GameLogStatus {
   @override
   final int? missionCompletedCount;
 
+  /// 玩家击杀数（被当前玩家击杀的次数）
+  @override
+  final int? playerKillCount;
+
+  /// 玩家被杀数（当前玩家被杀的次数）
+  @override
+  final int? playerDeathCount;
+
+  /// 两周内游戏时长（分钟）
+  @override
+  final int? gamePlayTimeMinutes;
+
   @override
   String toString() {
-    return 'GameLogStatus(latestGameTime: $latestGameTime, lastRefreshTime: $lastRefreshTime, missionCompletedCount: $missionCompletedCount)';
+    return 'GameLogStatus(latestGameTime: $latestGameTime, lastRefreshTime: $lastRefreshTime, missionCompletedCount: $missionCompletedCount, playerKillCount: $playerKillCount, playerDeathCount: $playerDeathCount, gamePlayTimeMinutes: $gamePlayTimeMinutes)';
   }
 
   @override
@@ -163,13 +225,25 @@ class _$GameLogStatusImpl implements _GameLogStatus {
             (identical(other.lastRefreshTime, lastRefreshTime) ||
                 other.lastRefreshTime == lastRefreshTime) &&
             (identical(other.missionCompletedCount, missionCompletedCount) ||
-                other.missionCompletedCount == missionCompletedCount));
+                other.missionCompletedCount == missionCompletedCount) &&
+            (identical(other.playerKillCount, playerKillCount) ||
+                other.playerKillCount == playerKillCount) &&
+            (identical(other.playerDeathCount, playerDeathCount) ||
+                other.playerDeathCount == playerDeathCount) &&
+            (identical(other.gamePlayTimeMinutes, gamePlayTimeMinutes) ||
+                other.gamePlayTimeMinutes == gamePlayTimeMinutes));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType, latestGameTime, lastRefreshTime, missionCompletedCount);
+      runtimeType,
+      latestGameTime,
+      lastRefreshTime,
+      missionCompletedCount,
+      playerKillCount,
+      playerDeathCount,
+      gamePlayTimeMinutes);
 
   @JsonKey(ignore: true)
   @override
@@ -189,7 +263,10 @@ abstract class _GameLogStatus implements GameLogStatus {
   const factory _GameLogStatus(
       {final DateTime? latestGameTime,
       final DateTime? lastRefreshTime,
-      final int? missionCompletedCount}) = _$GameLogStatusImpl;
+      final int? missionCompletedCount,
+      final int? playerKillCount,
+      final int? playerDeathCount,
+      final int? gamePlayTimeMinutes}) = _$GameLogStatusImpl;
 
   factory _GameLogStatus.fromJson(Map<String, dynamic> json) =
       _$GameLogStatusImpl.fromJson;
@@ -206,6 +283,18 @@ abstract class _GameLogStatus implements GameLogStatus {
 
   /// 任务完成数（EndMission日志数量）
   int? get missionCompletedCount;
+  @override
+
+  /// 玩家击杀数（被当前玩家击杀的次数）
+  int? get playerKillCount;
+  @override
+
+  /// 玩家被杀数（当前玩家被杀的次数）
+  int? get playerDeathCount;
+  @override
+
+  /// 两周内游戏时长（分钟）
+  int? get gamePlayTimeMinutes;
   @override
   @JsonKey(ignore: true)
   _$$GameLogStatusImplCopyWith<_$GameLogStatusImpl> get copyWith =>

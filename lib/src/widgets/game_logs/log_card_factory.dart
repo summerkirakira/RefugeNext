@@ -4,6 +4,7 @@ import 'log_cards/base_log_card.dart';
 import 'log_cards/inventory_log_card.dart';
 import 'log_cards/attachment_log_card.dart';
 import 'log_cards/login_log_card.dart';
+import 'log_cards/character_login_status_log_card.dart';
 import 'log_cards/vehicle_destruction_log_card.dart';
 import 'log_cards/actor_death_log_card.dart';
 import 'log_cards/game_version_log_card.dart';
@@ -28,6 +29,9 @@ class LogCardFactory {
       case LogTypes.initiateLogin:
       case LogTypes.asyncLoginCallback:
         return LoginLogCard(log: log, onTap: onTap);
+
+      case LogTypes.accountLoginCharacterStatus:
+        return CharacterLoginStatusLogCard(log: log, onTap: onTap);
 
       case LogTypes.vehicleDestruction:
         return VehicleDestructionLogCard(log: log, onTap: onTap);
@@ -70,6 +74,8 @@ class LogCardFactory {
       case LogTypes.initiateLogin:
       case LogTypes.asyncLoginCallback:
         return Icons.login;
+      case LogTypes.accountLoginCharacterStatus:
+        return Icons.account_circle;
       case LogTypes.gameVersion:
         return Icons.info;
       case LogTypes.physics:
@@ -125,6 +131,8 @@ class LogCardFactory {
       case LogTypes.initiateLogin:
       case LogTypes.asyncLoginCallback:
         return Colors.green;
+      case LogTypes.accountLoginCharacterStatus:
+        return Colors.purple;
       case LogTypes.gameVersion:
         return Colors.purple;
       case LogTypes.physics:
@@ -182,6 +190,8 @@ class LogCardFactory {
         return '发起登录';
       case LogTypes.asyncLoginCallback:
         return '登录回调';
+      case LogTypes.accountLoginCharacterStatus:
+        return '角色登录状态';
       case LogTypes.gameVersion:
         return '游戏版本';
       case LogTypes.physics:

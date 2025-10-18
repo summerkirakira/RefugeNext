@@ -343,6 +343,8 @@ class GameLogParser {
         return _parseMission(logLine);
       case 'SystemQuit':
         return _parseSystemQuit(logLine);
+      case 'AccountLoginCharacterStatus_Character':
+        return _parseCharacterLoginStatus(logLine);
       default:
         return {};
     }
@@ -764,7 +766,8 @@ class GameLogParser {
     }
 
     // 提取武器信息
-    final weaponMatch = RegExp(r"using '([^']+)'\s*\[(\d+)\]\s*\[Class ([^\]]+)\]").firstMatch(logLine);
+    // 先尝试匹配带ID的格式: using 'weapon' [id] [Class xxx]
+    var weaponMatch = RegExp(r"using '([^']+)'\s*\[(\d+)\]\s*\[Class ([^\]]+)\]").firstMatch(logLine);
     if (weaponMatch != null) {
       final weaponFullName = weaponMatch.group(1)!;
       final weaponId = weaponMatch.group(2)!;
@@ -779,6 +782,32 @@ class GameLogParser {
       data['weapon_id'] = weaponId;
       data['weapon_class'] = weaponClass;
       data['weapon_full_name'] = weaponFullName;
+    } else {
+      // 尝试匹配不带独立ID的格式: using 'weapon' [Class xxx]
+      weaponMatch = RegExp(r"using '([^']+)'\s*\[Class ([^\]]+)\]").firstMatch(logLine);
+      if (weaponMatch != null) {
+        final weaponFullName = weaponMatch.group(1)!;
+        final weaponClass = weaponMatch.group(2)!;
+
+        // 尝试从武器名称末尾提取ID
+        String? weaponId;
+        final idMatch = RegExp(r'_(\d+)$').firstMatch(weaponFullName);
+        if (idMatch != null) {
+          weaponId = idMatch.group(1);
+        }
+
+        // 清理武器名称
+        final cleanWeapon = weaponFullName
+            .replaceAll(RegExp(r'_\d+$'), '')
+            .replaceAll('_', ' ');
+
+        data['weapon_name'] = cleanWeapon;
+        if (weaponId != null) {
+          data['weapon_id'] = weaponId;
+        }
+        data['weapon_class'] = weaponClass;
+        data['weapon_full_name'] = weaponFullName;
+      }
     }
 
     // 提取伤害类型
@@ -892,6 +921,71 @@ class GameLogParser {
     final mainThreadMatch = RegExp(r'main thread id=(\d+)').firstMatch(logLine);
     if (mainThreadMatch != null) {
       data['main_thread_id'] = int.parse(mainThreadMatch.group(1)!);
+    }
+
+    return data;
+  }
+
+  /// 解析角色登录状态日志
+  static Map<String, dynamic> _parseCharacterLoginStatus(String logLine) {
+    final data = <String, dynamic>{};
+
+    if (!logLine.contains('Character:')) return data;
+
+    // 提取角色名称
+    final nameMatch = RegExp(r'name\s+(\S+)').firstMatch(logLine);
+    if (nameMatch != null) {
+      data['character_name'] = nameMatch.group(1);
+    }
+
+    // 提取账户ID
+    final accountIdMatch = RegExp(r'accountId\s+(\d+)').firstMatch(logLine);
+    if (accountIdMatch != null) {
+      data['account_id'] = accountIdMatch.group(1);
+    }
+
+    // 提取GEID (Global Entity ID)
+    final geidMatch = RegExp(r'geid\s+(\d+)').firstMatch(logLine);
+    if (geidMatch != null) {
+      data['geid'] = geidMatch.group(1);
+    }
+
+    // 提取状态
+    final stateMatch = RegExp(r'state\s+(\S+)').firstMatch(logLine);
+    if (stateMatch != null) {
+      final state = stateMatch.group(1)!;
+      data['state'] = state;
+
+      // 翻译状态
+      switch (state) {
+        case 'STATE_CURRENT':
+          data['state_description'] = '当前角色';
+          break;
+        case 'STATE_INACTIVE':
+          data['state_description'] = '非活动';
+          break;
+        case 'STATE_DELETED':
+          data['state_description'] = '已删除';
+          break;
+        default:
+          data['state_description'] = state;
+      }
+    }
+
+    // 提取创建时间（毫秒时间戳）
+    final createdAtMatch = RegExp(r'createdAt\s+(\d+)').firstMatch(logLine);
+    if (createdAtMatch != null) {
+      final timestamp = int.parse(createdAtMatch.group(1)!);
+      data['created_at'] = timestamp;
+      data['created_at_date'] = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    }
+
+    // 提取更新时间（毫秒时间戳）
+    final updatedAtMatch = RegExp(r'updatedAt\s+(\d+)').firstMatch(logLine);
+    if (updatedAtMatch != null) {
+      final timestamp = int.parse(updatedAtMatch.group(1)!);
+      data['updated_at'] = timestamp;
+      data['updated_at_date'] = DateTime.fromMillisecondsSinceEpoch(timestamp);
     }
 
     return data;

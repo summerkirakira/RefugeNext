@@ -540,10 +540,23 @@ class MainDataModel extends ChangeNotifier {
   Future<void> refreshGameLogStatus() async {
     final latestTime = await gameLogRepo.getLatestLogTime();
     final missionCount = await gameLogRepo.getMissionCompletedCount();
+    final gamePlayTime = await gameLogRepo.getGamePlayTimeInTwoWeeks();
+
+    // 获取当前用户的击杀数和被杀数
+    int killCount = 0;
+    int deathCount = 0;
+    if (_currentUser != null) {
+      killCount = await gameLogRepo.getPlayerKillCount(_currentUser!.handle);
+      deathCount = await gameLogRepo.getPlayerDeathCount(_currentUser!.handle);
+    }
+
     _gameLogStatus = GameLogStatus(
       latestGameTime: latestTime,
       lastRefreshTime: DateTime.now(),
       missionCompletedCount: missionCount,
+      playerKillCount: killCount,
+      playerDeathCount: deathCount,
+      gamePlayTimeMinutes: gamePlayTime,
     );
     notifyListeners();
   }

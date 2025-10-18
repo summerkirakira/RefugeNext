@@ -114,6 +114,20 @@ String _formatTime(DateTime time) {
   return formatter.format(time);
 }
 
+String _formatGameTime(int minutes) {
+  if (minutes < 60) {
+    return '$minutes 分钟';
+  }
+  final hours = minutes ~/ 60;
+  final mins = minutes % 60;
+  if (hours < 24) {
+    return mins > 0 ? '$hours 小时 $mins 分钟' : '$hours 小时';
+  }
+  final days = hours ~/ 24;
+  final remainHours = hours % 24;
+  return remainHours > 0 ? '$days 天 $remainHours 小时' : '$days 天';
+}
+
 class _UserSimpleInfoState extends State<UserSimpleInfo> {
   @override
   Widget build(BuildContext context) {
@@ -455,16 +469,34 @@ class _GameLogStatusWidgetState extends State<GameLogStatusWidget> {
             children: [
               DetailInfoItem(
                 leading: Icon(Icons.sports_esports_outlined, color: Theme.of(context).iconTheme.color),
-                title: '最近游戏时间',
+                title: '最近上线时间',
                 value: Provider.of<MainDataModel>(context).gameLogStatus?.latestGameTime != null
                     ? _formatTime(Provider.of<MainDataModel>(context).gameLogStatus!.latestGameTime!)
                     : '暂无',
               ),
               SizedBox(height: 10),
               DetailInfoItem(
+                leading: Icon(Icons.access_time, color: Theme.of(context).iconTheme.color),
+                title: '最近游戏时长',
+                value: _formatGameTime(Provider.of<MainDataModel>(context).gameLogStatus?.gamePlayTimeMinutes ?? 0),
+              ),
+              SizedBox(height: 10),
+              DetailInfoItem(
                 leading: Icon(Icons.task_alt_outlined, color: Theme.of(context).iconTheme.color),
                 title: '任务完成数',
                 value: Provider.of<MainDataModel>(context).gameLogStatus?.missionCompletedCount?.toString() ?? '0',
+              ),
+              SizedBox(height: 10),
+              DetailInfoItem(
+                leading: Icon(Icons.gps_fixed, color: Theme.of(context).iconTheme.color),
+                title: '击杀数',
+                value: Provider.of<MainDataModel>(context).gameLogStatus?.playerKillCount?.toString() ?? '0',
+              ),
+              SizedBox(height: 10),
+              DetailInfoItem(
+                leading: Icon(Icons.dangerous_outlined, color: Theme.of(context).iconTheme.color),
+                title: '死亡数',
+                value: Provider.of<MainDataModel>(context).gameLogStatus?.playerDeathCount?.toString() ?? '0',
               ),
             ],
           ),

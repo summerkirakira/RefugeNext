@@ -142,6 +142,7 @@ class LogTypes {
   static const String login = 'Login';  // 登录相关（通用）
   static const String initiateLogin = 'InitiateLogin';  // 发起登录
   static const String asyncLoginCallback = 'AsyncLoginCallback';  // 登录回调
+  static const String accountLoginCharacterStatus = 'AccountLoginCharacterStatus_Character';  // 角色登录状态
   static const String gameVersion = 'Game Version';  // 游戏版本
   static const String physics = 'Physics';  // 物理相关
   static const String error = 'Error';  // 错误

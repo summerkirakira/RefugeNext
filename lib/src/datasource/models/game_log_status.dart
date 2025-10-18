@@ -18,6 +18,15 @@ class GameLogStatus with _$GameLogStatus {
     /// 任务完成数（EndMission日志数量）
     int? missionCompletedCount,
 
+    /// 玩家击杀数（被当前玩家击杀的次数）
+    int? playerKillCount,
+
+    /// 玩家被杀数（当前玩家被杀的次数）
+    int? playerDeathCount,
+
+    /// 两周内游戏时长（分钟）
+    int? gamePlayTimeMinutes,
+
     // 预留字段，方便以后扩展：
     // int? totalLogCount,           // 日志总数
     // String? latestPlayerName,     // 最近游玩的角色名

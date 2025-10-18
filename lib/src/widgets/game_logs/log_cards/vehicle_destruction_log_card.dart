@@ -223,35 +223,35 @@ class VehicleDestructionLogCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Row(
-            children: List.generate(maxLevel, (index) {
-              final level = index + 1;
-              Color barColor;
-
-              if (level <= destroyFrom) {
-                // 之前的伤害等级
-                barColor = Colors.orange.withOpacity(0.3);
-              } else if (level <= destroyTo) {
-                // 新增的伤害等级
-                barColor = Colors.red;
-              } else {
-                // 未达到的等级
-                barColor = Colors.grey.withOpacity(0.2);
-              }
-
-              return Expanded(
-                child: Container(
-                  height: 4,
-                  margin: EdgeInsets.only(right: index < maxLevel - 1 ? 4 : 0),
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              );
-            }),
-          ),
+          // const SizedBox(height: 6),
+          // Row(
+          //   children: List.generate(maxLevel, (index) {
+          //     final level = index + 1;
+          //     Color barColor;
+          //
+          //     if (level <= destroyFrom) {
+          //       // 之前的伤害等级
+          //       barColor = Colors.orange.withOpacity(0.3);
+          //     } else if (level <= destroyTo) {
+          //       // 新增的伤害等级
+          //       barColor = Colors.red;
+          //     } else {
+          //       // 未达到的等级
+          //       barColor = Colors.grey.withOpacity(0.2);
+          //     }
+          //
+          //     return Expanded(
+          //       child: Container(
+          //         height: 4,
+          //         margin: EdgeInsets.only(right: index < maxLevel - 1 ? 4 : 0),
+          //         decoration: BoxDecoration(
+          //           color: barColor,
+          //           borderRadius: BorderRadius.circular(2),
+          //         ),
+          //       ),
+          //     );
+          //   }),
+          // ),
         ],
       ),
     );

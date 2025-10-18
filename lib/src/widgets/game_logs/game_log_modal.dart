@@ -58,6 +58,7 @@ class _GameLogContent extends StatefulWidget {
 
 class _GameLogContentState extends State<_GameLogContent> {
   final List<GameLog> _logs = [];
+  late ScrollController _scrollController;
 
   LogFilter _filter = const LogFilter();
   bool _isLoading = false;
@@ -68,19 +69,25 @@ class _GameLogContentState extends State<_GameLogContent> {
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     _loadInitialLogs();
   }
 
-  bool _onScrollNotification(ScrollNotification notification) {
-    if (notification is ScrollUpdateNotification) {
-      final metrics = notification.metrics;
-      if (metrics.pixels >= metrics.maxScrollExtent - GameLogModal._loadMoreThreshold) {
-        if (!_isLoadingMore && _hasMore) {
-          _loadMoreLogs();
-        }
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - GameLogModal._loadMoreThreshold) {
+      // 当滚动到距离底部200像素时开始加载更多
+      if (_hasMore && !_isLoadingMore) {
+        _loadMoreLogs();
       }
     }
-    return false;
   }
 
   Future<void> _loadInitialLogs() async {
@@ -161,8 +168,8 @@ class _GameLogContentState extends State<_GameLogContent> {
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: _onScrollNotification,
+    return Container(
+      height: 600,
       child: Column(
         children: [
           // 搜索和过滤组件
@@ -174,7 +181,9 @@ class _GameLogContentState extends State<_GameLogContent> {
           const Divider(height: 1),
 
           // 日志列表
-          _buildLogList(),
+          Expanded(
+            child: _buildLogList(),
+          ),
         ],
       ),
     );
@@ -194,38 +203,31 @@ class _GameLogContentState extends State<_GameLogContent> {
       return _buildEmptyState();
     }
 
-    return Column(
-      children: [
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _logs.length + (_isLoadingMore ? 1 : 0) + (!_hasMore && _logs.isNotEmpty ? 1 : 0),
-          itemBuilder: (context, index) {
-            // 加载更多指示器
-            if (index == _logs.length) {
-              if (_isLoadingMore) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              } else if (!_hasMore) {
-                return _buildEndOfList();
-              }
-            }
-
-            // 日志卡片
-            final log = _logs[index];
-            return LogCardFactory.createCard(
-              log,
-              onTap: () => _showLogDetail(context, log),
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: _logs.length + (_isLoadingMore ? 1 : 0) + (!_hasMore && _logs.isNotEmpty ? 1 : 0),
+      itemBuilder: (context, index) {
+        // 加载更多指示器
+        if (index == _logs.length) {
+          if (_isLoadingMore) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
             );
-          },
-        ),
-        // 底部间距，确保列表可以完全滚动
-        const SizedBox(height: 100),
-      ],
+          } else if (!_hasMore) {
+            return _buildEndOfList();
+          }
+        }
+
+        // 日志卡片
+        final log = _logs[index];
+        return LogCardFactory.createCard(
+          log,
+          onTap: () => _showLogDetail(context, log),
+        );
+      },
     );
   }
 

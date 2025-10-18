@@ -430,6 +430,88 @@ class GameLogRepo {
     return result.first['count'] as int;
   }
 
+  // 获取玩家击杀数（content包含"killed by '玩家名'"的日志数量）
+  Future<int> getPlayerKillCount(String playerHandle) async {
+    final db = await DatabaseService.instance.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM game_logs WHERE content LIKE ?',
+      ['%killed by \'$playerHandle\'%'],
+    );
+    return result.first['count'] as int;
+  }
+
+  // 获取玩家被杀数（content包含"<Actor Death> CActor::Kill: '玩家handle'"的日志数量）
+  Future<int> getPlayerDeathCount(String playerHandle) async {
+    final db = await DatabaseService.instance.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM game_logs WHERE content LIKE ?',
+      ['%<Actor Death> CActor::Kill: \'$playerHandle\'%'],
+    );
+    return result.first['count'] as int;
+  }
+
+  // 计算两周内的游戏时长（分钟）
+  Future<int> getGamePlayTimeInTwoWeeks() async {
+    final db = await DatabaseService.instance.database;
+    final now = DateTime.now();
+    final twoWeeksAgo = now.subtract(Duration(days: 14));
+
+    // 查询两周内的登录日志
+    final loginLogs = await db.query(
+      'game_logs',
+      where: 'log_type = ? AND timestamp >= ?',
+      whereArgs: ['AccountLoginCharacterStatus_Character', twoWeeksAgo.millisecondsSinceEpoch],
+      orderBy: 'timestamp ASC',
+    );
+
+    // 查询两周内的退出日志
+    final quitLogs = await db.query(
+      'game_logs',
+      where: 'log_type = ? AND timestamp >= ?',
+      whereArgs: ['SystemQuit', twoWeeksAgo.millisecondsSinceEpoch],
+      orderBy: 'timestamp ASC',
+    );
+
+    if (quitLogs.isEmpty) {
+      return 0; // 没有退出日志，无法计算时长
+    }
+
+    int totalMinutes = 0;
+    int loginIndex = 0;
+    int quitIndex = 0;
+
+    // 边界情况：如果第一条退出日志在第一条登录日志之前（或没有登录日志）
+    // 说明在两周窗口之前就已经登录了，将窗口起始时间作为隐式登录时间
+    if (loginLogs.isEmpty ||
+        (quitLogs.isNotEmpty &&
+         DateTime.fromMillisecondsSinceEpoch(quitLogs[0]['timestamp'] as int)
+           .isBefore(DateTime.fromMillisecondsSinceEpoch(loginLogs[0]['timestamp'] as int)))) {
+      final firstQuitTime = DateTime.fromMillisecondsSinceEpoch(quitLogs[0]['timestamp'] as int);
+      final duration = firstQuitTime.difference(twoWeeksAgo);
+      totalMinutes += duration.inMinutes;
+      quitIndex++; // 跳过已处理的第一个退出日志
+    }
+
+    // 配对登录和退出，计算时间差
+    while (loginIndex < loginLogs.length && quitIndex < quitLogs.length) {
+      final loginTime = DateTime.fromMillisecondsSinceEpoch(loginLogs[loginIndex]['timestamp'] as int);
+      final quitTime = DateTime.fromMillisecondsSinceEpoch(quitLogs[quitIndex]['timestamp'] as int);
+
+      // 如果退出时间在登录时间之后，说明找到了一对
+      if (quitTime.isAfter(loginTime)) {
+        final duration = quitTime.difference(loginTime);
+        totalMinutes += duration.inMinutes;
+        loginIndex++;
+        quitIndex++;
+      } else {
+        // 退出时间在登录时间之前，跳过这个退出日志（理论上不应该出现）
+        quitIndex++;
+      }
+    }
+
+    return totalMinutes;
+  }
+
   // 导出日志到JSON
   Future<String> exportLogsToJson({
     DateTime? startTime,
