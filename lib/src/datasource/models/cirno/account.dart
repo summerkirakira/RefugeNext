@@ -4,16 +4,19 @@
 class AccountRegisterRequest {
   final String email;
   final String password;
+  final String username;
 
   AccountRegisterRequest({
     required this.email,
     required this.password,
+    required this.username,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'email': email,
       'password': password,
+      'username': username,
     };
   }
 }
@@ -68,32 +71,44 @@ class AccountLoginResponse {
 /// 账号绑定的设备信息
 class AccountDeviceInfo {
   final String uuid;
-  final String? createdAt;
-  final double? totalVipSeconds;
-  final int? totalCredit;
+  final String version;
+  final String lastSeen;
+  final String systemModel;
+  final int vipType;
+  final String vipExpire;
+  final int credit;
 
   AccountDeviceInfo({
     required this.uuid,
-    this.createdAt,
-    this.totalVipSeconds,
-    this.totalCredit,
+    required this.version,
+    required this.lastSeen,
+    required this.systemModel,
+    required this.vipType,
+    required this.vipExpire,
+    required this.credit,
   });
 
   factory AccountDeviceInfo.fromJson(Map<String, dynamic> json) {
     return AccountDeviceInfo(
       uuid: json['uuid'] as String,
-      createdAt: json['created_at'] as String?,
-      totalVipSeconds: (json['total_vip_seconds'] as num?)?.toDouble(),
-      totalCredit: json['total_credit'] as int?,
+      version: json['version'] as String,
+      lastSeen: json['last_seen'] as String,
+      systemModel: json['system_model'] as String,
+      vipType: json['vip_type'] as int,
+      vipExpire: json['vip_expire'] as String,
+      credit: json['credit'] as int,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'uuid': uuid,
-      if (createdAt != null) 'created_at': createdAt,
-      if (totalVipSeconds != null) 'total_vip_seconds': totalVipSeconds,
-      if (totalCredit != null) 'total_credit': totalCredit,
+      'version': version,
+      'last_seen': lastSeen,
+      'system_model': systemModel,
+      'vip_type': vipType,
+      'vip_expire': vipExpire,
+      'credit': credit,
     };
   }
 }
@@ -105,6 +120,9 @@ class AccountInfoResponse {
   final double totalVipSeconds;
   final int totalCredit;
   final List<AccountDeviceInfo> devices;
+  final String? username;
+  final String? avatar;
+  final String? extraInfo;
 
   AccountInfoResponse({
     required this.email,
@@ -112,6 +130,9 @@ class AccountInfoResponse {
     required this.totalVipSeconds,
     required this.totalCredit,
     required this.devices,
+    this.username,
+    this.avatar,
+    this.extraInfo,
   });
 
   factory AccountInfoResponse.fromJson(Map<String, dynamic> json) {
@@ -123,6 +144,9 @@ class AccountInfoResponse {
       devices: (json['devices'] as List<dynamic>)
           .map((e) => AccountDeviceInfo.fromJson(e as Map<String, dynamic>))
           .toList(),
+      username: json['username'] as String?,
+      avatar: json['avatar'] as String?,
+      extraInfo: json['extra_info'] as String?,
     );
   }
 
@@ -133,6 +157,9 @@ class AccountInfoResponse {
       'total_vip_seconds': totalVipSeconds,
       'total_credit': totalCredit,
       'devices': devices.map((e) => e.toJson()).toList(),
+      if (username != null) 'username': username,
+      if (avatar != null) 'avatar': avatar,
+      if (extraInfo != null) 'extra_info': extraInfo,
     };
   }
 }
@@ -247,6 +274,64 @@ class GameLogSyncInfoResponse {
       if (latestLogTime != null) 'latest_log_time': latestLogTime,
       'total_logs': totalLogs,
       if (oldestLogTime != null) 'oldest_log_time': oldestLogTime,
+    };
+  }
+}
+
+/// 更新账号详细信息请求
+class UpdateAccountDetailRequest {
+  final String? username;
+  final String? avatar;
+  final String? extraInfo;
+
+  UpdateAccountDetailRequest({
+    this.username,
+    this.avatar,
+    this.extraInfo,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (username != null) 'username': username,
+      if (avatar != null) 'avatar': avatar,
+      if (extraInfo != null) 'extra_info': extraInfo,
+    };
+  }
+}
+
+/// 账号详细信息响应
+class AccountDetailResponse {
+  final String? username;
+  final String? avatar;
+  final String? extraInfo;
+  final String createdAt;
+  final String updatedAt;
+
+  AccountDetailResponse({
+    this.username,
+    this.avatar,
+    this.extraInfo,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory AccountDetailResponse.fromJson(Map<String, dynamic> json) {
+    return AccountDetailResponse(
+      username: json['username'] as String?,
+      avatar: json['avatar'] as String?,
+      extraInfo: json['extra_info'] as String?,
+      createdAt: json['created_at'] as String,
+      updatedAt: json['updated_at'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (username != null) 'username': username,
+      if (avatar != null) 'avatar': avatar,
+      if (extraInfo != null) 'extra_info': extraInfo,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }
 }

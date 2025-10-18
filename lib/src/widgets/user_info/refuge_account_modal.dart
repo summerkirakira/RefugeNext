@@ -4,12 +4,15 @@ import '../../network/cirno/cirno_api.dart';
 import '../../funcs/toast.dart';
 
 /// 显示避难所账号登录/注册 Modal
-void showRefugeAccountModal(BuildContext context) {
+void showRefugeAccountModal(
+  BuildContext context, {
+  VoidCallback? onLoginSuccess,
+}) {
   WoltModalSheet.show<void>(
     context: context,
     pageListBuilder: (modalSheetContext) {
       return [
-        getRefugeAccountPage(modalSheetContext, context),
+        getRefugeAccountPage(modalSheetContext, context, onLoginSuccess),
       ];
     },
   );
@@ -19,6 +22,7 @@ void showRefugeAccountModal(BuildContext context) {
 WoltModalSheetPage getRefugeAccountPage(
   BuildContext modalSheetContext,
   BuildContext mainContext,
+  VoidCallback? onLoginSuccess,
 ) {
   return WoltModalSheetPage(
     hasSabGradient: false,
@@ -50,12 +54,16 @@ WoltModalSheetPage getRefugeAccountPage(
         onPressed: Navigator.of(modalSheetContext).pop,
       ),
     ),
-    child: RefugeAccountWidget(),
+    child: RefugeAccountWidget(onLoginSuccess: onLoginSuccess),
   );
 }
 
 /// 避难所账号 Widget
 class RefugeAccountWidget extends StatefulWidget {
+  final VoidCallback? onLoginSuccess;
+
+  const RefugeAccountWidget({Key? key, this.onLoginSuccess}) : super(key: key);
+
   @override
   _RefugeAccountWidgetState createState() => _RefugeAccountWidgetState();
 }
@@ -71,6 +79,7 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
   bool _isLoginLoading = false;
 
   // 注册表单
+  final _registerUsernameController = TextEditingController();
   final _registerEmailController = TextEditingController();
   final _registerPasswordController = TextEditingController();
   final _registerConfirmPasswordController = TextEditingController();
@@ -89,6 +98,7 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
     _tabController.dispose();
     _loginEmailController.dispose();
     _loginPasswordController.dispose();
+    _registerUsernameController.dispose();
     _registerEmailController.dispose();
     _registerPasswordController.dispose();
     _registerConfirmPasswordController.dispose();
@@ -138,6 +148,9 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
 
       showToast(message: "登录成功！");
 
+      // 调用回调刷新父页面
+      widget.onLoginSuccess?.call();
+
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -154,13 +167,19 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
 
   /// 注册处理
   Future<void> _handleRegister() async {
+    final username = _registerUsernameController.text.trim();
     final email = _registerEmailController.text.trim();
     final password = _registerPasswordController.text;
     final confirmPassword = _registerConfirmPasswordController.text;
 
     // 验证
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       showToast(message: "请填写所有字段");
+      return;
+    }
+
+    if (username.length < 2) {
+      showToast(message: "用户名长度至少为 2 位");
       return;
     }
 
@@ -188,6 +207,7 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
       await CirnoApiClient().registerAccount(
         email: email,
         password: password,
+        username: username,
       );
 
       showToast(message: "注册成功！请登录");
@@ -197,6 +217,7 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
       _tabController.animateTo(0);
 
       // 清空注册表单
+      _registerUsernameController.clear();
       _registerEmailController.clear();
       _registerPasswordController.clear();
       _registerConfirmPasswordController.clear();
@@ -377,6 +398,21 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
             ),
           ),
           SizedBox(height: 20),
+
+          // 用户名输入框
+          TextField(
+            controller: _registerUsernameController,
+            decoration: InputDecoration(
+              labelText: '用户名',
+              hintText: '至少 2 位',
+              prefixIcon: Icon(Icons.person_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 15),
 
           // 邮箱输入框
           TextField(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../network/cirno/cirno_api.dart';
 import '../../datasource/models/cirno/account.dart';
 import '../../funcs/toast.dart';
@@ -18,6 +19,7 @@ class RefugeAccountDetailPage extends StatefulWidget {
 class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
   bool _isLoading = true;
   AccountInfoResponse? _accountInfo;
+  AccountDetailResponse? _accountDetail;
   String? _errorMessage;
 
   @override
@@ -34,10 +36,16 @@ class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
     });
 
     try {
-      final accountInfo = await CirnoApiClient().getAccountInfo();
+      // 同时加载账户信息和账户详情
+      final results = await Future.wait([
+        CirnoApiClient().getAccountInfo(),
+        CirnoApiClient().getAccountDetail(),
+      ]);
+
       if (mounted) {
         setState(() {
-          _accountInfo = accountInfo;
+          _accountInfo = results[0] as AccountInfoResponse;
+          _accountDetail = results[1] as AccountDetailResponse;
           _isLoading = false;
         });
       }
@@ -99,7 +107,7 @@ class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
   }
 
   /// 解绑设备
-  Future<void> _unbindDevice(String deviceUuid) async {
+Future<void> _unbindDevice(String deviceUuid) async {
     try {
       await CirnoApiClient().unbindDevice(deviceUuid);
       showToast(message: "设备解绑成功");
@@ -148,11 +156,122 @@ class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
     }
   }
 
+  /// 显示编辑用户名对话框
+  Future<void> _showEditUsernameDialog() async {
+    final currentUsername = _accountDetail?.username ?? '';
+    final controller = TextEditingController(text: currentUsername);
+
+    final newUsername = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('修改用户名'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: '请输入用户名',
+            helperText: '至少 2 个字符',
+          ),
+          maxLength: 20,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              final username = controller.text.trim();
+              if (username.isEmpty) {
+                showToast(message: "用户名不能为空");
+                return;
+              }
+              if (username.length < 2) {
+                showToast(message: "用户名至少 2 个字符");
+                return;
+              }
+              Navigator.pop(context, username);
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (newUsername != null && newUsername != currentUsername) {
+      await _updateUsername(newUsername);
+    }
+  }
+
+  /// 更新用户名
+  Future<void> _updateUsername(String username) async {
+    try {
+      await CirnoApiClient().updateAccountDetail(username: username);
+      showToast(message: "用户名更新成功");
+      await _loadAccountInfo();
+    } catch (e) {
+      showToast(message: "更新失败: ${e.toString()}");
+    }
+  }
+
+  /// 显示头像选项
+  Future<void> _showAvatarOptions() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('选择图片'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUploadAvatar();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('取消'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 选择并上传头像
+  Future<void> _pickAndUploadAvatar() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+
+      final filePath = result.files.single.path;
+      if (filePath == null) {
+        showToast(message: "无法获取文件路径");
+        return;
+      }
+
+      // 显示上传中提示
+      showToast(message: "正在上传头像...");
+
+      await CirnoApiClient().uploadAvatar(filePath);
+      showToast(message: "头像上传成功");
+      await _loadAccountInfo();
+    } catch (e) {
+      showToast(message: "上传失败: ${e.toString()}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).colorScheme.inverseSurface.withOpacity(0.05),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('避难所账号详情'),
         centerTitle: true,
@@ -210,10 +329,65 @@ class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // 头像显示区域
+          Center(
+            child: GestureDetector(
+              onTap: _accountDetail != null ? _showAvatarOptions : null,
+              child: _accountDetail == null
+                  ? CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey[300],
+                      child: const CircularProgressIndicator(),
+                    )
+                  : Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _accountDetail!.avatar != null
+                              ? NetworkImage(_accountDetail!.avatar!)
+                              : null,
+                          backgroundColor: Colors.grey[300],
+                          child: _accountDetail!.avatar == null
+                              ? Icon(Icons.person, size: 50, color: Colors.grey[600])
+                              : null,
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           // 账户基本信息
           SettingsGroup(
             settingsGroupTitle: "账户信息",
             items: [
+              // 用户名
+              SettingsItem(
+                onTap: _accountDetail != null ? _showEditUsernameDialog : null,
+                icons: Icons.person_outlined,
+                iconStyle: IconStyle(
+                  iconsColor: Colors.white,
+                  withBackground: true,
+                  backgroundColor: Colors.deepPurple,
+                ),
+                title: "用户名",
+                subtitle: _accountDetail == null
+                    ? "加载中..."
+                    : (_accountDetail!.username ?? "未设置"),
+                trailing: _accountDetail != null
+                    ? const Icon(Icons.edit, color: Colors.grey, size: 20)
+                    : null,
+              ),
               SettingsItem(
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: _accountInfo!.email));
@@ -247,7 +421,7 @@ class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
                   withBackground: true,
                   backgroundColor: Colors.orange,
                 ),
-                title: "VIP 剩余",
+                title: "避难所 Premium",
                 subtitle: "$vipDays 天",
               ),
               SettingsItem(

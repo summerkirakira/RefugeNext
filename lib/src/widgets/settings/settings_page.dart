@@ -21,32 +21,7 @@ import '../game_logs/game_log_modal.dart';
 import '../user_info/refuge_account_modal.dart';
 import '../user_info/refuge_account_detail_page.dart';
 import '../../repo/refuge_account.dart';
-
-
-Color cardBackgroundColor(BuildContext context) {
-
-  final isVip = Provider.of<MainDataModel>(context).isVIP;
-
-  if (!isVip) {
-    return Colors.grey[400]!;
-  }
-
-  final isDarkMode = Provider.of<MainDataModel>(context).isDarkMode;
-  if (isDarkMode) {
-    return Theme.of(context).primaryColorDark;
-  } else {
-    return Theme.of(context).primaryColor;
-  }
-}
-
-int getRemainingDays(int remainingTime) {
-
-  final days = remainingTime ~/ 86400;
-
-  // 将差异转换为天数并返回
-  return days;
-}
-
+import '../../datasource/models/cirno/account.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -62,6 +37,8 @@ class _SettingsPageState extends State<SettingsPage> {
   String version = "loading...";
   DateTime? _lastTapTime;
   int _tapCount = 0;
+  AccountInfoResponse? _refugeAccountInfo;
+  bool _isLoadingRefugeAccount = true;
 
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -71,19 +48,38 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  String getUserNameString(BuildContext context) {
-    if (Provider.of<MainDataModel>(context).currentUser == null) {
-      return "未登录";
+  void _loadRefugeAccountInfo() async {
+    final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
+    if (isLoggedIn) {
+      try {
+        final accountInfo = await CirnoApiClient().getAccountInfo();
+        if (mounted) {
+          setState(() {
+            _refugeAccountInfo = accountInfo;
+            _isLoadingRefugeAccount = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoadingRefugeAccount = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoadingRefugeAccount = false;
+        });
+      }
     }
-    final handle = Provider.of<MainDataModel>(context).currentUser!.handle;
-    final nickName = Provider.of<MainDataModel>(context).currentUser!.name;
-    return "$handle\n$nickName";
   }
 
   Future<void> selectGameDirectory(BuildContext context) async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
       dialogTitle: '选择Star Citizen游戏目录',
     );
+
 
     if (selectedDirectory != null) {
       if (!GameLogService.isValidGameDirectory(selectedDirectory)) {
@@ -110,46 +106,123 @@ class _SettingsPageState extends State<SettingsPage> {
 
 
   Widget getUserCard(BuildContext context) {
+    // 使用全局订阅状态判断背景色（不依赖避难所账号登录）
+    final isVip = Provider.of<MainDataModel>(context).isVIP;
 
-    final userNameString = getUserNameString(context);
+    // 根据登录状态显示不同的用户名
+    String userName;
+    String cardTitle;
+    String cardSubtitle;
+    VoidCallback? cardOnTap;
 
-    final imageUrl = Provider.of<MainDataModel>(context).currentUser?.profileImage ??
-        "https://cdn.robertsspaceindustries.com/static/images/account/avatar_default_big.jpg";
+    if (_refugeAccountInfo == null) {
+      // 未登录避难所账号
+      userName = "未登录QAQ";
+      cardTitle = isVip ? "避难所Premium生效中" : "避难所Premium已失效...";
+      cardSubtitle = "点此登录或获取订阅";
+      cardOnTap = () async {
+        Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      };
+    } else {
+      // 已登录避难所账号
+      userName = _refugeAccountInfo!.username ?? "未设置用户名";
+      final vipDays = (_refugeAccountInfo!.totalVipSeconds / 86400).floor();
+      final credit = _refugeAccountInfo!.totalCredit;
 
-    final userProfilePic = AssetImage("assets/images/user_profile_pic.jpeg");
-    final title = Provider.of<MainDataModel>(context).isVIP ? "避难所Premium生效中" : "避难所Premium已失效...";
-    String subtitle = "点此获取订阅";
-    if (Provider.of<MainDataModel>(context).isVIP) {
-      final remainingDays = getRemainingDays(Provider.of<MainDataModel>(context).property?.vipExpire ?? 0);
-      final token = Provider.of<MainDataModel>(context).property?.credit ?? 0;
-      subtitle = "订阅剩余 $remainingDays 天 | $token";
+      cardTitle = isVip ? "避难所Premium生效中" : "避难所Premium已失效...";
+      // cardSubtitle = "绑定邮箱: ${_refugeAccountInfo!.email}\n订阅剩余 $vipDays 天 | 积分$credit";
+      cardSubtitle = "订阅剩余 $vipDays 天 | $credit";
+      cardOnTap = () async {
+        Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      };
     }
 
+    // 计算卡片背景色
+    Color backgroundColor;
+    if (!isVip) {
+      backgroundColor = Colors.grey[400]!;
+    } else {
+      final isDarkMode = Provider.of<MainDataModel>(context).isDarkMode;
+      backgroundColor = isDarkMode
+          ? Theme.of(context).primaryColorDark
+          : Theme.of(context).primaryColor;
+    }
+
+    // 根据是否有头像选择显示方式
+    ImageProvider userProfilePic;
+    if (_refugeAccountInfo?.avatar != null && _refugeAccountInfo!.avatar!.isNotEmpty) {
+      userProfilePic = CachedNetworkImageProvider(
+        _refugeAccountInfo!.avatar!,
+        scale: 0.5,
+      );
+    } else {
+      userProfilePic = const AssetImage("assets/images/cirno_avatar.jpeg");
+    }
 
     return Stack(
       children: [
         BigUserCard(
-          // cardColor: Colors.red,
-          backgroundColor: cardBackgroundColor(context),
-          userName: userNameString,
+          backgroundColor: backgroundColor,
+          userName: userName,
+          userMoreInfo: GestureDetector(
+            onTap: () async {
+              final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
+              if (isLoggedIn) {
+                // 已登录，跳转到账号详情页
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const RefugeAccountDetailPage(),
+                  ),
+                );
+              } else {
+                // 未登录，显示登录页
+                showRefugeAccountModal(
+                  context,
+                  onLoginSuccess: () {
+                    _loadRefugeAccountInfo();
+                  },
+                );
+              }
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _refugeAccountInfo == null
+                      ? "点击登录避难所账号"
+                      : "管理避难所账号",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 12,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
           userProfilePic: userProfilePic,
           cardActionWidget: SettingsItem(
             icons: Icons.edit,
             iconStyle: IconStyle(
               withBackground: true,
               borderRadius: 50,
-              backgroundColor: cardBackgroundColor(context),
+              backgroundColor: backgroundColor,
             ),
-            title: title,
-            subtitle: subtitle,
-            onTap: () async {
-              Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            },
+            title: cardTitle,
+            subtitle: cardSubtitle,
+            onTap: cardOnTap,
           ),
         ),
-        if (Theme.of(context).platform == TargetPlatform.macOS || 
-            Theme.of(context).platform == TargetPlatform.windows || 
+        if (Theme.of(context).platform == TargetPlatform.macOS ||
+            Theme.of(context).platform == TargetPlatform.windows ||
             Theme.of(context).platform == TargetPlatform.linux)
           Positioned(
             left: 0,
@@ -171,6 +244,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     getVersion();
+    _loadRefugeAccountInfo();
   }
 
   @override
@@ -179,10 +253,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
       body: Container(
         color: Theme.of(context).colorScheme.inverseSurface.withOpacity(0.05),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: ListView(
-            children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: ListView(
+                children: [
               getUserCard(context),
               SettingsGroup(
                 // backgroundColor: Theme.of(context).cardColor,
@@ -290,24 +367,24 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ],
               ),
-              // 游戏设置 - 仅Windows显示
-              if (Platform.isWindows)
-                SettingsGroup(
-                  settingsGroupTitle: "游戏",
-                  items: [
-                    SettingsItem(
-                      onTap: () async {
-                        await selectGameDirectory(context);
-                      },
-                      icons: Icons.folder_rounded,
-                      iconStyle: IconStyle(
-                        iconsColor: Colors.white,
-                        withBackground: true,
-                        backgroundColor: Colors.orange,
+              // 游戏设置
+              SettingsGroup(
+                settingsGroupTitle: "游戏",
+                items: [
+                    if (Platform.isWindows)
+                      SettingsItem(
+                        onTap: () async {
+                          await selectGameDirectory(context);
+                        },
+                        icons: Icons.folder_rounded,
+                        iconStyle: IconStyle(
+                          iconsColor: Colors.white,
+                          withBackground: true,
+                          backgroundColor: Colors.orange,
+                        ),
+                        title: '游戏目录',
+                        subtitle: Provider.of<MainDataModel>(context).gameDirectory ?? "未设置",
                       ),
-                      title: '游戏目录',
-                      subtitle: Provider.of<MainDataModel>(context).gameDirectory ?? "未设置",
-                    ),
                     // SettingsItem(
                     //   onTap: () async {
                     //     await autoFindGameDirectory(context);
@@ -321,26 +398,27 @@ class _SettingsPageState extends State<SettingsPage> {
                     //   title: '自动查找游戏目录',
                     //   subtitle: "自动搜索常见安装位置",
                     // ),
-                    SettingsItem(
-                      onTap: () async {
-                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
-                        if (dataModel.gameDirectory == null) {
-                          showToast(message: "请先设置游戏目录");
-                          return;
-                        }
+                    if (Platform.isWindows)
+                      SettingsItem(
+                        onTap: () async {
+                          final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                          if (dataModel.gameDirectory == null) {
+                            showToast(message: "请先设置游戏目录");
+                            return;
+                          }
 
-                        // 调用合并后的导入方法
-                        await dataModel.importAllGameLogs();
-                      },
-                      icons: Icons.file_download_rounded,
-                      iconStyle: IconStyle(
-                        iconsColor: Colors.white,
-                        withBackground: true,
-                        backgroundColor: Colors.indigo,
+                          // 调用合并后的导入方法
+                          await dataModel.importAllGameLogs();
+                        },
+                        icons: Icons.file_download_rounded,
+                        iconStyle: IconStyle(
+                          iconsColor: Colors.white,
+                          withBackground: true,
+                          backgroundColor: Colors.indigo,
+                        ),
+                        title: '导入游戏日志',
+                        subtitle: "导入当前日志&历史日志",
                       ),
-                      title: '导入游戏日志',
-                      subtitle: "导入当前日志&历史日志",
-                    ),
                     SettingsItem(
                       onTap: () {
                         GameLogModal.show(context);
@@ -370,28 +448,29 @@ class _SettingsPageState extends State<SettingsPage> {
                     //   title: '清理旧日志',
                     //   subtitle: "清理30天前的游戏日志",
                     // ),
-                    SettingsItem(
-                      onTap: () async {
-                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
-                        final processedCount = await dataModel.gameLogRepo.getProcessedFileCount();
+                    if (Platform.isWindows)
+                      SettingsItem(
+                        onTap: () async {
+                          final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                          final processedCount = await dataModel.gameLogRepo.getProcessedFileCount();
 
-                        if (processedCount == 0) {
-                          showToast(message: "当前没有已处理的历史日志记录");
-                          return;
-                        }
+                          if (processedCount == 0) {
+                            showToast(message: "当前没有已处理的历史日志记录");
+                            return;
+                          }
 
-                        await dataModel.gameLogRepo.clearProcessedFiles();
-                        showToast(message: "已清空 $processedCount 个历史日志文件的处理记录\n下次导入时将重新处理所有历史日志");
-                      },
-                      icons: Icons.refresh_rounded,
-                      iconStyle: IconStyle(
-                        iconsColor: Colors.white,
-                        withBackground: true,
-                        backgroundColor: Colors.deepPurple,
+                          await dataModel.gameLogRepo.clearProcessedFiles();
+                          showToast(message: "已清空 $processedCount 个历史日志文件的处理记录\n下次导入时将重新处理所有历史日志");
+                        },
+                        icons: Icons.refresh_rounded,
+                        iconStyle: IconStyle(
+                          iconsColor: Colors.white,
+                          withBackground: true,
+                          backgroundColor: Colors.deepPurple,
+                        ),
+                        title: '重置处理记录',
+                        subtitle: "清空历史日志处理记录，下次将重新导入所有历史日志",
                       ),
-                      title: '重置处理记录',
-                      subtitle: "清空历史日志处理记录，下次将重新导入所有历史日志",
-                    ),
                     // SettingsItem(
                     //   onTap: () async {
                     //     final dataModel = Provider.of<MainDataModel>(context, listen: false);
@@ -419,32 +498,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 settingsGroupTitle: "关于",
                 items: [
                   SettingsItem(
-                    onTap: () async {
-                      // 检查是否已登录
-                      final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
-
-                      if (isLoggedIn) {
-                        // 已登录，导航到账户详情页面
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const RefugeAccountDetailPage(),
-                          ),
-                        );
-                      } else {
-                        // 未登录，显示登录/注册 Modal
-                        showRefugeAccountModal(context);
-                      }
-                    },
-                    icons: Icons.cloud_outlined,
-                    iconStyle: IconStyle(
-                      iconsColor: Colors.white,
-                      withBackground: true,
-                      backgroundColor: Colors.blueAccent,
-                    ),
-                    title: "避难所账号",
-                    subtitle: "登录/注册避难所账号（测试）",
-                  ),
-                  SettingsItem(
                     onTap: () {
                       // copy group id to clipboard
                       Clipboard.setData(ClipboardData(text: "689970313"));
@@ -457,13 +510,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   SettingsItem(
                     onTap: () async {
                       final now = DateTime.now();
-                      if (_lastTapTime == null || 
+                      if (_lastTapTime == null ||
                           now.difference(_lastTapTime!).inMilliseconds > 2000) {
                         _tapCount = 0;
                       }
                       _lastTapTime = now;
                       _tapCount++;
-                      
+
                       if (_tapCount >= 7) {
                         if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
                           // showVipAlert(context: context);
@@ -520,6 +573,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:refuge_next/src/datasource/models/cirno/promote_property.dart';
 import '../../datasource/models/cirno/upgrade_path.dart';
 import '../../datasource/models/cirno/upgrade_response.dart';
@@ -126,10 +127,12 @@ class CirnoApiClient {
   Future<void> registerAccount({
     required String email,
     required String password,
+    required String username,
   }) async {
     final request = AccountRegisterRequest(
       email: email,
       password: password,
+      username: username,
     );
     await basicPost(endpoint: 'account/register', data: request.toJson());
   }
@@ -173,6 +176,70 @@ class CirnoApiClient {
   Future<void> unbindDevice(String uuid) async {
     // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
     await _dio.delete("${baseUrl}account/unbind/$uuid");
+  }
+
+  /// 获取账号详细信息
+  Future<AccountDetailResponse> getAccountDetail() async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    final response = await _dio.get("${baseUrl}account/detail");
+    return AccountDetailResponse.fromJson(response.data);
+  }
+
+  /// 更新账号详细信息
+  Future<void> updateAccountDetail({
+    String? username,
+    String? avatar,
+    String? extraInfo,
+  }) async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+    final request = UpdateAccountDetailRequest(
+      username: username,
+      avatar: avatar,
+      extraInfo: extraInfo,
+    );
+    await _dio.put(
+      "${baseUrl}account/detail",
+      data: request.toJson(),
+    );
+  }
+
+  /// 上传头像图片
+  Future<void> uploadAvatar(String filePath) async {
+    // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
+
+    // 根据文件扩展名确定 MIME 类型
+    String? contentType;
+    final extension = filePath.toLowerCase().split('.').last;
+
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case 'png':
+        contentType = 'image/png';
+        break;
+      case 'gif':
+        contentType = 'image/gif';
+        break;
+      case 'webp':
+        contentType = 'image/webp';
+        break;
+      default:
+        throw Exception('不支持的图片格式: .$extension\n仅支持: jpg, jpeg, png, gif, webp');
+    }
+
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        filePath,
+        contentType: MediaType.parse(contentType),
+      ),
+    });
+
+    await _dio.post(
+      "${baseUrl}account/upload-avatar",
+      data: formData,
+    );
   }
 
   /// 批量添加游戏日志

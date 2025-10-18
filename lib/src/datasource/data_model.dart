@@ -645,6 +645,18 @@ class MainDataModel extends ChangeNotifier {
 
   // 导入所有游戏日志（当前日志 + 未处理的历史日志）
   Future<Map<String, int>> importAllGameLogs() async {
+    // 非Windows平台静默跳过（游戏只在Windows上运行）
+    if (!Platform.isWindows) {
+      return {
+        'current_inserted': 0,
+        'current_skipped': 0,
+        'historical_files': 0,
+        'historical_inserted': 0,
+        'historical_skipped': 0,
+        'skipped_processed_files': 0,
+      };
+    }
+
     if (_gameDirectory == null) {
       showToast(message: "请先设置游戏目录");
       return {
