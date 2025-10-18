@@ -97,10 +97,26 @@ class _BuybackPageState extends State<BuybackPage> {
                   child: ListView.builder(
                     controller: _buybackScrollController,
                     padding: const EdgeInsets.all(0),
-                    itemCount: Provider.of<MainDataModel>(context).buybackItems.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: Provider.of<MainDataModel>(context).buybackItems.isEmpty
+                        ? 1
+                        : Provider.of<MainDataModel>(context).buybackItems.length,
                     itemBuilder: (context, index) {
+                      final buybackItems = Provider.of<MainDataModel>(context).buybackItems;
+
+                      if (buybackItems.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Center(
+                            child: Text('下拉刷新回购数据~',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        );
+                      }
+
                       return BuybackItemWidget(
-                        buybackItem: Provider.of<MainDataModel>(context).buybackItems[index],
+                        buybackItem: buybackItems[index],
                       );
                     },
                   )
