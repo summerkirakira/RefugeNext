@@ -237,6 +237,13 @@ class MainDataModel extends ChangeNotifier {
     return property!.isVip;
   }
 
+  /// 刷新VIP订阅状态
+  Future<void> refreshVipStatus() async {
+    final cirnoAuth = await CirnoAuth.getInstance();
+    await cirnoAuth.refreshProperty();
+    notifyListeners();
+  }
+
 
   MainDataModel() {
     initUser();

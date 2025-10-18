@@ -39,6 +39,7 @@ class _SettingsPageState extends State<SettingsPage> {
   int _tapCount = 0;
   AccountInfoResponse? _refugeAccountInfo;
   bool _isLoadingRefugeAccount = true;
+  bool _isRefreshing = false;
 
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -70,6 +71,42 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         setState(() {
           _isLoadingRefugeAccount = false;
+        });
+      }
+    }
+  }
+
+  /// 刷新VIP订阅状态和账户信息
+  Future<void> _refreshVipAndAccount() async {
+    if (_isRefreshing) return;
+
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      // 刷新VIP订阅状态
+      if (!mounted) return;
+      await Provider.of<MainDataModel>(context, listen: false).refreshVipStatus();
+
+      // 刷新避难所账户信息
+      final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
+      if (isLoggedIn) {
+        final accountInfo = await CirnoApiClient().getAccountInfo();
+        if (mounted) {
+          setState(() {
+            _refugeAccountInfo = accountInfo;
+          });
+        }
+      }
+
+      showToast(message: "订阅状态已刷新");
+  } catch (e) {
+      showToast(message: "刷新失败: ${e.toString()}");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
         });
       }
     }
@@ -234,6 +271,25 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
           ),
+        // 刷新按钮
+        Positioned(
+          right: 0,
+          top: 0,
+          child: IconButton(
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.refresh, color: Colors.white),
+            tooltip: "刷新订阅状态",
+            onPressed: _isRefreshing ? null : _refreshVipAndAccount,
+          ),
+        ),
       ],
     );
   }

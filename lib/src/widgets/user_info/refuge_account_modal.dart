@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:provider/provider.dart';
 import '../../network/cirno/cirno_api.dart';
 import '../../funcs/toast.dart';
+import '../../datasource/data_model.dart';
 
 /// 显示避难所账号登录/注册 Modal
 void showRefugeAccountModal(
@@ -54,15 +56,23 @@ WoltModalSheetPage getRefugeAccountPage(
         onPressed: Navigator.of(modalSheetContext).pop,
       ),
     ),
-    child: RefugeAccountWidget(onLoginSuccess: onLoginSuccess),
+    child: RefugeAccountWidget(
+      onLoginSuccess: onLoginSuccess,
+      mainContext: mainContext,
+    ),
   );
 }
 
 /// 避难所账号 Widget
 class RefugeAccountWidget extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
+  final BuildContext mainContext;
 
-  const RefugeAccountWidget({Key? key, this.onLoginSuccess}) : super(key: key);
+  const RefugeAccountWidget({
+    Key? key,
+    this.onLoginSuccess,
+    required this.mainContext,
+  }) : super(key: key);
 
   @override
   _RefugeAccountWidgetState createState() => _RefugeAccountWidgetState();
@@ -144,6 +154,14 @@ class _RefugeAccountWidgetState extends State<RefugeAccountWidget>
       } catch (e) {
         // 绑定失败不影响登录
         print('绑定设备失败: $e');
+      }
+
+      // 刷新VIP订阅状态（使用主应用context）
+      try {
+        await Provider.of<MainDataModel>(widget.mainContext, listen: false).refreshVipStatus();
+      } catch (e) {
+        // 刷新订阅状态失败不影响登录
+        print('刷新订阅状态失败: $e');
       }
 
       showToast(message: "登录成功！");

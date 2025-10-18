@@ -204,7 +204,7 @@ class CirnoApiClient {
   }
 
   /// 上传头像图片
-  Future<void> uploadAvatar(String filePath) async {
+  Future<Map<String, dynamic>> uploadAvatar(String filePath) async {
     // 此接口依赖 JWT，会自动从拦截器中添加 Authorization header
 
     // 根据文件扩展名确定 MIME 类型
@@ -236,10 +236,12 @@ class CirnoApiClient {
       ),
     });
 
-    await _dio.post(
+    final response = await _dio.post(
       "${baseUrl}account/upload-avatar",
       data: formData,
     );
+
+    return response.data as Map<String, dynamic>;
   }
 
   /// 批量添加游戏日志

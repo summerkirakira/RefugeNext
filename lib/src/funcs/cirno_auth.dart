@@ -104,6 +104,11 @@ class CirnoAuth {
     _property = property;
   }
 
+  /// 刷新订阅状态和配置信息
+  Future<void> refreshProperty() async {
+    await getRefugeVersion();
+  }
+
   String get uuid => _uuid;
 
   RefugeVersionProperty? get property => _property;

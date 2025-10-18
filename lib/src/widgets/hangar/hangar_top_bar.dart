@@ -12,6 +12,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
+import '../game_logs/game_log_modal.dart';
 
 class HangarTopBar extends StatefulWidget {
   final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
@@ -82,18 +83,24 @@ class _HangarTopBarState extends State<HangarTopBar> {
                           },
                           icon: const Icon(Icons.refresh),
                         ),
+                      // IconButton(
+                      //   onPressed: () async {
+                      //     WoltModalSheet.show<void>(
+                      //         context: context,
+                      //         pageListBuilder: (modalSheetContext) {
+                      //           return [
+                      //             getHangarExportPage(
+                      //                 modalSheetContext, context)
+                      //           ];
+                      //         });
+                      //   },
+                      //   icon: const Icon(Icons.file_download_outlined),
+                      // ),
                       IconButton(
-                        onPressed: () async {
-                          WoltModalSheet.show<void>(
-                              context: context,
-                              pageListBuilder: (modalSheetContext) {
-                                return [
-                                  getHangarExportPage(
-                                      modalSheetContext, context)
-                                ];
-                              });
+                        onPressed: () {
+                          GameLogModal.show(context);
                         },
-                        icon: const Icon(Icons.file_download_outlined),
+                        icon: const Icon(Icons.games_outlined),
                       ),
                       IconButton(onPressed: () {
                         WoltModalSheet.show<void>(

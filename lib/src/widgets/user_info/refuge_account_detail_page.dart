@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import '../../network/cirno/cirno_api.dart';
 import '../../datasource/models/cirno/account.dart';
 import '../../funcs/toast.dart';
 import '../../funcs/cirno_auth.dart';
+import '../../datasource/data_model.dart';
 
 /// 避难所账户详情页面
 class RefugeAccountDetailPage extends StatefulWidget {
@@ -36,6 +38,11 @@ class _RefugeAccountDetailPageState extends State<RefugeAccountDetailPage> {
     });
 
     try {
+      // 刷新VIP订阅状态
+      if (mounted) {
+        await Provider.of<MainDataModel>(context, listen: false).refreshVipStatus();
+      }
+
       // 同时加载账户信息和账户详情
       final results = await Future.wait([
         CirnoApiClient().getAccountInfo(),
@@ -146,8 +153,33 @@ Future<void> _unbindDevice(String deviceUuid) async {
   /// 登出
   Future<void> _logout() async {
     try {
+      // 先解绑当前设备
+      final currentUuid = CirnoAuth.instance?.uuid;
+      if (currentUuid != null) {
+        try {
+          showToast(message: "正在解绑设备...");
+          await CirnoApiClient().unbindDevice(currentUuid);
+        } catch (unbindError) {
+          // 解绑失败不阻止登出，但提示用户
+          print('Failed to unbind device: $unbindError');
+          showToast(message: "设备解绑失败，但将继续登出");
+        }
+      }
+
+      // 清除本地登录信息
       await CirnoApiClient().logout();
-      showToast(message: "已登出");
+
+      // 刷新VIP订阅状态
+      if (mounted) {
+        try {
+          await Provider.of<MainDataModel>(context, listen: false).refreshVipStatus();
+        } catch (e) {
+          // 刷新订阅状态失败不影响登出
+          print('刷新订阅状态失败: $e');
+        }
+      }
+
+      showToast(message: "已解绑设备并登出");
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -260,8 +292,9 @@ Future<void> _unbindDevice(String deviceUuid) async {
       // 显示上传中提示
       showToast(message: "正在上传头像...");
 
-      await CirnoApiClient().uploadAvatar(filePath);
-      showToast(message: "头像上传成功");
+      final response = await CirnoApiClient().uploadAvatar(filePath);
+      final message = response['message'] as String? ?? "头像上传成功";
+      showToast(message: message);
       await _loadAccountInfo();
     } catch (e) {
       showToast(message: "上传失败: ${e.toString()}");
