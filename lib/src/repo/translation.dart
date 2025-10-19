@@ -22,6 +22,13 @@ class TranslationRepo {
 
   bool _translationEnabled = true;
 
+  // 游戏内载具特殊标记翻译映射表
+  static const Map<String, String> _inGameVehicleTagTranslations = {
+    'PU': 'PU',
+    'AI': 'AI',
+    'CRIM': '罪犯',
+  };
+
   bool get translationEnabled => _translationEnabled;
 
   void setTranslationEnabled(bool enabled) {
@@ -175,6 +182,96 @@ class TranslationRepo {
       return;
     }
     await CirnoApiClient().uploadNotTranslatedTexts(_notTranslated);
+  }
+
+  /// 翻译游戏内部载具名称
+  ///
+  /// 将游戏内载具名称格式（如：AEGS_Gladius_PU_AI_CRIM_6621815970438）
+  /// 翻译为易读的中文格式（如：短剑[PU][罪犯][AI]）
+  ///
+  /// 处理流程：
+  /// 1. 移除尾部数字（如 _6621815970438）
+  /// 2. 移除头部厂商名（第一个_之前的部分）
+  /// 3. 识别并提取特殊标记（PU, AI, CRIM等）
+  /// 4. 主体名称下划线转空格后进行翻译
+  /// 5. 组合为：主体名称[标记1][标记2]...
+  String translateInGameVehicleName(String vehicleName) {
+    if (!_translationEnabled) {
+      return vehicleName;
+    }
+
+    if (vehicleName.isEmpty) {
+      return vehicleName;
+    }
+
+    // 步骤1: 移除尾部数字（格式：_数字）
+    String processed = vehicleName.replaceAll(RegExp(r'_\d+$'), '');
+
+    // 步骤2: 移除头部厂商名（第一个_之前的部分）
+    final firstUnderscoreIndex = processed.indexOf('_');
+    if (firstUnderscoreIndex != -1) {
+      processed = processed.substring(firstUnderscoreIndex + 1);
+    }
+
+    // 步骤3: 按下划线分割
+    final parts = processed.split('_');
+    if (parts.isEmpty) {
+      return vehicleName;
+    }
+
+    // 步骤4: 识别主体名称和特殊标记
+    final List<String> vehicleNameParts = [];
+    final List<String> tags = [];
+
+    bool foundFirstNonTag = false;
+    for (final part in parts) {
+      if (part.isEmpty) continue;
+
+      // 检查是否是特殊标记
+      if (_inGameVehicleTagTranslations.containsKey(part)) {
+        if (!foundFirstNonTag) {
+          // 如果还没找到主体名称，先暂存标记
+          tags.add(part);
+        } else {
+          // 找到主体名称后，所有标记都添加到标记列表
+          tags.add(part);
+        }
+      } else {
+        // 不是标记，是主体名称的一部分
+        if (!foundFirstNonTag) {
+          // 第一个非标记部分，之前的标记也是名称的一部分
+          vehicleNameParts.addAll(tags);
+          tags.clear();
+          foundFirstNonTag = true;
+        }
+        vehicleNameParts.add(part);
+      }
+    }
+
+    // 步骤5: 处理主体名称
+    String mainName;
+    if (vehicleNameParts.isEmpty) {
+      // 如果没有主体名称部分，整个可能都是标记，返回原名
+      mainName = parts.join(' ');
+    } else {
+      // 将主体名称部分用空格连接
+      final nameWithSpaces = vehicleNameParts.join(' ');
+      // 调用普通翻译
+      mainName = getTranslationSync(nameWithSpaces);
+    }
+
+    // 步骤6: 组合结果
+    if (tags.isEmpty) {
+      return mainName;
+    }
+
+    // 将标记翻译并用方括号包裹
+    final translatedTags = tags.map((tag) {
+      final translation = _inGameVehicleTagTranslations[tag] ?? tag;
+      return '[$translation]';
+    }).join('');
+
+    return '$mainName $translatedTags';
   }
 
 }

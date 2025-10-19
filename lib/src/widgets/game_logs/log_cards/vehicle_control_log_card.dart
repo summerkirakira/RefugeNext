@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:refuge_next/src/datasource/models/game_log.dart';
+import 'package:refuge_next/src/repo/translation.dart';
 
 /// 载具控制日志卡片
 class VehicleControlLogCard extends StatelessWidget {
@@ -71,13 +72,15 @@ class VehicleControlLogCard extends StatelessWidget {
               const Divider(height: 16),
 
               // 载具信息
-              if (parsedData['vehicle_name'] != null)
+              if (parsedData['vehicle_name'] != null || parsedData['vehicle_full_name'] != null)
                 _buildInfoRow(
                   context,
                   icon: Icons.rocket_launch,
                   label: '载具',
-                  value: parsedData['vehicle_name'] as String,
+                  value: _translateVehicleName(parsedData),
                   iconColor: Colors.green,
+                  highlight: true,
+                  highlightColor: Colors.green,
                 ),
 
               // 动作描述
@@ -96,12 +99,28 @@ class VehicleControlLogCard extends StatelessWidget {
     );
   }
 
+  String _translateVehicleName(Map<String, dynamic> parsedData) {
+    final translationRepo = TranslationRepo();
+
+    // 优先使用原始完整名称
+    final fullName = parsedData['vehicle_full_name'] as String?;
+    if (fullName != null) {
+      return translationRepo.translateInGameVehicleName(fullName);
+    }
+
+    // 降级到清理后的名称（向后兼容）
+    final cleanName = parsedData['vehicle_name'] as String?;
+    return cleanName ?? '';
+  }
+
   Widget _buildInfoRow(
     BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
     Color? iconColor,
+    bool highlight = false,
+    Color? highlightColor,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -123,7 +142,10 @@ class VehicleControlLogCard extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+                    color: highlight ? (highlightColor ?? Colors.green) : null,
+                  ),
             ),
           ),
         ],

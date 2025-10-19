@@ -366,6 +366,7 @@ class GameLogParser {
       final cleanName = fullName.replaceAll(RegExp(r'_\d+$'), '').replaceAll('_', ' ');
 
       data['vehicle_name'] = cleanName;
+      data['vehicle_full_name'] = fullName; // 保存原始完整名称用于翻译
       data['vehicle_id'] = vehicleId;
     }
 
