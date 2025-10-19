@@ -1,10 +1,10 @@
 import '../datasource/models/user.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/cirno/cirno_api.dart';
+import '../utils/storage_path.dart';
 
 
 class TranslationRepo {
@@ -36,8 +36,7 @@ class TranslationRepo {
   }
 
   Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
+    return await StoragePath.getAppDataPath();
   }
 
   Future<File> get _localFile async {

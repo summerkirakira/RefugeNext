@@ -6,8 +6,8 @@ import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 
 import 'dart:io';
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/storage_path.dart';
 
 
 class ShipInfoRepo {
@@ -41,8 +41,8 @@ class ShipInfoRepo {
 
 
   Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return "${directory.path}/ship_info/components";
+    final appDataPath = await StoragePath.getAppDataPath();
+    return "$appDataPath/ship_info/components";
   }
 
   Future<File> get _shipPath async {
