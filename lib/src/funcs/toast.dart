@@ -34,7 +34,8 @@ void showToast({required String message}) {
       dragToClose: true,
     );
   } else {
-    if (message.contains("成功")) {
+    // if (message.contains("成功")) {
+    if (true) {
       toastification.show(
         type: ToastificationType.success,
         style: ToastificationStyle.flat,

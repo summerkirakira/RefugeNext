@@ -1,25 +1,24 @@
 import '../datasource/models/buyback.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import '../network/api_service.dart';
 import '../network/parsers/buyback_parser.dart';
 import '../network/utils.dart' show runAsyncFunctionWithParams;
 import './translation.dart';
+import '../utils/storage_path.dart';
 
 
 class BuybackRepo {
-  
+
   static final BuybackRepo _instance = BuybackRepo._internal();
   final TranslationRepo translationRepo = TranslationRepo();
-  
+
   BuybackRepo._internal();
-  
+
   factory BuybackRepo() => _instance;
-  
+
   Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
+    return await StoragePath.getAppDataPath();
   }
   
   Future<File> get _localFile async {

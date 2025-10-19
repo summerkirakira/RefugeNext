@@ -2,10 +2,10 @@ import 'package:refuge_next/src/network/api_service.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:refuge_next/src/network/graphql/catalog.dart' show CatalogReq;
 import './translation.dart';
+import '../utils/storage_path.dart';
 
 
 class CatalogRepo {
@@ -23,8 +23,7 @@ class CatalogRepo {
   Map<String, List<CatalogProperty>> _catalog = {};
 
   Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
+    return await StoragePath.getAppDataPath();
   }
 
   Future<File> get _localFile async {

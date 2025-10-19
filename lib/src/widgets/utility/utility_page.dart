@@ -77,7 +77,7 @@ class FeatureSelectionPage extends StatelessWidget {
                       padding: EdgeInsets.all(8),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 3,
+                        mainAxisExtent: 60,
                         crossAxisSpacing: 2,
                         mainAxisSpacing: 2,
                       ),

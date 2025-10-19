@@ -16,6 +16,13 @@ add_executable(${BINARY_NAME} WIN32
   "runner.exe.manifest"
 )
 
+# Set the output executable name to Chinese for Release and Profile builds only
+# This allows 'flutter run' to work in Debug mode while having a user-friendly
+# Chinese filename for distribution builds
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "Profile")
+  set_target_properties(${BINARY_NAME} PROPERTIES OUTPUT_NAME "星河避难所")
+endif()
+
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})

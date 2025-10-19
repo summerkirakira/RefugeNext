@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "refuge_next" "\0"
+            VALUE "CompanyName", "Summerkirakira" "\0"
+            VALUE "FileDescription", "星河避难所 - Star Citizen 多平台客户端" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "refuge_next" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "refuge_next.exe" "\0"
-            VALUE "ProductName", "refuge_next" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 Summerkirakira. All rights reserved." "\0"
+            VALUE "OriginalFilename", "星河避难所.exe" "\0"
+            VALUE "ProductName", "星河避难所" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -1,10 +1,10 @@
 import 'package:refuge_next/src/datasource/models/hangar/hangar_log.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import '../network/api_service.dart';
 import '../network/parsers/hangar_log_parser.dart';
 import '../network/utils.dart' show runAsyncFunctionWithParams;
+import '../utils/storage_path.dart';
 
 
 class HangarLogRepo {
@@ -18,8 +18,7 @@ class HangarLogRepo {
   final parser = HangarLogParser();
 
   Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
+    return await StoragePath.getAppDataPath();
   }
 
   Future<File> get _localFile async {
