@@ -23,6 +23,7 @@ import '../user_info/refuge_account_detail_page.dart';
 import '../../repo/refuge_account.dart';
 import '../../datasource/models/cirno/account.dart';
 import '../../funcs/launch_at_startup_service.dart';
+import './custom_big_user_card.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -154,10 +155,24 @@ class _SettingsPageState extends State<SettingsPage> {
     VoidCallback? cardOnTap;
 
     if (_refugeAccountInfo == null) {
-      // 未登录避难所账号
+      // 未登录避难所账号，从 MainDataModel 的 property 读取订阅信息
       userName = "未登录QAQ";
       cardTitle = isVip ? "避难所Premium生效中" : "避难所Premium已失效...";
-      cardSubtitle = "点此登录或获取订阅";
+
+      final property = Provider.of<MainDataModel>(context, listen: false).property;
+
+      if (property != null) {
+        // 从 property 计算剩余天数和积分
+        final currentTimestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final remainingSeconds = property.vipExpire - currentTimestamp;
+        final vipDays = remainingSeconds > 0 ? (remainingSeconds / 86400).floor() : 0;
+        final credit = property.credit;
+
+        cardSubtitle = isVip ? "订阅剩余 $vipDays 天 | $credit" : "点此获取订阅";
+      } else {
+        cardSubtitle = isVip ? "订阅生效中" : "点此获取订阅";
+      }
+
       cardOnTap = () async {
         Uri uri = Uri.parse(CirnoApiClient().getSubscriptionUrl());
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -201,9 +216,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Stack(
       children: [
-        BigUserCard(
+        CustomBigUserCard(
           backgroundColor: backgroundColor,
           userName: userName,
+          imageFit: BoxFit.cover,
           userMoreInfo: GestureDetector(
             onTap: () async {
               final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
