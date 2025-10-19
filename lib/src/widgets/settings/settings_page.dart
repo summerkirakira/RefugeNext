@@ -611,7 +611,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         backgroundColor: Colors.red,
                       ),
                       title: '清空游戏日志',
-                      subtitle: "清空所有日志数据库和处理记录（不可恢复）",
+                      subtitle: "清空日志库中所有记录",
                     ),
                     // SettingsItem(
                     //   onTap: () async {
