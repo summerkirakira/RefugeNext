@@ -222,6 +222,23 @@ class MainDataModel extends ChangeNotifier {
     }
   }
 
+  // 开机自启动设置
+  bool _enableLaunchAtStartup = false;
+
+  bool get enableLaunchAtStartup => _enableLaunchAtStartup;
+
+  Future<void> setEnableLaunchAtStartup(bool enabled) async {
+    _enableLaunchAtStartup = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('app.settings.enableLaunchAtStartup', enabled);
+    notifyListeners();
+  }
+
+  Future<void> loadEnableLaunchAtStartupSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    _enableLaunchAtStartup = prefs.getBool('app.settings.enableLaunchAtStartup') ?? false;
+  }
+
   // 实时日志同步相关状态
   StreamSubscription<FileSystemEvent>? _logFileWatcher;
   DateTime? _lastProcessedTime;
@@ -291,7 +308,7 @@ class MainDataModel extends ChangeNotifier {
     'Game Version',
     // 'InitiateLogin',
     // 'AttachmentReceived',
-    'Jump Drive State Changed',
+    // 'Jump Drive State Changed',
     'Vehicle Destruction',
     'Actor Death',
     'EndMission',
@@ -345,6 +362,7 @@ class MainDataModel extends ChangeNotifier {
     await loadEnableHangarTranslationSetting();
     await loadGameDirectory();
     await loadEnableRealtimeLogSyncSetting();
+    await loadEnableLaunchAtStartupSetting();
     await translationRepo.readTranslation();
     await shipAliasRepo.getShipAliases();
     readHangarItems();

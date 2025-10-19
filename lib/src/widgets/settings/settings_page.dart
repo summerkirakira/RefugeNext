@@ -22,6 +22,7 @@ import '../user_info/refuge_account_modal.dart';
 import '../user_info/refuge_account_detail_page.dart';
 import '../../repo/refuge_account.dart';
 import '../../datasource/models/cirno/account.dart';
+import '../../funcs/launch_at_startup_service.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -407,6 +408,50 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ),
+                  // 开机自启动设置（仅桌面平台显示）
+                  if (LaunchAtStartupService.isDesktopPlatform())
+                    SettingsItem(
+                      onTap: () {},
+                      icons: Icons.power_settings_new_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.deepOrange,
+                      ),
+                      title: '开机自启动',
+                      subtitle: Provider.of<MainDataModel>(context).enableLaunchAtStartup
+                          ? "应用将在系统启动时自动运行并最小化到托盘"
+                          : "关闭开机自启动",
+                      trailing: Switch.adaptive(
+                        value: Provider.of<MainDataModel>(context).enableLaunchAtStartup,
+                        onChanged: (value) async {
+                          final launchService = LaunchAtStartupService();
+                          bool success = false;
+
+                          if (value) {
+                            // 启用开机自启动
+                            success = await launchService.enable();
+                            if (success) {
+                              await Provider.of<MainDataModel>(context, listen: false)
+                                  .setEnableLaunchAtStartup(true);
+                              showToast(message: "已启用开机自启动");
+                            } else {
+                              showToast(message: "启用开机自启动失败");
+                            }
+                          } else {
+                            // 禁用开机自启动
+                            success = await launchService.disable();
+                            if (success) {
+                              await Provider.of<MainDataModel>(context, listen: false)
+                                  .setEnableLaunchAtStartup(false);
+                              showToast(message: "已禁用开机自启动");
+                            } else {
+                              showToast(message: "禁用开机自启动失败");
+                            }
+                          }
+                        },
+                      ),
+                    ),
                 ],
               ),
               SettingsGroup(

@@ -17,6 +17,8 @@ import 'package:refuge_next/src/funcs/app_update.dart';
 import 'package:toastification/toastification.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:refuge_next/src/funcs/tray_manager_service.dart';
+import 'package:refuge_next/src/funcs/launch_at_startup_service.dart';
+import 'package:refuge_next/src/datasource/config_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,12 @@ void main() async {
   // 初始化window manager和tray manager（仅桌面平台）
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     await windowManager.ensureInitialized();
+
+    // 初始化开机自启动服务
+    await LaunchAtStartupService().initialize();
+
+    // 检查是否启用了开机自启动设置
+    final enableLaunchAtStartup = await ConfigStorage.getBool('app.settings.enableLaunchAtStartup') ?? false;
 
     WindowOptions windowOptions = const WindowOptions(
       size: Size(1280, 720),
@@ -37,10 +45,19 @@ void main() async {
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
       // 设置拦截窗口关闭事件
       await windowManager.setPreventClose(true);
+
+      // 如果启用了开机自启动，启动时最小化到托盘
+      if (enableLaunchAtStartup) {
+        // 最小化到托盘
+        await windowManager.hide();
+        await windowManager.setSkipTaskbar(true);
+      } else {
+        // 正常显示窗口
+        await windowManager.show();
+        await windowManager.focus();
+      }
     });
 
     // 初始化系统托盘
