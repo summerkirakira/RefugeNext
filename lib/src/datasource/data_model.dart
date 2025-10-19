@@ -1250,11 +1250,11 @@ class MainDataModel extends ChangeNotifier {
   Future<Map<String, dynamic>> uploadGameLogsToServer() async {
     try {
       // 第一步：刷新本地日志
-      showToast(message: "正在刷新本地日志...");
+      // showToast(message: "正在刷新本地日志...");
       final importResult = await importAllGameLogs();
 
       // 第二步：获取服务器同步信息
-      showToast(message: "正在获取服务器同步信息...");
+      // showToast(message: "正在获取服务器同步信息...");
       final cirnoApi = CirnoApiClient();
       final syncInfo = await cirnoApi.getGameLogSyncInfo();
 
@@ -1264,11 +1264,11 @@ class MainDataModel extends ChangeNotifier {
       if (syncInfo.latestLogTime != null && syncInfo.latestLogTime!.isNotEmpty) {
         // 如果服务器有日志，只上传服务器最新时间之后的日志
         final latestServerTime = DateTime.parse(syncInfo.latestLogTime!);
-        showToast(message: "查询 ${latestServerTime.toLocal()} 之后的日志...");
+        // showToast(message: "查询 ${latestServerTime.toLocal()} 之后的日志...");
         logsToUpload = await gameLogRepo.getLogsAfter(afterTime: latestServerTime);
       } else {
         // 如果服务器没有日志，上传所有本地日志
-        showToast(message: "服务器无日志记录，准备上传所有本地日志...");
+        // showToast(message: "服务器无日志记录，准备上传所有本地日志...");
         logsToUpload = await gameLogRepo.getAllLogs();
       }
 
@@ -1280,11 +1280,11 @@ class MainDataModel extends ChangeNotifier {
 
       final filteredCount = totalLogsBeforeFilter - logsToUpload.length;
       if (filteredCount > 0) {
-        showToast(message: "已过滤 $filteredCount 条 Flow 类型日志");
+        // showToast(message: "已过滤 $filteredCount 条 Flow 类型日志");
       }
 
       if (logsToUpload.isEmpty) {
-        showToast(message: "过滤后没有需要上传的日志");
+        // showToast(message: "过滤后没有需要上传的日志");
         return {
           'success': true,
           'uploaded': 0,
@@ -1305,7 +1305,7 @@ class MainDataModel extends ChangeNotifier {
       }).toList();
 
       // 第五步：批量上传
-      showToast(message: "正在上传 ${logsToUploadRequests.length} 条日志...");
+      // showToast(message: "正在上传 ${logsToUploadRequests.length} 条日志...");
       final uploadResult = await cirnoApi.addGameLogBatch(logsToUploadRequests);
 
       final message = "上传完成！\n"
@@ -1314,7 +1314,7 @@ class MainDataModel extends ChangeNotifier {
           "${filteredCount > 0 ? '已过滤: $filteredCount 条 Flow 日志\n' : ''}"
           "服务器总计: ${syncInfo.totalLogs + uploadResult.inserted} 条";
 
-      showToast(message: message);
+      // showToast(message: message);
 
       return {
         'success': true,
@@ -1340,15 +1340,15 @@ class MainDataModel extends ChangeNotifier {
       final cirnoApi = CirnoApiClient();
 
       // 第一步：获取本地最新日志时间
-      showToast(message: "正在检查本地日志...");
+      // showToast(message: "正在检查本地日志...");
       final localLatestTime = await gameLogRepo.getLatestLogTime();
 
       // 第二步：获取服务器同步信息
-      showToast(message: "正在获取服务器同步信息...");
+      // showToast(message: "正在获取服务器同步信息...");
       final syncInfo = await cirnoApi.getGameLogSyncInfo();
 
       if (syncInfo.latestLogTime == null || syncInfo.latestLogTime!.isEmpty) {
-        showToast(message: "服务器暂无日志数据");
+        // showToast(message: "服务器暂无日志数据");
         return {
           'success': true,
           'downloaded': 0,
@@ -1361,7 +1361,7 @@ class MainDataModel extends ChangeNotifier {
 
       // 第三步：比较时间，判断是否需要同步
       if (localLatestTime != null && !serverLatestTime.isAfter(localLatestTime)) {
-        showToast(message: "本地日志已是最新");
+        // showToast(message: "本地日志已是最新");
         return {
           'success': true,
           'downloaded': 0,
@@ -1372,7 +1372,7 @@ class MainDataModel extends ChangeNotifier {
       }
 
       // 第四步：分页查询服务器日志
-      showToast(message: "正在从服务器拉取日志...");
+      // showToast(message: "正在从服务器拉取日志...");
       final List<GameLog> downloadedLogs = [];
       int page = 0;
       const int perPage = 2000; // 每页2000条
@@ -1412,12 +1412,12 @@ class MainDataModel extends ChangeNotifier {
 
         // 显示进度
         if (hasMore) {
-          showToast(message: "已拉取 ${downloadedLogs.length} 条，继续...");
+          // showToast(message: "已拉取 ${downloadedLogs.length} 条，继续...");
         }
       }
 
       if (downloadedLogs.isEmpty) {
-        showToast(message: "服务器没有新日志");
+        // showToast(message: "服务器没有新日志");
         return {
           'success': true,
           'downloaded': 0,
@@ -1428,7 +1428,7 @@ class MainDataModel extends ChangeNotifier {
       }
 
       // 第五步：插入到本地数据库
-      showToast(message: "正在保存 ${downloadedLogs.length} 条日志到本地...");
+      // showToast(message: "正在保存 ${downloadedLogs.length} 条日志到本地...");
       final insertResult = await gameLogRepo.insertLogs(downloadedLogs);
       final inserted = insertResult['inserted'] ?? 0;
       final skipped = insertResult['skipped'] ?? 0;
@@ -1442,7 +1442,7 @@ class MainDataModel extends ChangeNotifier {
           "重复: $skipped 条\n"
           "本地总计: ${await gameLogRepo.getLogCount()} 条";
 
-      showToast(message: message);
+      // showToast(message: message);
 
       return {
         'success': true,
@@ -1467,7 +1467,7 @@ class MainDataModel extends ChangeNotifier {
     try {
       final cirnoApi = CirnoApiClient();
 
-      showToast(message: "开始同步日志...");
+      // showToast(message: "开始同步日志...");
 
       // 第一步：获取本地和服务器的同步信息
       final localLatestTime = await gameLogRepo.getLatestLogTime();
@@ -1499,7 +1499,7 @@ class MainDataModel extends ChangeNotifier {
       }
 
       // 第四步：刷新本地日志（导入游戏目录中的最新日志）
-      showToast(message: "正在刷新本地日志...");
+      // showToast(message: "正在刷新本地日志...");
       await importAllGameLogs();
 
       // 第五步：重新获取本地最新时间和服务器同步信息
