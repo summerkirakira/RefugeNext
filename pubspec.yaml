@@ -106,6 +106,10 @@ dev_dependencies:
   freezed: ^2.5.2
   json_serializable: ^6.8.0
 
+dependency_overrides:
+  babstrap_settings_screen:
+    path: packages/babstrap_settings_screen
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
