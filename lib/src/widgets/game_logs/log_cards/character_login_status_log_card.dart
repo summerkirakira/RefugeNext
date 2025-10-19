@@ -92,6 +92,7 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
                   icon: Icons.badge,
                   label: '账户ID',
                   value: parsedData['account_id'] as String,
+                  iconColor: Colors.blue,
                 ),
 
               // GEID (Global Entity ID)
@@ -101,6 +102,7 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
                   icon: Icons.fingerprint,
                   label: 'GEID',
                   value: parsedData['geid'] as String,
+                  iconColor: Colors.purple,
                 ),
 
               // 创建时间
@@ -110,6 +112,7 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
                   icon: Icons.calendar_today,
                   label: '创建时间',
                   value: _formatDate(parsedData['created_at_date'] as DateTime),
+                  iconColor: Colors.orange,
                 ),
 
               // 更新时间
@@ -119,6 +122,7 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
                   icon: Icons.update,
                   label: '更新时间',
                   value: _formatDate(parsedData['updated_at_date'] as DateTime),
+                  iconColor: Colors.cyan,
                 ),
             ],
           ),
@@ -188,17 +192,15 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
         children: [
           Icon(
             Icons.person,
-            size: 18,
-            color: Theme.of(context).colorScheme.primary,
+            size: 16,
+            color: Colors.green,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               characterName,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.primary,
                   ),
             ),
           ),
@@ -212,6 +214,7 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    Color? iconColor,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -221,7 +224,7 @@ class CharacterLoginStatusLogCard extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: iconColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Text(
