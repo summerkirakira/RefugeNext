@@ -989,6 +989,17 @@ class MainDataModel extends ChangeNotifier {
     return await gameLogRepo.getDuplicateCount();
   }
 
+  // 清空所有游戏日志和处理记录
+  Future<int> clearAllGameLogs() async {
+    // 清空日志数据库
+    final deletedCount = await gameLogRepo.clearAllLogs();
+    // 清空已处理文件记录
+    await gameLogRepo.clearProcessedFiles();
+    // 重新加载日志（此时应该为空）
+    await loadRecentGameLogs();
+    return deletedCount;
+  }
+
   // 导入历史日志
   Future<Map<String, int>> importHistoricalGameLogs() async {
     if (_gameDirectory == null) {

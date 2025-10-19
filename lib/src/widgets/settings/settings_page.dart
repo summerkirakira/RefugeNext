@@ -573,29 +573,46 @@ class _SettingsPageState extends State<SettingsPage> {
                     //   title: '清理旧日志',
                     //   subtitle: "清理30天前的游戏日志",
                     // ),
-                    if (Platform.isWindows)
-                      SettingsItem(
-                        onTap: () async {
-                          final dataModel = Provider.of<MainDataModel>(context, listen: false);
-                          final processedCount = await dataModel.gameLogRepo.getProcessedFileCount();
+                    SettingsItem(
+                      onTap: () async {
+                        // 显示确认对话框
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('确认清空'),
+                            content: const Text('确定要清空所有游戏日志吗？\n\n此操作将删除所有日志数据库记录和历史日志处理记录，且无法恢复。'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('取消'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text('确认', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
 
-                          if (processedCount == 0) {
-                            showToast(message: "当前没有已处理的历史日志记录");
-                            return;
-                          }
+                        if (confirmed != true) return;
 
-                          await dataModel.gameLogRepo.clearProcessedFiles();
-                          showToast(message: "已清空 $processedCount 个历史日志文件的处理记录\n下次导入时将重新处理所有历史日志");
-                        },
-                        icons: Icons.refresh_rounded,
-                        iconStyle: IconStyle(
-                          iconsColor: Colors.white,
-                          withBackground: true,
-                          backgroundColor: Colors.deepPurple,
-                        ),
-                        title: '重置处理记录',
-                        subtitle: "清空历史日志处理记录，下次将重新导入所有历史日志",
+                        final dataModel = Provider.of<MainDataModel>(context, listen: false);
+                        try {
+                          final deletedCount = await dataModel.clearAllGameLogs();
+                          showToast(message: "已清空 $deletedCount 条游戏日志\n历史日志处理记录也已清空");
+                        } catch (e) {
+                          showToast(message: "清空失败: $e");
+                        }
+                      },
+                      icons: Icons.delete_forever_rounded,
+                      iconStyle: IconStyle(
+                        iconsColor: Colors.white,
+                        withBackground: true,
+                        backgroundColor: Colors.red,
                       ),
+                      title: '清空游戏日志',
+                      subtitle: "清空所有日志数据库和处理记录（不可恢复）",
+                    ),
                     // SettingsItem(
                     //   onTap: () async {
                     //     final dataModel = Provider.of<MainDataModel>(context, listen: false);
