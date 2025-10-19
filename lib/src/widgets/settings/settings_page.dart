@@ -476,6 +476,29 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: '导入游戏日志',
                         subtitle: "导入当前日志&历史日志",
                       ),
+                    if (Platform.isWindows)
+                      SettingsItem(
+                        onTap: () {},
+                        icons: Icons.sync_rounded,
+                        iconStyle: IconStyle(
+                          iconsColor: Colors.white,
+                          withBackground: true,
+                          backgroundColor: Colors.teal,
+                        ),
+                        title: '实时同步日志',
+                        subtitle: "自动同步游戏产生的日志文件，无需手动上传",
+                        trailing: Switch.adaptive(
+                          value: Provider.of<MainDataModel>(context).enableRealtimeLogSync,
+                          onChanged: (value) {
+                            if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
+                              showVipAlert(context: context);
+                              return;
+                            }
+                            Provider.of<MainDataModel>(context, listen: false)
+                                .setEnableRealtimeLogSync(value);
+                          },
+                        ),
+                      ),
                     SettingsItem(
                       onTap: () {
                         GameLogModal.show(context);

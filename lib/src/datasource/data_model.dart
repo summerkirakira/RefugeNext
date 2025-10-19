@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/datasource/models/buyback.dart';
@@ -6,6 +7,7 @@ import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 import 'package:refuge_next/src/datasource/models/upgradeInfo.dart';
 import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
 import '../repo/hangar_log.dart';
+import '../repo/refuge_account.dart';
 import '../repo/ship_info.dart';
 import './models/hangar.dart';
 import './models/user.dart';
@@ -166,6 +168,68 @@ class MainDataModel extends ChangeNotifier {
     TranslationRepo().setTranslationEnabled(_enableHangarTranslation);
   }
 
+  bool _enableRealtimeLogSync = false;
+
+  bool get enableRealtimeLogSync => _enableRealtimeLogSync;
+
+  Future<void> setEnableRealtimeLogSync(bool enabled) async {
+    print('[RealtimeLogSync] 用户设置实时同步: $enabled');
+
+    // VIP检查：非VIP用户静默关闭功能
+    if (enabled && !isVIP) {
+      _enableRealtimeLogSync = false;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('app.settings.enableRealtimeLogSync', false);
+      notifyListeners();
+      return;
+    }
+
+    _enableRealtimeLogSync = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('app.settings.enableRealtimeLogSync', enabled);
+    notifyListeners();
+
+    // 根据设置启动或停止监控
+    if (enabled) {
+      print('[RealtimeLogSync] 开关已开启，正在启动监控...');
+      await startRealtimeLogSync();
+    } else {
+      print('[RealtimeLogSync] 开关已关闭，正在停止监控...');
+      await stopRealtimeLogSync();
+    }
+  }
+
+  Future<void> loadEnableRealtimeLogSyncSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    _enableRealtimeLogSync = prefs.getBool('app.settings.enableRealtimeLogSync') ?? false;
+    print('[RealtimeLogSync] 加载实时同步设置: $_enableRealtimeLogSync');
+
+    // VIP检查：非VIP用户静默关闭功能
+    if (_enableRealtimeLogSync && !isVIP) {
+      _enableRealtimeLogSync = false;
+      await prefs.setBool('app.settings.enableRealtimeLogSync', false);
+      notifyListeners();
+      return;
+    }
+
+    // 如果实时同步已启用且游戏目录已设置，自动启动监控
+    // 注意：需要在 loadGameDirectory() 之后调用此方法
+    if (_enableRealtimeLogSync && _gameDirectory != null) {
+      print('[RealtimeLogSync] 应用启动时自动启动监控 (游戏目录: $_gameDirectory)');
+      await startRealtimeLogSync();
+    } else if (_enableRealtimeLogSync && _gameDirectory == null) {
+      print('[RealtimeLogSync] ⚠️ 实时同步已启用但游戏目录未设置，无法启动监控');
+    }
+  }
+
+  // 实时日志同步相关状态
+  StreamSubscription<FileSystemEvent>? _logFileWatcher;
+  DateTime? _lastProcessedTime;
+  bool _isProcessingLogChange = false;
+  Timer? _debounceTimer;
+  Timer? _pollingTimer;  // 轮询定时器
+  DateTime? _lastFileModifiedTime;  // 上次文件修改时间
+
   Map<String, List<CatalogProperty>> _catalog = {};
 
   List<CatalogProperty> getCataLog(CatalogTypes catalogType) {
@@ -262,6 +326,11 @@ class MainDataModel extends ChangeNotifier {
     final cirnoAuth = await CirnoAuth.getInstance();
     await cirnoAuth.refreshProperty();
     notifyListeners();
+
+    // 刷新VIP状态后检查实时同步，非VIP静默关闭
+    if (!isVIP && _enableRealtimeLogSync) {
+      await setEnableRealtimeLogSync(false);
+    }
   }
 
 
@@ -275,6 +344,7 @@ class MainDataModel extends ChangeNotifier {
     await loadShowRefreshButtonSetting();
     await loadEnableHangarTranslationSetting();
     await loadGameDirectory();
+    await loadEnableRealtimeLogSyncSetting();
     await translationRepo.readTranslation();
     await shipAliasRepo.getShipAliases();
     readHangarItems();
@@ -463,6 +533,273 @@ class MainDataModel extends ChangeNotifier {
       await prefs.remove('app.settings.gameDirectory');
     }
     notifyListeners();
+
+    // 如果实时同步已开启，重启监控
+    if (_enableRealtimeLogSync) {
+      await stopRealtimeLogSync();
+      if (directory != null) {
+        await startRealtimeLogSync();
+      }
+    }
+  }
+
+  // 启动实时日志同步
+  Future<void> startRealtimeLogSync() async {
+    // 仅Windows平台支持
+    if (!Platform.isWindows) {
+      print('[RealtimeLogSync] 仅Windows平台支持实时同步');
+      return;
+    }
+
+    if (_gameDirectory == null) {
+      print('[RealtimeLogSync] 游戏目录未设置');
+      return;
+    }
+
+    print('[RealtimeLogSync] 游戏目录: $_gameDirectory');
+
+    if (!GameLogService.isValidGameDirectory(_gameDirectory!)) {
+      print('[RealtimeLogSync] 无效的游戏目录');
+      return;
+    }
+
+    // 停止现有监控
+    await stopRealtimeLogSync();
+
+    try {
+      final logPath = GameLogService.getGameLogPath(_gameDirectory!);
+      print('[RealtimeLogSync] 日志文件路径: $logPath');
+
+      final logStream = GameLogService.watchLogFile(_gameDirectory!);
+      if (logStream == null) {
+        print('[RealtimeLogSync] 无法监控日志文件（文件可能不存在）');
+        return;
+      }
+
+      // 初始化最后处理时间为当前时间
+      _lastProcessedTime = DateTime.tryParse("1970-01-01");
+      print('[RealtimeLogSync] 初始化起始时间: $_lastProcessedTime');
+
+      // 订阅文件变化事件
+      _logFileWatcher = logStream.listen(
+        (event) {
+          print('[RealtimeLogSync] 收到文件事件: ${event.type}, 路径: ${event.path}');
+
+          // 只处理文件修改事件
+          if (event is FileSystemModifyEvent) {
+            print('[RealtimeLogSync] 检测到文件修改事件，启动防抖定时器');
+            // 使用防抖机制，避免频繁触发
+            _debounceTimer?.cancel();
+            _debounceTimer = Timer(const Duration(seconds: 2), () {
+              print('[RealtimeLogSync] 防抖定时器触发，开始处理日志变化');
+              _processLogFileChange();
+            });
+          } else {
+            print('[RealtimeLogSync] 忽略事件类型: ${event.runtimeType}');
+          }
+        },
+        onError: (error) {
+          print('[RealtimeLogSync] 监控错误: $error');
+        },
+        cancelOnError: false,
+      );
+
+      print('[RealtimeLogSync] ✅ 已成功启动文件系统事件监控');
+    } catch (e) {
+      print('[RealtimeLogSync] ❌ 启动文件系统事件监控失败: $e');
+    }
+
+    // 启动轮询后备机制（每10秒检查一次文件修改时间）
+    try {
+      // 初始化文件修改时间
+      _lastFileModifiedTime = await GameLogService.getLogFileModifiedTime(_gameDirectory!);
+      print('[RealtimeLogSync] 初始文件修改时间: $_lastFileModifiedTime');
+
+      _pollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+        await _checkFileModificationByPolling();
+      });
+      print('[RealtimeLogSync] ✅ 已启动轮询后备机制（每10秒检查一次）');
+    } catch (e) {
+      print('[RealtimeLogSync] ❌ 启动轮询机制失败: $e');
+    }
+  }
+
+  // 轮询检查文件修改（后备机制）
+  Future<void> _checkFileModificationByPolling() async {
+    if (_gameDirectory == null) {
+      return;
+    }
+
+    try {
+      final modifiedTime = await GameLogService.getLogFileModifiedTime(_gameDirectory!);
+
+      if (modifiedTime == null) {
+        print('[RealtimeLogSync] 轮询: 无法获取文件修改时间');
+        return;
+      }
+
+      print('[RealtimeLogSync] 轮询检查: 当前修改时间 $modifiedTime, 上次 $_lastFileModifiedTime');
+
+      // 如果是第一次检查或者文件时间被重置了，只记录时间
+      if (_lastFileModifiedTime == null) {
+        _lastFileModifiedTime = modifiedTime;
+        print('[RealtimeLogSync] 轮询: 初始化修改时间');
+        return;
+      }
+
+      // 检查文件是否被修改（时间晚于上次记录）
+      if (modifiedTime.isAfter(_lastFileModifiedTime!)) {
+        print('[RealtimeLogSync] ✅ 轮询检测到文件修改! 上次: $_lastFileModifiedTime, 现在: $modifiedTime');
+        _lastFileModifiedTime = modifiedTime;
+
+        // 触发日志处理（使用防抖避免与文件监听冲突）
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(const Duration(seconds: 1), () {
+          print('[RealtimeLogSync] 轮询触发日志处理');
+          _processLogFileChange();
+        });
+      }
+    } catch (e) {
+      print('[RealtimeLogSync] ❌ 轮询检查失败: $e');
+    }
+  }
+
+  // 停止实时日志同步
+  Future<void> stopRealtimeLogSync() async {
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
+
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
+
+    await _logFileWatcher?.cancel();
+    _logFileWatcher = null;
+
+    _lastProcessedTime = null;
+    _lastFileModifiedTime = null;
+    _isProcessingLogChange = false;
+
+    print('[RealtimeLogSync] 已停止实时日志监控（文件事件 + 轮询）');
+  }
+
+  // 处理日志文件变化
+  Future<void> _processLogFileChange() async {
+    print('[RealtimeLogSync] >>> 进入 _processLogFileChange()');
+
+    // 防止并发处理
+    if (_isProcessingLogChange) {
+      print('[RealtimeLogSync] 已有处理正在进行，跳过');
+      return;
+    }
+
+    if (_gameDirectory == null || _lastProcessedTime == null) {
+      print('[RealtimeLogSync] 游戏目录或起始时间为空，跳过');
+      return;
+    }
+
+    _isProcessingLogChange = true;
+    print('[RealtimeLogSync] 上次处理时间: $_lastProcessedTime');
+
+    try {
+      // 读取增量日志
+      print('[RealtimeLogSync] 开始读取增量日志...');
+      final incrementalLog = await GameLogService.readLogsSince(
+        _gameDirectory!,
+        _lastProcessedTime!,
+      );
+
+      if (incrementalLog == null || incrementalLog.isEmpty) {
+        print('[RealtimeLogSync] 未读取到增量内容（可能无新日志或时间戳不匹配）');
+        return;
+      }
+
+      print('[RealtimeLogSync] 读取到增量内容: ${incrementalLog.length} 字符, ${incrementalLog.split('\n').length} 行');
+
+      // 解析日志
+      final logs = GameLogParser.parseLogText(incrementalLog);
+      print('[RealtimeLogSync] 解析出日志数量: ${logs.length} 条');
+
+      if (logs.isEmpty) {
+        print('[RealtimeLogSync] 解析后没有有效日志');
+        return;
+      }
+
+      // 保存到数据库
+      final result = await gameLogRepo.insertLogs(logs);
+      final inserted = result['inserted'] ?? 0;
+      final skipped = result['skipped'] ?? 0;
+      print('[RealtimeLogSync] 数据库插入结果: 新增 $inserted 条, 跳过 $skipped 条');
+
+      if (inserted > 0) {
+        print('[RealtimeLogSync] ✅ 自动导入 $inserted 条新日志');
+
+        // 更新最后处理时间为最新日志的时间
+        _lastProcessedTime = logs.last.timestamp;
+        print('[RealtimeLogSync] 更新起始时间为: $_lastProcessedTime');
+
+        // 更新UI
+        _gameLogs = await gameLogRepo.getRecentLogs(100);
+        notifyListeners();
+
+        // 静默上传到服务器（不显示Toast）
+        _silentUploadNewLogs();
+      }
+    } catch (e) {
+      print('[RealtimeLogSync] ❌ 处理日志变化失败: $e');
+      print('[RealtimeLogSync] 错误堆栈: ${StackTrace.current}');
+    } finally {
+      _isProcessingLogChange = false;
+      print('[RealtimeLogSync] <<< 退出 _processLogFileChange()');
+    }
+  }
+
+  // 静默上传新日志到服务器
+  Future<void> _silentUploadNewLogs() async {
+    try {
+      // 检查是否登录
+      final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
+      if (!isLoggedIn) {
+        return;
+      }
+
+      final cirnoApi = CirnoApiClient();
+      final syncInfo = await cirnoApi.getGameLogSyncInfo();
+
+      // 确定需要上传的日志
+      List<GameLog> logsToUpload;
+
+      if (syncInfo.latestLogTime != null && syncInfo.latestLogTime!.isNotEmpty) {
+        final latestServerTime = DateTime.parse(syncInfo.latestLogTime!);
+        logsToUpload = await gameLogRepo.getLogsAfter(afterTime: latestServerTime);
+      } else {
+        logsToUpload = await gameLogRepo.getAllLogs();
+      }
+
+      // 过滤上传类型
+      logsToUpload = logsToUpload
+          .where((log) => _uploadableLogTypes.contains(log.logType))
+          .toList();
+
+      if (logsToUpload.isEmpty) {
+        return;
+      }
+
+      // 转换为上传格式
+      final logsToUploadRequests = logsToUpload.map((log) {
+        return GameLogRequest(
+          logTime: log.timestamp.toIso8601String(),
+          gameAccountName: log.account,
+          logType: log.logType,
+          content: log.content,
+        );
+      }).toList();
+
+      // 上传到服务器
+      await cirnoApi.addGameLogBatch(logsToUploadRequests);
+      print('[RealtimeLogSync] 静默上传 ${logsToUpload.length} 条日志到服务器');
+    } catch (e) {
+      print('[RealtimeLogSync] 静默上传失败: $e');
+    }
   }
 
   // 从游戏目录导入日志

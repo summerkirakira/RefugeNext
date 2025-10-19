@@ -166,6 +166,23 @@ class GameLogService {
     }
   }
 
+  // 获取日志文件修改时间（用于轮询检测）
+  static Future<DateTime?> getLogFileModifiedTime(String gameDir) async {
+    try {
+      final logPath = getGameLogPath(gameDir);
+      final logFile = File(logPath);
+
+      if (!logFile.existsSync()) {
+        return null;
+      }
+
+      return await logFile.lastModified();
+    } catch (e) {
+      print('Error getting log file modified time: $e');
+      return null;
+    }
+  }
+
   // 读取指定时间之后的日志
   static Future<String?> readLogsSince(String gameDir, DateTime since) async {
     try {
@@ -176,7 +193,13 @@ class GameLogService {
         return null;
       }
 
-      final lines = await logFile.readAsLines(encoding: utf8);
+      // 使用字节读取并正确处理编码
+      final bytes = await logFile.readAsBytes();
+      // 跳过 UTF-8 BOM 标记
+      final start = bytes.length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
+      final content = utf8.decode(bytes.sublist(start), allowMalformed: true);
+      final lines = content.split('\n');
+
       final filteredLines = <String>[];
 
       for (final line in lines) {

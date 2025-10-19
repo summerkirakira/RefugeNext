@@ -132,7 +132,7 @@ class VehicleDestructionLogCard extends StatelessWidget {
                   context,
                   icon: Icons.shield,
                   label: '类型',
-                  value: parsedData['combat_type'] as String,
+                  value: _translateCombatType(parsedData['combat_type'] as String?),
                   iconColor: Colors.amber,
                 ),
             ],
@@ -152,6 +152,21 @@ class VehicleDestructionLogCard extends StatelessWidget {
         return '摧毁';
       default:
         return '未知($level)';
+    }
+  }
+
+  String _translateCombatType(String? type) {
+    if (type == null) return '';
+
+    switch (type) {
+      case 'Combat':
+        return '战斗';
+      case 'Collision':
+        return '碰撞';
+      case 'SelfDestruct':
+        return '自毁';
+      default:
+        return type; // 未知类型保持原文
     }
   }
 
