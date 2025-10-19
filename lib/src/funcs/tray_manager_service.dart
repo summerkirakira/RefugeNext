@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class TrayManagerService extends TrayListener {
   static final TrayManagerService _instance = TrayManagerService._internal();
@@ -32,27 +35,80 @@ class TrayManagerService extends TrayListener {
     await trayManager.setToolTip('星河避难所');
   }
 
+  /// 从 assets 中提取图标文件到临时目录
+  /// 返回提取后的文件路径
+  Future<String> _extractIconFromAssets(String assetPath) async {
+    try {
+      // 获取临时目录
+      final tempDir = await getTemporaryDirectory();
+
+      // 从 asset 路径中提取文件名
+      final fileName = path.basename(assetPath);
+
+      // 构建临时文件路径
+      final filePath = path.join(tempDir.path, fileName);
+      final file = File(filePath);
+
+      // 如果文件已存在，直接返回路径
+      if (await file.exists()) {
+        return filePath;
+      }
+
+      // 从 assets 读取文件数据
+      final byteData = await rootBundle.load(assetPath);
+
+      // 写入临时目录
+      await file.writeAsBytes(
+        byteData.buffer.asUint8List(
+          byteData.offsetInBytes,
+          byteData.lengthInBytes,
+        ),
+      );
+
+      return filePath;
+    } catch (e) {
+      if (kDebugMode) {
+        print('提取图标文件失败: $e');
+      }
+      rethrow;
+    }
+  }
+
   /// 设置托盘图标
   Future<void> _setTrayIcon() async {
-    String iconPath;
+    String assetPath;
 
     if (Platform.isWindows) {
-      // Windows优先使用ICO，如果不存在则使用PNG
-      iconPath = 'assets/icons/tray_icon.ico';
-      // 检查ICO文件是否存在，如果不存在则回退到PNG
-      final icoFile = File(iconPath);
-      if (!await icoFile.exists()) {
-        iconPath = 'assets/icons/rocket.png';
-      }
+      // Windows优先使用ICO
+      assetPath = 'assets/icons/tray_icon.ico';
     } else if (Platform.isMacOS) {
       // macOS使用PNG
-      iconPath = 'assets/icons/rocket.png';
+      assetPath = 'assets/icons/rocket.png';
     } else {
       // Linux使用PNG
-      iconPath = 'assets/icons/rocket.png';
+      assetPath = 'assets/icons/rocket.png';
     }
 
-    await trayManager.setIcon(iconPath);
+    try {
+      // 从 assets 提取图标到临时目录
+      final iconPath = await _extractIconFromAssets(assetPath);
+      await trayManager.setIcon(iconPath);
+    } catch (e) {
+      if (kDebugMode) {
+        print('设置托盘图标失败: $e');
+      }
+      // 如果提取 ICO 失败且在 Windows 上，尝试使用 PNG 作为后备
+      if (Platform.isWindows && assetPath.endsWith('.ico')) {
+        try {
+          final fallbackPath = await _extractIconFromAssets('assets/icons/rocket.png');
+          await trayManager.setIcon(fallbackPath);
+        } catch (fallbackError) {
+          if (kDebugMode) {
+            print('设置后备托盘图标也失败: $fallbackError');
+          }
+        }
+      }
+    }
   }
 
   /// 设置托盘菜单

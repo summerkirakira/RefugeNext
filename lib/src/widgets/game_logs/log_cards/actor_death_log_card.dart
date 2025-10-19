@@ -144,6 +144,11 @@ class ActorDeathLogCard extends StatelessWidget {
         badgeIcon = Icons.warning;
         displayText = '意外死亡';
         break;
+      case 'Crash':
+        badgeColor = Colors.orange;
+        badgeIcon = Icons.link_off;
+        displayText = '碰撞死亡';
+        break;
       case 'VehicleDestruction':
         badgeColor = Colors.deepOrange;
         badgeIcon = Icons.local_fire_department;

@@ -30,6 +30,7 @@ class LaunchAtStartupService {
       launchAtStartup.setup(
         appName: packageInfo.appName,
         appPath: Platform.resolvedExecutable,
+        args: ['--autostart'], // 添加自启动标识参数
       );
 
       _initialized = true;

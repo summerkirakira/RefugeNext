@@ -581,7 +581,7 @@ class GameLogParser {
     if (actionMatch != null) {
       final action = actionMatch.group(1);
       if (action == 'lost') {
-        data['action_description'] = '失去重生点预订';
+        data['action_description'] = '未保存重生点';
       } else if (action == 'gained') {
         data['action_description'] = '获得重生点预订';
       }

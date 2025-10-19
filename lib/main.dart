@@ -19,9 +19,31 @@ import 'package:window_manager/window_manager.dart';
 import 'package:refuge_next/src/funcs/tray_manager_service.dart';
 import 'package:refuge_next/src/funcs/launch_at_startup_service.dart';
 import 'package:refuge_next/src/datasource/config_storage.dart';
+import 'package:windows_single_instance/windows_single_instance.dart';
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Windows平台：确保单实例运行
+  // 当用户再次点击应用图标时，会唤醒已有实例并显示窗口
+  if (Platform.isWindows) {
+    await WindowsSingleInstance.ensureSingleInstance(
+      args,
+      "refuge_next_single_instance",
+      onSecondWindow: (args) async {
+        // 当检测到第二个实例启动时，显示第一个实例的窗口
+        try {
+          await windowManager.show();
+          await windowManager.focus();
+          await windowManager.setSkipTaskbar(false);
+        } catch (e) {
+          // 如果windowManager还未初始化，忽略错误
+          print('Error showing window: $e');
+        }
+      },
+    );
+  }
+
   await mustStartup();
 
   // 初始化window manager和tray manager（仅桌面平台）
@@ -31,8 +53,8 @@ void main() async {
     // 初始化开机自启动服务
     await LaunchAtStartupService().initialize();
 
-    // 检查是否启用了开机自启动设置
-    final enableLaunchAtStartup = await ConfigStorage.getBool('app.settings.enableLaunchAtStartup') ?? false;
+    // 检查是否是通过开机自启动启动的
+    final isAutoStarted = args.contains('--autostart');
 
     WindowOptions windowOptions = const WindowOptions(
       size: Size(1280, 720),
@@ -48,13 +70,13 @@ void main() async {
       // 设置拦截窗口关闭事件
       await windowManager.setPreventClose(true);
 
-      // 如果启用了开机自启动，启动时最小化到托盘
-      if (enableLaunchAtStartup) {
+      // 如果是通过开机自启动启动的，最小化到托盘
+      if (isAutoStarted) {
         // 最小化到托盘
         await windowManager.hide();
         await windowManager.setSkipTaskbar(true);
       } else {
-        // 正常显示窗口
+        // 正常显示窗口（手动启动）
         await windowManager.show();
         await windowManager.focus();
       }
