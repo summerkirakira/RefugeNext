@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/request_star.dart';
@@ -14,10 +15,37 @@ import 'package:refuge_next/src/widgets/empty_page/empty_page.dart' show EmptyPa
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
 import 'package:refuge_next/src/funcs/app_update.dart';
 import 'package:toastification/toastification.dart';
+import 'package:window_manager/window_manager.dart';
+import 'package:refuge_next/src/funcs/tray_manager_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await mustStartup();
+
+  // 初始化window manager和tray manager（仅桌面平台）
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    await windowManager.ensureInitialized();
+
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(1280, 720),
+      minimumSize: Size(800, 600),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      title: '星河避难所',
+    );
+
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+      // 设置拦截窗口关闭事件
+      await windowManager.setPreventClose(true);
+    });
+
+    // 初始化系统托盘
+    await TrayManagerService().initialize();
+  }
 
   runApp(ChangeNotifierProvider<MainDataModel>(
     create: (context) => MainDataModel(),
@@ -53,7 +81,41 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WindowListener {
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 在桌面平台注册窗口监听器
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      windowManager.addListener(this);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkUpdate();
+      showStarDialog(context);
+    });
+  }
+
+  @override
+  void dispose() {
+    // 移除窗口监听器
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      windowManager.removeListener(this);
+    }
+    super.dispose();
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    // 拦截窗口关闭事件，隐藏到托盘而不是退出
+    bool isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose) {
+      await windowManager.hide();
+      await windowManager.setSkipTaskbar(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,15 +177,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> checkUpdate() async {
     final auth = await CirnoAuth.getInstance();
     auth.addAfterInit(() => showUpdateDialog(context, auth.property!));
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkUpdate();
-      showStarDialog(context);
-    });
   }
 
 }

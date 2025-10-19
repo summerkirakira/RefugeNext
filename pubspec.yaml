@@ -84,6 +84,8 @@ dependencies:
   sqflite_common_ffi: ^2.3.3
   path: ^1.9.0
   file_picker: ^8.0.7
+  tray_manager: ^0.2.3
+  window_manager: ^0.4.2
 
 
 dev_dependencies:
