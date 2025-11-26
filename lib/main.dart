@@ -20,6 +20,7 @@ import 'package:refuge_next/src/funcs/tray_manager_service.dart';
 import 'package:refuge_next/src/funcs/launch_at_startup_service.dart';
 import 'package:refuge_next/src/datasource/config_storage.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
+import 'src/widgets/friends/friends_status_page.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -205,8 +206,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       case 1:
         return ShopPage();
       case 2:
-        return FeatureSelectionPage();
+        return const FriendsStatusPage();
       case 3:
+        return FeatureSelectionPage();
+      case 4:
         return UserInfoPage();
       default:
         return Text('Home Page');

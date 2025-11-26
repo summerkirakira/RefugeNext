@@ -17,7 +17,7 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
   @override
   void initState() {
     super.initState();
-    _controllers = List<AnimationController>.generate(4, (int index) {
+    _controllers = List<AnimationController>.generate(5, (int index) {
       return AnimationController(
         duration: const Duration(milliseconds: 300),
         vsync: this,
@@ -61,6 +61,11 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
           icon: Icon(Icons.business_rounded),
           selectedIcon: Icon(Icons.business_rounded),
           label: Text('商店'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.people_outline),
+          selectedIcon: Icon(Icons.people_rounded),
+          label: Text('好友'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.build_circle_outlined),
