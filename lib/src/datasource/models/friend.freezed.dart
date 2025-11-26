@@ -26,8 +26,8 @@ mixin _$Friend {
   set displayname(String value) => throw _privateConstructorUsedError;
   String get nickname => throw _privateConstructorUsedError;
   set nickname(String value) => throw _privateConstructorUsedError;
-  String get avatar => throw _privateConstructorUsedError;
-  set avatar(String value) => throw _privateConstructorUsedError;
+  String? get avatar => throw _privateConstructorUsedError;
+  set avatar(String? value) => throw _privateConstructorUsedError;
   String? get signature => throw _privateConstructorUsedError;
   set signature(String? value) => throw _privateConstructorUsedError;
   FriendMeta? get meta => throw _privateConstructorUsedError;
@@ -61,7 +61,7 @@ abstract class $FriendCopyWith<$Res> {
       {String id,
       String displayname,
       String nickname,
-      String avatar,
+      String? avatar,
       String? signature,
       FriendMeta? meta,
       bool isGM,
@@ -89,7 +89,7 @@ class _$FriendCopyWithImpl<$Res, $Val extends Friend>
     Object? id = null,
     Object? displayname = null,
     Object? nickname = null,
-    Object? avatar = null,
+    Object? avatar = freezed,
     Object? signature = freezed,
     Object? meta = freezed,
     Object? isGM = null,
@@ -110,10 +110,10 @@ class _$FriendCopyWithImpl<$Res, $Val extends Friend>
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
               as String,
-      avatar: null == avatar
+      avatar: freezed == avatar
           ? _value.avatar
           : avatar // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       signature: freezed == signature
           ? _value.signature
           : signature // ignore: cast_nullable_to_non_nullable
@@ -177,7 +177,7 @@ abstract class _$$FriendImplCopyWith<$Res> implements $FriendCopyWith<$Res> {
       {String id,
       String displayname,
       String nickname,
-      String avatar,
+      String? avatar,
       String? signature,
       FriendMeta? meta,
       bool isGM,
@@ -205,7 +205,7 @@ class __$$FriendImplCopyWithImpl<$Res>
     Object? id = null,
     Object? displayname = null,
     Object? nickname = null,
-    Object? avatar = null,
+    Object? avatar = freezed,
     Object? signature = freezed,
     Object? meta = freezed,
     Object? isGM = null,
@@ -226,10 +226,10 @@ class __$$FriendImplCopyWithImpl<$Res>
           ? _value.nickname
           : nickname // ignore: cast_nullable_to_non_nullable
               as String,
-      avatar: null == avatar
+      avatar: freezed == avatar
           ? _value.avatar
           : avatar // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       signature: freezed == signature
           ? _value.signature
           : signature // ignore: cast_nullable_to_non_nullable
@@ -283,7 +283,7 @@ class _$FriendImpl implements _Friend {
   @override
   String nickname;
   @override
-  String avatar;
+  String? avatar;
   @override
   String? signature;
   @override
@@ -324,7 +324,7 @@ abstract class _Friend implements Friend {
       {required String id,
       required String displayname,
       required String nickname,
-      required String avatar,
+      required String? avatar,
       String? signature,
       FriendMeta? meta,
       bool isGM,
@@ -345,8 +345,8 @@ abstract class _Friend implements Friend {
   String get nickname;
   set nickname(String value);
   @override
-  String get avatar;
-  set avatar(String value);
+  String? get avatar;
+  set avatar(String? value);
   @override
   String? get signature;
   set signature(String? value);

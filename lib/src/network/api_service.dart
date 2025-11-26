@@ -8,6 +8,8 @@ import 'utils.dart';
 import '../datasource/models/login/login_property.dart';
 import 'dart:io';
 import 'hangar/property.dart';
+import '../datasource/models/identify_response.dart';
+import '../datasource/models/friend.dart';
 
 class RsiApiClient {
   static final RsiApiClient _instance = RsiApiClient._internal();
@@ -293,4 +295,19 @@ class RsiApiClient {
     }
     throw Exception("${response.data['msg']} (${response.data['code']})");
   }
+
+  Future<IdentifyResponse?> identify() async {
+    try {
+      final response = await basicPost(endpoint: 'api/spectrum/auth/identify', data: {});
+      final identifyResponse = IdentifyResponse.fromJson(response.data);
+      if (identifyResponse.success == 1 && identifyResponse.data != null) {
+        return identifyResponse;
+      }
+      return null;
+    } catch (e) {
+      print('Identify API Error: $e');
+      return null;
+    }
+  }
 }
+

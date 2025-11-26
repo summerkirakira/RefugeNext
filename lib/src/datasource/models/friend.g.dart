@@ -10,7 +10,7 @@ _$FriendImpl _$$FriendImplFromJson(Map<String, dynamic> json) => _$FriendImpl(
       id: json['id'] as String,
       displayname: json['displayname'] as String,
       nickname: json['nickname'] as String,
-      avatar: json['avatar'] as String,
+      avatar: json['avatar'] as String?,
       signature: json['signature'] as String?,
       meta: json['meta'] == null
           ? null

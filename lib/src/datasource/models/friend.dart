@@ -9,7 +9,7 @@ class Friend with _$Friend {
     required String id,
     required String displayname,
     required String nickname,
-    required String avatar,
+    required String? avatar,
     String? signature,
     FriendMeta? meta,
     @Default(false) bool isGM,

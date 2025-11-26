@@ -47,6 +47,7 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'models/hangar/hangar_log.dart';
 import 'models/game_log.dart';
 import 'models/game_log_status.dart';
+import './models/friend.dart';
 
 
 enum HangarItemType {
@@ -62,6 +63,20 @@ class MainDataModel extends ChangeNotifier {
   int _selectedPage = 0;
 
   String get data => _data;
+  
+  List<Friend>? _friends;
+
+  List<Friend>? get friends => _friends;
+  
+  Future<void> updateFriends() async {
+    final rsiApiClient = RsiApiClient();
+    final identify = await rsiApiClient.identify();
+    if (identify == null) {
+      return;
+    }
+    _friends = identify.data!.friends;
+    notifyListeners();
+  }
 
   int get selectedPage => _selectedPage;
 
@@ -373,7 +388,10 @@ class MainDataModel extends ChangeNotifier {
       await initShipUpgrade();
       await filterShipUpgrade(null, null);
       await readHangarLogs();
-      await refreshHangarLogs();
+      // await refreshHangarLogs();
+      if (_currentUser != null) {
+         await updateFriends();
+      }
     } catch (e) {
       print(e);
     }
@@ -1748,6 +1766,7 @@ class MainDataModel extends ChangeNotifier {
 
     rsiApiClient.setRSIToken(token: newUser.rsiToken);
     await rsiApiClient.refreshCsrfToken();
+    await updateFriends();
     notifyListeners();
   }
 
