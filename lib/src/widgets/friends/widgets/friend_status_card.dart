@@ -118,10 +118,10 @@ class FriendStatusCard extends StatelessWidget {
       case FriendStatusType.inGame:
         return const badges.BadgeStyle(
           shape: badges.BadgeShape.circle,
-          badgeColor: Colors.transparent, // Hollow center
-          padding: EdgeInsets.all(5), // Adjust size
+          badgeColor: Colors.blue,
+          padding: EdgeInsets.all(6),
           elevation: 0,
-          borderSide: BorderSide(color: Colors.green, width: 3), // Green ring
+          borderSide: BorderSide(color: Colors.white, width: 2),
         );
       case FriendStatusType.away:
         return const badges.BadgeStyle(
@@ -156,7 +156,7 @@ class FriendStatusCard extends StatelessWidget {
       case FriendStatusType.online:
         return Colors.green;
       case FriendStatusType.inGame:
-        return Colors.green; // In-game can also be seen as "active" green
+        return Colors.blue; // In-game can also be seen as "active" green
       case FriendStatusType.away:
         return Colors.amber;
       case FriendStatusType.doNotDisturb:

@@ -58,6 +58,11 @@ enum HangarItemType {
   upgrade,
 }
 
+enum FriendSortType {
+  byName,
+  byRecentActivity,
+}
+
 class MainDataModel extends ChangeNotifier {
   String _data = "Initial Data";
   int _selectedPage = 0;
@@ -67,15 +72,49 @@ class MainDataModel extends ChangeNotifier {
   List<Friend>? _friends;
 
   List<Friend>? get friends => _friends;
+
+  FriendSortType _friendSortType = FriendSortType.byName;
+
+  FriendSortType get friendSortType => _friendSortType;
+
+  void setFriendSortType(FriendSortType type) {
+    if (_friendSortType != type) {
+      _friendSortType = type;
+      notifyListeners();
+    }
+  }
+
+  List<Friend> sortFriends(List<Friend> friends) {
+    final sortedList = List<Friend>.from(friends);
+    switch (_friendSortType) {
+      case FriendSortType.byName:
+        sortedList.sort((a, b) => a.displayname.toLowerCase().compareTo(b.displayname.toLowerCase()));
+        break;
+      case FriendSortType.byRecentActivity:
+        sortedList.sort((a, b) {
+          final sinceA = a.presence?.since ?? 0;
+          final sinceB = b.presence?.since ?? 0;
+          return sinceB.compareTo(sinceA); // Descending order (most recent first)
+        });
+        break;
+    }
+    return sortedList;
+  }
   
   Future<void> updateFriends() async {
-    final rsiApiClient = RsiApiClient();
-    final identify = await rsiApiClient.identify();
-    if (identify == null) {
-      return;
+    try {
+      final rsiApiClient = RsiApiClient();
+      final result = await rsiApiClient.identify();
+      if (result == null) {
+        showAlert(message: '无法获取用户信息，请先登录');
+        return;
+      }
+      _friends = result.data!.friends;
+      notifyListeners();
+    } catch (e) {
+      showAlert(message: '获取好友列表失败: $e');
     }
-    _friends = identify.data!.friends;
-    notifyListeners();
+
   }
 
   int get selectedPage => _selectedPage;
