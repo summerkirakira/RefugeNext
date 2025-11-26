@@ -15,9 +15,10 @@ class FriendsStatusPage extends StatefulWidget {
 class _FriendsStatusPageState extends State<FriendsStatusPage> {
   final PageController _controller = PageController();
   final CustomTabBarController _tabBarController = CustomTabBarController();
-  final List<String> _titles = ["好友位置", "在线", "离线"];
+  // final List<String> _titles = ["好友位置", "在线", "离线"];
+  final List<String> _titles = ["在线", "离线"];
   final List<Widget> _pages = const [
-    FriendsLocationPage(),
+    // FriendsLocationPage(),
     FriendsOnlinePage(),
     FriendsOfflinePage(),
   ];
@@ -56,7 +57,7 @@ class _FriendsStatusPageState extends State<FriendsStatusPage> {
           const FriendsTopBar(),
           Center(
             child: SizedBox(
-              width: 180, // Adjusted width to accommodate 3 items
+              width: 120, // Adjusted width to accommodate 3 items
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

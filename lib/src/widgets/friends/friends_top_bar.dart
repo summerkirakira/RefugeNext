@@ -49,8 +49,8 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                       const Text('好友', style: TextStyle(fontSize: 24)),
                       const Spacer(),
                       IconButton(
-                        onPressed: () {
-                          // TODO: Implement refresh friend status
+                        onPressed: () async {
+                          await context.read<MainDataModel>().updateFriends();
                         },
                         icon: const Icon(Icons.refresh),
                       ),

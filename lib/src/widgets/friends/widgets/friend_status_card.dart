@@ -13,8 +13,9 @@ enum FriendStatusType {
 
 class FriendStatusCard extends StatelessWidget {
   final String name;
-  final String avatarUrl;
+  final String? avatarUrl;
   final FriendStatusType statusType;
+  final String? signature; // Added signature field
   final String? statusMessage;
   final VoidCallback? onTap;
 
@@ -23,6 +24,7 @@ class FriendStatusCard extends StatelessWidget {
     required this.name,
     required this.avatarUrl,
     this.statusType = FriendStatusType.offline,
+    this.signature, // Initialize signature
     this.statusMessage,
     this.onTap,
   });
@@ -37,7 +39,7 @@ class FriendStatusCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(6.0),
           child: Row(
             children: [
               _buildAvatar(),
@@ -52,12 +54,23 @@ class FriendStatusCard extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                     ),
+                    if (signature != null && signature!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        signature!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                            ),
+                        maxLines: 2, // Allow up to 2 lines for signature
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                     if (statusMessage != null && statusMessage!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         statusMessage!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                              color: _getStatusColor(), // Dynamic color for status message
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -79,8 +92,8 @@ class FriendStatusCard extends StatelessWidget {
       badgeContent: _getBadgeContent(),
       badgeStyle: _getBadgeStyle(),
       child: AdvancedAvatar(
-        size: 50,
-        image: CachedNetworkImageProvider(avatarUrl),
+        size: 60,
+        image: CachedNetworkImageProvider(avatarUrl ?? 'https://cdn.robertsspaceindustries.com/static/images/account/avatar_default_big.jpg'),
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
         ),
@@ -89,11 +102,6 @@ class FriendStatusCard extends StatelessWidget {
   }
 
   Widget _getBadgeContent() {
-    // For solid circles, we can use an empty container with size?
-    // Or just rely on badgeStyle padding/shape if content is null/empty string.
-    // However, badges usually expect some content or specific styling.
-    // Let's return a small SizedBox to ensure size consistency if needed, 
-    // but badgeStyle controls the visual mostly.
     return const SizedBox(width: 0, height: 0);
   }
 
@@ -140,6 +148,22 @@ class FriendStatusCard extends StatelessWidget {
           elevation: 0,
           borderSide: BorderSide(color: Colors.white, width: 2),
         );
+    }
+  }
+
+  Color _getStatusColor() {
+    switch (statusType) {
+      case FriendStatusType.online:
+        return Colors.green;
+      case FriendStatusType.inGame:
+        return Colors.green; // In-game can also be seen as "active" green
+      case FriendStatusType.away:
+        return Colors.amber;
+      case FriendStatusType.doNotDisturb:
+        return Colors.red;
+      case FriendStatusType.offline:
+      default:
+        return Colors.grey;
     }
   }
 }
