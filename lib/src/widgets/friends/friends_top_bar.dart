@@ -54,22 +54,6 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                         },
                         icon: const Icon(Icons.refresh),
                       ),
-                      PopupMenuButton<FriendSortType>(
-                        icon: const Icon(Icons.sort),
-                        onSelected: (FriendSortType result) {
-                          context.read<MainDataModel>().setFriendSortType(result);
-                        },
-                        itemBuilder: (BuildContext context) => <PopupMenuEntry<FriendSortType>>[
-                          const PopupMenuItem<FriendSortType>(
-                            value: FriendSortType.byName,
-                            child: Text('按名称排序'),
-                          ),
-                          const PopupMenuItem<FriendSortType>(
-                            value: FriendSortType.byRecentActivity,
-                            child: Text('按最近活跃排序'),
-                          ),
-                        ],
-                      ),
                       IconButton(
                         onPressed: () {
                           // TODO: Implement search for friends
