@@ -42,8 +42,8 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
         BottomNavigationBarItem(
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 0 ?
-          Icons.home_rounded : Icons.home_outlined),
-          label: '机库',
+              Icons.people_rounded : Icons.people_outline),
+          label: '好友',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.business_rounded),
@@ -52,8 +52,8 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
         BottomNavigationBarItem(
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 2 ?
-              Icons.people_rounded : Icons.people_outline),
-          label: '好友',
+              Icons.home_rounded : Icons.home_outlined),
+          label: '机库',
         ),
         BottomNavigationBarItem(
           icon: Icon(

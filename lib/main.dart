@@ -202,11 +202,11 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   Widget _getSelectedPage(int _selectedIndex) {
     switch (_selectedIndex) {
       case 0:
-        return HangarPage();
+        return const FriendsStatusPage();
       case 1:
         return ShopPage();
       case 2:
-        return const FriendsStatusPage();
+        return HangarPage();
       case 3:
         return FeatureSelectionPage();
       case 4:

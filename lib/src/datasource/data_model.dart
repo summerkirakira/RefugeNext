@@ -65,7 +65,7 @@ enum FriendSortType {
 
 class MainDataModel extends ChangeNotifier {
   String _data = "Initial Data";
-  int _selectedPage = 0;
+  int _selectedPage = 2;
 
   String get data => _data;
   

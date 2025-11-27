@@ -53,9 +53,9 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
       groupAlignment: 0.0,
       destinations: const [
         NavigationRailDestination(
-          icon: Icon(Icons.home),
-          selectedIcon: Icon(Icons.home_filled),
-          label: Text('机库'),
+          icon: Icon(Icons.people_outline),
+          selectedIcon: Icon(Icons.people_rounded),
+          label: Text('好友'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.business_rounded),
@@ -63,9 +63,9 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
           label: Text('商店'),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.people_outline),
-          selectedIcon: Icon(Icons.people_rounded),
-          label: Text('好友'),
+          icon: Icon(Icons.home),
+          selectedIcon: Icon(Icons.home_filled),
+          label: Text('机库'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.build_circle_outlined),
