@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'widgets/add_friend_modal.dart';
 
 
 class FriendsTopBar extends StatefulWidget {
@@ -62,7 +63,14 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                       ),
                       IconButton(
                         onPressed: () {
-                          // TODO: Implement add friend functionality
+                          WoltModalSheet.show<void>(
+                            context: context,
+                            pageListBuilder: (modalSheetContext) {
+                              return [
+                                getAddFriendBottomSheet(context),
+                              ];
+                            },
+                          );
                         },
                         icon: const Icon(Icons.person_add),
                       ),

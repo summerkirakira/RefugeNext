@@ -48,6 +48,7 @@ import 'models/hangar/hangar_log.dart';
 import 'models/game_log.dart';
 import 'models/game_log_status.dart';
 import './models/friend.dart';
+import './models/identify_response.dart' show IdentifyResponse;
 
 
 enum HangarItemType {
@@ -69,9 +70,11 @@ class MainDataModel extends ChangeNotifier {
 
   String get data => _data;
   
-  List<Friend>? _friends;
+  IdentifyResponse? _identifyResponse;
 
-  List<Friend>? get friends => _friends;
+  IdentifyResponse? get identifyResponse => _identifyResponse;
+
+  List<Friend>? get friends => _identifyResponse?.data?.friends; // 现在直接从 identifyResponse 中取
 
   FriendSortType _friendSortType = FriendSortType.byName;
 
@@ -107,9 +110,12 @@ class MainDataModel extends ChangeNotifier {
       final result = await rsiApiClient.identify();
       if (result == null) {
         showAlert(message: '无法获取用户信息，请先登录');
+        // 如果 identify 失败（例如未登录），清空 _identifyResponse
+        _identifyResponse = null;
+        notifyListeners();
         return;
       }
-      _friends = result.data!.friends;
+      _identifyResponse = result; // 保存完整的响应对象
       notifyListeners();
     } catch (e) {
       showAlert(message: '获取好友列表失败: $e');

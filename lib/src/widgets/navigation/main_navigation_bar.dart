@@ -42,7 +42,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
         BottomNavigationBarItem(
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 0 ?
-              Icons.people_rounded : Icons.people_outline),
+              Icons.people_rounded : Icons.people_outline_outlined),
           label: '好友',
         ),
         BottomNavigationBarItem(

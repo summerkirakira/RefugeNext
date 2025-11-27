@@ -53,7 +53,7 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
       groupAlignment: 0.0,
       destinations: const [
         NavigationRailDestination(
-          icon: Icon(Icons.people_outline),
+          icon: Icon(Icons.people_outline_outlined),
           selectedIcon: Icon(Icons.people_rounded),
           label: Text('好友'),
         ),

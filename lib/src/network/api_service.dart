@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../datasource/models/hangar/upgrade_target_property.dart';
 import 'utils.dart';
@@ -306,7 +307,57 @@ class RsiApiClient {
       return null;
     } catch (e) {
       print('Identify API Error: $e');
-      return null;
+    return null;
+    }
+  }
+
+  /// 搜索 Spectrum 成员 (Auto Complete)
+  Future<List<Friend>> searchMember(String text) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/search/member/autocomplete',
+          data: {
+            "community_id": null,
+            "text": text,
+            "ignore_self": true,
+          });
+
+      if (response.data != null && response.data['success'] == 1) {
+        // 检查 data 是否存在且为列表
+        if (response.data['data'] != null) {
+          final List<dynamic> list = response.data['data']['members'];
+          return list.map((e) => Friend.fromJson(e)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      // 可以在此处添加日志记录
+      print('Search Member Error: $e');
+      return [];
+    }
+  }
+
+  /// 发送好友请求
+  Future<bool> addFriend(String memberId) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/friend-request/create',
+          data: {
+            "member_id": memberId,
+          });
+
+      if (response.data != null && response.data['success'] == 1) {
+        showToast(message: '好友请求已发送'); // 成功提示
+        return true;
+      } else {
+        // 显示 API 返回的错误信息，或通用失败信息
+        showToast(message: response.data['code'] ?? '发送好友请求失败');
+        return false;
+      }
+    } catch (e) {
+      print('Add Friend Error: $e'); // 打印异常
+      showToast(message: '发送好友请求异常: $e'); // 异常提示
+      return false;
     }
   }
 }
