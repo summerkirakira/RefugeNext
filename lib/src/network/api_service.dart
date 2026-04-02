@@ -326,6 +326,18 @@ class RsiApiClient {
     }
   }
 
+  Future<bool> setPresenceStatus(String status) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/member/presence/setStatus',
+          data: {'status': status});
+      return response.data['success'] == 1;
+    } catch (e) {
+      print('SetPresenceStatus API Error: $e');
+      return false;
+    }
+  }
+
   /// 搜索 Spectrum 成员 (Auto Complete)
   Future<List<Friend>> searchMember(String text) async {
     try {

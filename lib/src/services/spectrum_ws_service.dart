@@ -167,7 +167,7 @@ class SpectrumWsService {
 
     // 忽略心跳响应
     final trimmed = rawData.trim();
-    if (trimmed == '8' || trimmed.isEmpty) return;
+    if (trimmed == '1' || trimmed.isEmpty) return;
 
     try {
       final json = jsonDecode(trimmed) as Map<String, dynamic>;

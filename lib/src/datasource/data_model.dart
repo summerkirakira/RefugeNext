@@ -71,6 +71,8 @@ class MainDataModel extends ChangeNotifier {
 
   String get data => _data;
   
+  StreamSubscription<Map<String, dynamic>>? _spectrumEventSub;
+
   IdentifyResponse? _identifyResponse;
 
   IdentifyResponse? get identifyResponse => _identifyResponse;
@@ -122,6 +124,24 @@ class MainDataModel extends ChangeNotifier {
       showAlert(message: '获取好友列表失败: $e');
     }
 
+  }
+
+  void _onSpectrumEvent(Map<String, dynamic> event) {
+    final type = event['type'];
+    if (type == 'member.presence.update') {
+      final memberId = event['member_id']?.toString();
+      final presenceData = event['presence'];
+      if (memberId == null || presenceData == null) return;
+      final friendList = friends;
+      if (friendList == null) return;
+      for (final friend in friendList) {
+        if (friend.id == memberId) {
+          friend.presence = FriendPresence.fromJson(presenceData);
+          notifyListeners();
+          break;
+        }
+      }
+    }
   }
 
   int get selectedPage => _selectedPage;
@@ -438,6 +458,8 @@ class MainDataModel extends ChangeNotifier {
       if (_currentUser != null) {
          await updateFriends();
          SpectrumWsService().connect();
+         _spectrumEventSub?.cancel();
+         _spectrumEventSub = SpectrumWsService().eventStream.listen(_onSpectrumEvent);
       }
     } catch (e) {
       print(e);
