@@ -360,5 +360,74 @@ class RsiApiClient {
       return false;
     }
   }
+
+  /// 接受好友请求
+  Future<bool> acceptFriend(String requestId) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/friend-request/accept',
+          data: {
+            "request_id": requestId,
+          });
+
+      if (response.data != null && response.data['success'] == 1) {
+        showToast(message: '已接受好友请求');
+        return true;
+      } else {
+        showToast(message: response.data['code'] ?? '接受好友请求失败');
+        return false;
+      }
+    } catch (e) {
+      print('Accept Friend Error: $e');
+      showToast(message: '接受好友请求异常: $e');
+      return false;
+    }
+  }
+
+  /// 移除好友
+  Future<bool> removeFriend(String memberId) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/friend/remove',
+          data: {
+            "member_id": memberId,
+          });
+
+      if (response.data != null && response.data['success'] == 1) {
+        showToast(message: '好友已移除');
+        return true;
+      } else {
+        showToast(message: response.data['code'] ?? '移除好友失败');
+        return false;
+      }
+    } catch (e) {
+      print('Remove Friend Error: $e');
+      showToast(message: '移除好友异常: $e');
+      return false;
+    }
+  }
+
+  /// 拒绝好友请求
+  Future<bool> declineFriendRequest(String requestId) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/friend-request/decline',
+          data: {
+            "request_id": requestId,
+          });
+
+      if (response.data != null && response.data['success'] == 1) {
+        showToast(message: '已拒绝好友请求');
+        return true;
+      } else {
+        showToast(message: response.data['code'] ?? '拒绝好友请求失败');
+        return false;
+      }
+    } catch (e) {
+      print('Decline Friend Request Error: $e');
+      showToast(message: '拒绝好友请求异常: $e');
+      return false;
+    }
+  }
 }
 

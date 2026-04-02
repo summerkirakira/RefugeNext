@@ -39,6 +39,25 @@ String convertDate(String date) {
   return newFormat.format(dateObj);
 }
 
+Future<int> getTotalPages(String content) async {
+  dom.Document? doc = html_parser.parse(content);
+  dom.Element? lastPageBtn = doc.querySelector(".raquo.btn");
+
+  if (lastPageBtn == null) {
+    return 1;
+  }
+
+  String href = lastPageBtn.attributes['href'] ?? "";
+  RegExp regExp = RegExp(r'page=(\d+)');
+  Match? match = regExp.firstMatch(href);
+
+  if (match != null && match.groupCount >= 1) {
+    return int.parse(match.group(1)!);
+  } else {
+    throw ParserError("未找到总页数");
+  }
+}
+
 Future<List<HangarItem>> getHangarItems({required String content, required int page}) async {
   List<HangarItem> hangarItems = [];
   dom.Document? doc = html_parser.parse(content);

@@ -46,6 +46,14 @@ class HangarRepo {
 
     return getHangarItems(content: response.data, page: page);
   }
+
+  Future<int> getHangarTotalPages() async {
+    final rsiApiClient = RsiApiClient();
+    final response = await rsiApiClient.basicGet(endpoint: "account/pledges?page=0");
+
+    return getTotalPages(response.data);
+
+  }
   
   
   Future<List<HangarItem>> refreshHangarItems() async {
@@ -53,16 +61,21 @@ class HangarRepo {
     
     int page = 1;
 
+    int totalPages = await getHangarTotalPages();
+
     bool isEnd = false;
     while (!isEnd) {
       List<int> pages = List.generate(10, (index) => index + page);
+      if (pages.last > totalPages) {
+        isEnd = true;
+      }
       List<List<HangarItem>> results = [];
-      results = await runAsyncFunctionWithParams(getHangarItemByPage, pages, 10);
+      results = await runAsyncFunctionWithParams(getHangarItemByPage, pages, pages.length);
 
       for (var element in results) {
-        if (element.isEmpty) {
-          isEnd = true;
-        }
+        // if (element.isEmpty) {
+        //   isEnd = true;
+        // }
         hangarItems.addAll(element);
       }
       page += 10;
