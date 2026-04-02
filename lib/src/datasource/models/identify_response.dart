@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'friend.dart';
+import 'spectrum/private_lobby.dart';
 
 part 'identify_response.freezed.dart';
 part 'identify_response.g.dart';
@@ -20,6 +21,7 @@ class IdentifyResponse with _$IdentifyResponse {
 class IdentifyData with _$IdentifyData {
   factory IdentifyData({
     List<Friend>? friends,
+    @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies,
   }) = _IdentifyData;
 
   factory IdentifyData.fromJson(Map<String, dynamic> json) => _$IdentifyDataFromJson(json);

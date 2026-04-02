@@ -49,7 +49,10 @@ import 'models/game_log.dart';
 import 'models/game_log_status.dart';
 import './models/friend.dart';
 import './models/identify_response.dart' show IdentifyResponse;
+import './models/spectrum/private_lobby.dart';
+import './models/spectrum/spectrum_message.dart';
 import '../services/spectrum_ws_service.dart';
+import '../services/notification_service.dart';
 
 
 enum HangarItemType {
@@ -73,6 +76,15 @@ class MainDataModel extends ChangeNotifier {
   
   StreamSubscription<Map<String, dynamic>>? _spectrumEventSub;
 
+  int _unreadMessageCount = 0;
+
+  int get unreadMessageCount => _unreadMessageCount;
+
+  void clearUnreadMessages() {
+    _unreadMessageCount = 0;
+    notifyListeners();
+  }
+
   String _currentPresenceStatus = 'online';
 
   String get currentPresenceStatus => _currentPresenceStatus;
@@ -89,7 +101,9 @@ class MainDataModel extends ChangeNotifier {
 
   IdentifyResponse? get identifyResponse => _identifyResponse;
 
-  List<Friend>? get friends => _identifyResponse?.data?.friends; // 现在直接从 identifyResponse 中取
+  List<Friend>? get friends => _identifyResponse?.data?.friends;
+
+  List<PrivateLobby>? get privateLobbies => _identifyResponse?.data?.privateLobbies;
 
   FriendSortType _friendSortType = FriendSortType.byName;
 
@@ -152,6 +166,21 @@ class MainDataModel extends ChangeNotifier {
           notifyListeners();
           break;
         }
+      }
+    } else if (type == 'message.new') {
+      final messageData = event['message'];
+      if (messageData == null) return;
+      try {
+        final message = SpectrumMessage.fromJson(messageData);
+        _unreadMessageCount++;
+        notifyListeners();
+
+        final sender = message.member?.displayname ?? '未知用户';
+        final text = message.plaintext ?? '';
+        showToast(message: '$sender: $text');
+        NotificationService().showMessageNotification(sender: sender, text: text);
+      } catch (e) {
+        print('SpectrumWS: Failed to parse message.new: $e');
       }
     }
   }

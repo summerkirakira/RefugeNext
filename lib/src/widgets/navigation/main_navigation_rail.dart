@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:badges/badges.dart' as badges;
 import '../../datasource/data_model.dart';
 
 
@@ -39,6 +40,9 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
     return NavigationRail(
       selectedIndex: context.watch<MainDataModel>().selectedPage,
       onDestinationSelected: (int index) {
+        if (index == 0) {
+          context.read<MainDataModel>().clearUnreadMessages();
+        }
         context.read<MainDataModel>().updateSelectedPage(index);
 
         for (var i = 0; i < _controllers.length; i++) {
@@ -51,28 +55,50 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
       },
       labelType: NavigationRailLabelType.selected,
       groupAlignment: 0.0,
-      destinations: const [
+      destinations: [
         NavigationRailDestination(
-          icon: Icon(Icons.people_outline_outlined),
-          selectedIcon: Icon(Icons.people_rounded),
-          label: Text('好友'),
+          icon: badges.Badge(
+            showBadge: context.watch<MainDataModel>().unreadMessageCount > 0,
+            badgeContent: Text(
+              context.watch<MainDataModel>().unreadMessageCount.toString(),
+              style: const TextStyle(color: Colors.white, fontSize: 10),
+            ),
+            badgeStyle: const badges.BadgeStyle(
+              badgeColor: Colors.red,
+              padding: EdgeInsets.all(4),
+            ),
+            child: const Icon(Icons.people_outline_outlined),
+          ),
+          selectedIcon: badges.Badge(
+            showBadge: context.watch<MainDataModel>().unreadMessageCount > 0,
+            badgeContent: Text(
+              context.watch<MainDataModel>().unreadMessageCount.toString(),
+              style: const TextStyle(color: Colors.white, fontSize: 10),
+            ),
+            badgeStyle: const badges.BadgeStyle(
+              badgeColor: Colors.red,
+              padding: EdgeInsets.all(4),
+            ),
+            child: const Icon(Icons.people_rounded),
+          ),
+          label: const Text('好友'),
         ),
-        NavigationRailDestination(
+        const NavigationRailDestination(
           icon: Icon(Icons.business_rounded),
           selectedIcon: Icon(Icons.business_rounded),
           label: Text('商店'),
         ),
-        NavigationRailDestination(
+        const NavigationRailDestination(
           icon: Icon(Icons.home),
           selectedIcon: Icon(Icons.home_filled),
           label: Text('机库'),
         ),
-        NavigationRailDestination(
+        const NavigationRailDestination(
           icon: Icon(Icons.build_circle_outlined),
           selectedIcon: Icon(Icons.build_circle_rounded),
           label: Text('工具'),
         ),
-        NavigationRailDestination(
+        const NavigationRailDestination(
           icon: Icon(Icons.account_circle_outlined),
           selectedIcon: Icon(Icons.account_circle_rounded),
           label: Text('我的'),

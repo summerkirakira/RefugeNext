@@ -31,9 +31,13 @@ _$IdentifyDataImpl _$$IdentifyDataImplFromJson(Map<String, dynamic> json) =>
       friends: (json['friends'] as List<dynamic>?)
           ?.map((e) => Friend.fromJson(e as Map<String, dynamic>))
           .toList(),
+      privateLobbies: (json['private_lobbies'] as List<dynamic>?)
+          ?.map((e) => PrivateLobby.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$$IdentifyDataImplToJson(_$IdentifyDataImpl instance) =>
     <String, dynamic>{
       'friends': instance.friends,
+      'private_lobbies': instance.privateLobbies,
     };

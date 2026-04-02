@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:badges/badges.dart' as badges;
 import '../../datasource/data_model.dart';
 
 
@@ -40,9 +41,20 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
     return BottomNavigationBar(
       items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(
-              Provider.of<MainDataModel>(context).selectedPage == 0 ?
-              Icons.people_rounded : Icons.people_outline_outlined),
+          icon: badges.Badge(
+            showBadge: context.watch<MainDataModel>().unreadMessageCount > 0,
+            badgeContent: Text(
+              context.watch<MainDataModel>().unreadMessageCount.toString(),
+              style: const TextStyle(color: Colors.white, fontSize: 10),
+            ),
+            badgeStyle: const badges.BadgeStyle(
+              badgeColor: Colors.red,
+              padding: EdgeInsets.all(4),
+            ),
+            child: Icon(
+                Provider.of<MainDataModel>(context).selectedPage == 0 ?
+                Icons.people_rounded : Icons.people_outline_outlined),
+          ),
           label: '好友',
         ),
         BottomNavigationBarItem(
@@ -72,6 +84,9 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
       selectedItemColor: Theme.of(context).colorScheme.primary,
       unselectedItemColor: Theme.of(context).colorScheme.onSurface,
       onTap: (int index) {
+        if (index == 0) {
+          context.read<MainDataModel>().clearUnreadMessages();
+        }
         context.read<MainDataModel>().updateSelectedPage(index);
 
         // for (var i = 0; i < _controllers.length; i++) {

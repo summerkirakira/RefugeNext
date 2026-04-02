@@ -222,6 +222,11 @@ IdentifyData _$IdentifyDataFromJson(Map<String, dynamic> json) {
 mixin _$IdentifyData {
   List<Friend>? get friends => throw _privateConstructorUsedError;
   set friends(List<Friend>? value) => throw _privateConstructorUsedError;
+  @JsonKey(name: 'private_lobbies')
+  List<PrivateLobby>? get privateLobbies => throw _privateConstructorUsedError;
+  @JsonKey(name: 'private_lobbies')
+  set privateLobbies(List<PrivateLobby>? value) =>
+      throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -235,7 +240,9 @@ abstract class $IdentifyDataCopyWith<$Res> {
           IdentifyData value, $Res Function(IdentifyData) then) =
       _$IdentifyDataCopyWithImpl<$Res, IdentifyData>;
   @useResult
-  $Res call({List<Friend>? friends});
+  $Res call(
+      {List<Friend>? friends,
+      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies});
 }
 
 /// @nodoc
@@ -252,12 +259,17 @@ class _$IdentifyDataCopyWithImpl<$Res, $Val extends IdentifyData>
   @override
   $Res call({
     Object? friends = freezed,
+    Object? privateLobbies = freezed,
   }) {
     return _then(_value.copyWith(
       friends: freezed == friends
           ? _value.friends
           : friends // ignore: cast_nullable_to_non_nullable
               as List<Friend>?,
+      privateLobbies: freezed == privateLobbies
+          ? _value.privateLobbies
+          : privateLobbies // ignore: cast_nullable_to_non_nullable
+              as List<PrivateLobby>?,
     ) as $Val);
   }
 }
@@ -270,7 +282,9 @@ abstract class _$$IdentifyDataImplCopyWith<$Res>
       __$$IdentifyDataImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<Friend>? friends});
+  $Res call(
+      {List<Friend>? friends,
+      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies});
 }
 
 /// @nodoc
@@ -285,12 +299,17 @@ class __$$IdentifyDataImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? friends = freezed,
+    Object? privateLobbies = freezed,
   }) {
     return _then(_$IdentifyDataImpl(
       friends: freezed == friends
           ? _value.friends
           : friends // ignore: cast_nullable_to_non_nullable
               as List<Friend>?,
+      privateLobbies: freezed == privateLobbies
+          ? _value.privateLobbies
+          : privateLobbies // ignore: cast_nullable_to_non_nullable
+              as List<PrivateLobby>?,
     ));
   }
 }
@@ -298,17 +317,21 @@ class __$$IdentifyDataImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$IdentifyDataImpl implements _IdentifyData {
-  _$IdentifyDataImpl({this.friends});
+  _$IdentifyDataImpl(
+      {this.friends, @JsonKey(name: 'private_lobbies') this.privateLobbies});
 
   factory _$IdentifyDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$IdentifyDataImplFromJson(json);
 
   @override
   List<Friend>? friends;
+  @override
+  @JsonKey(name: 'private_lobbies')
+  List<PrivateLobby>? privateLobbies;
 
   @override
   String toString() {
-    return 'IdentifyData(friends: $friends)';
+    return 'IdentifyData(friends: $friends, privateLobbies: $privateLobbies)';
   }
 
   @JsonKey(ignore: true)
@@ -326,7 +349,10 @@ class _$IdentifyDataImpl implements _IdentifyData {
 }
 
 abstract class _IdentifyData implements IdentifyData {
-  factory _IdentifyData({List<Friend>? friends}) = _$IdentifyDataImpl;
+  factory _IdentifyData(
+      {List<Friend>? friends,
+      @JsonKey(name: 'private_lobbies')
+      List<PrivateLobby>? privateLobbies}) = _$IdentifyDataImpl;
 
   factory _IdentifyData.fromJson(Map<String, dynamic> json) =
       _$IdentifyDataImpl.fromJson;
@@ -334,6 +360,11 @@ abstract class _IdentifyData implements IdentifyData {
   @override
   List<Friend>? get friends;
   set friends(List<Friend>? value);
+  @override
+  @JsonKey(name: 'private_lobbies')
+  List<PrivateLobby>? get privateLobbies;
+  @JsonKey(name: 'private_lobbies')
+  set privateLobbies(List<PrivateLobby>? value);
   @override
   @JsonKey(ignore: true)
   _$$IdentifyDataImplCopyWith<_$IdentifyDataImpl> get copyWith =>

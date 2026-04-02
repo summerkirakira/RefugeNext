@@ -11,6 +11,7 @@ import 'dart:io';
 import 'hangar/property.dart';
 import '../datasource/models/identify_response.dart';
 import '../datasource/models/spectrum/spectrum_auth_property.dart';
+import '../datasource/models/spectrum/spectrum_message.dart';
 import '../datasource/models/friend.dart';
 
 class RsiApiClient {
@@ -335,6 +336,67 @@ class RsiApiClient {
     } catch (e) {
       print('SetPresenceStatus API Error: $e');
       return false;
+    }
+  }
+
+  Future<bool> sendMessage({
+    required String lobbyId,
+    required String plaintext,
+  }) async {
+    try {
+      final key = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
+      final response = await basicPost(
+          endpoint: 'api/spectrum/message/create',
+          data: {
+            'lobby_id': lobbyId,
+            'content_state': {
+              'blocks': [
+                {
+                  'key': key,
+                  'text': plaintext,
+                  'type': 'unstyled',
+                  'depth': 0,
+                  'inlineStyleRanges': [],
+                  'entityRanges': [],
+                  'data': {},
+                }
+              ],
+              'entityMap': {},
+            },
+            'plaintext': plaintext,
+            'media_id': null,
+            'highlight_role_id': null,
+          });
+      return response.data['success'] == 1;
+    } catch (e) {
+      print('SendMessage API Error: $e');
+      return false;
+    }
+  }
+
+  Future<List<SpectrumMessage>> getMessageHistory({
+    required String lobbyId,
+    String? messageId,
+    String timeframe = 'before',
+    int size = 50,
+  }) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/message/history',
+          data: {
+            'lobby_id': lobbyId,
+            'timeframe': timeframe,
+            'message_id': messageId,
+            'size': size,
+          });
+      if (response.data['success'] == 1 && response.data['data'] != null) {
+        final List<dynamic> list = response.data['data']['messages'] ?? [];
+        return list.map((e) => SpectrumMessage.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('GetMessageHistory API Error: $e');
+      return [];
     }
   }
 
