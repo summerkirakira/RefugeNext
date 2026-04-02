@@ -49,6 +49,7 @@ import 'models/game_log.dart';
 import 'models/game_log_status.dart';
 import './models/friend.dart';
 import './models/identify_response.dart' show IdentifyResponse;
+import '../services/spectrum_ws_service.dart';
 
 
 enum HangarItemType {
@@ -436,6 +437,7 @@ class MainDataModel extends ChangeNotifier {
       // await refreshHangarLogs();
       if (_currentUser != null) {
          await updateFriends();
+         SpectrumWsService().connect();
       }
     } catch (e) {
       print(e);
