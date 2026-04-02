@@ -12,6 +12,7 @@ import 'hangar/property.dart';
 import '../datasource/models/identify_response.dart';
 import '../datasource/models/spectrum/spectrum_auth_property.dart';
 import '../datasource/models/spectrum/spectrum_message.dart';
+import '../datasource/models/spectrum/private_lobby.dart';
 import '../datasource/models/friend.dart';
 
 class RsiApiClient {
@@ -327,6 +328,21 @@ class RsiApiClient {
     }
   }
 
+  Future<PrivateLobby?> getLobbyInfo(String memberNickname) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/lobby/info',
+          data: {'member_nickname': memberNickname});
+      if (response.data['success'] == 1 && response.data['data'] != null) {
+        return PrivateLobby.fromJson(response.data['data']);
+      }
+      return null;
+    } catch (e) {
+      print('GetLobbyInfo API Error: $e');
+      return null;
+    }
+  }
+
   Future<bool> setPresenceStatus(String status) async {
     try {
       final response = await basicPost(
@@ -344,7 +360,7 @@ class RsiApiClient {
     required String plaintext,
   }) async {
     try {
-      final key = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
+      final key = (DateTime.now().millisecondsSinceEpoch % 1679616).toRadixString(36).padLeft(4, '0');
       final response = await basicPost(
           endpoint: 'api/spectrum/message/create',
           data: {
@@ -515,6 +531,24 @@ class RsiApiClient {
     } catch (e) {
       print('Decline Friend Request Error: $e');
       showToast(message: '拒绝好友请求异常: $e');
+      return false;
+    }
+  }
+
+  Future<bool> cancelFriendRequest(String requestId) async {
+    try {
+      final response = await basicPost(
+          endpoint: 'api/spectrum/friend-request/cancel',
+          data: {'request_id': requestId});
+      if (response.data != null && response.data['success'] == 1) {
+        return true;
+      } else {
+        showToast(message: response.data['code'] ?? '取消好友请求失败');
+        return false;
+      }
+    } catch (e) {
+      print('Cancel Friend Request Error: $e');
+      showToast(message: '取消好友请求异常: $e');
       return false;
     }
   }

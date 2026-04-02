@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tab_bar/library.dart';
 import 'package:refuge_next/src/widgets/friends/friends_top_bar.dart';
-import 'package:refuge_next/src/widgets/friends/pages/friends_location_page.dart';
+import 'package:refuge_next/src/widgets/friends/pages/friends_messages_page.dart';
 import 'package:refuge_next/src/widgets/friends/pages/friends_online_page.dart';
 import 'package:refuge_next/src/widgets/friends/pages/friends_offline_page.dart';
 
@@ -15,10 +15,9 @@ class FriendsStatusPage extends StatefulWidget {
 class _FriendsStatusPageState extends State<FriendsStatusPage> {
   final PageController _controller = PageController();
   final CustomTabBarController _tabBarController = CustomTabBarController();
-  // final List<String> _titles = ["好友位置", "在线", "离线"];
-  final List<String> _titles = ["在线", "离线"];
+  final List<String> _titles = ["消息", "在线", "离线"];
   final List<Widget> _pages = const [
-    // FriendsLocationPage(),
+    FriendsMessagesPage(),
     FriendsOnlinePage(),
     FriendsOfflinePage(),
   ];
@@ -57,7 +56,7 @@ class _FriendsStatusPageState extends State<FriendsStatusPage> {
           const FriendsTopBar(),
           Center(
             child: SizedBox(
-              width: 120, // Adjusted width to accommodate 3 items
+              width: 180,
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

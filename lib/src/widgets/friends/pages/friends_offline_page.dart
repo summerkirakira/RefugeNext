@@ -4,6 +4,9 @@ import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:refuge_next/src/widgets/friends/widgets/friend_status_card.dart';
 import 'package:refuge_next/src/widgets/friends/utils.dart';
 import 'package:refuge_next/src/widgets/friends/widgets/friend_sort_bar.dart';
+import 'package:refuge_next/src/widgets/friends/widgets/chat_detail_page.dart';
+import 'package:refuge_next/src/network/api_service.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 
 class FriendsOfflinePage extends StatelessWidget {
   const FriendsOfflinePage({super.key});
@@ -64,6 +67,19 @@ class FriendsOfflinePage extends StatelessWidget {
                             statusType: getFriendStatusType(friend),
                             signature: friend.signature,
                             statusMessage: friend.presence?.info ?? friend.presence!.status,
+                            onTap: () async {
+                              final lobby = await RsiApiClient().getLobbyInfo(friend.nickname);
+                              if (lobby != null && context.mounted) {
+                                Navigator.push(context, MaterialPageRoute(
+                                  builder: (_) => ChatDetailPage(
+                                    lobby: lobby,
+                                    currentUserHandle: dataModel.currentUser?.handle ?? '',
+                                  ),
+                                ));
+                              } else {
+                                showToast(message: '无法打开聊天');
+                              }
+                            },
                           );
                         },
                       ),

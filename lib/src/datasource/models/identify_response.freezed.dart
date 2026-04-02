@@ -227,6 +227,11 @@ mixin _$IdentifyData {
   @JsonKey(name: 'private_lobbies')
   set privateLobbies(List<PrivateLobby>? value) =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'friend_requests')
+  List<FriendRequest>? get friendRequests => throw _privateConstructorUsedError;
+  @JsonKey(name: 'friend_requests')
+  set friendRequests(List<FriendRequest>? value) =>
+      throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -242,7 +247,8 @@ abstract class $IdentifyDataCopyWith<$Res> {
   @useResult
   $Res call(
       {List<Friend>? friends,
-      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies});
+      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies,
+      @JsonKey(name: 'friend_requests') List<FriendRequest>? friendRequests});
 }
 
 /// @nodoc
@@ -260,6 +266,7 @@ class _$IdentifyDataCopyWithImpl<$Res, $Val extends IdentifyData>
   $Res call({
     Object? friends = freezed,
     Object? privateLobbies = freezed,
+    Object? friendRequests = freezed,
   }) {
     return _then(_value.copyWith(
       friends: freezed == friends
@@ -270,6 +277,10 @@ class _$IdentifyDataCopyWithImpl<$Res, $Val extends IdentifyData>
           ? _value.privateLobbies
           : privateLobbies // ignore: cast_nullable_to_non_nullable
               as List<PrivateLobby>?,
+      friendRequests: freezed == friendRequests
+          ? _value.friendRequests
+          : friendRequests // ignore: cast_nullable_to_non_nullable
+              as List<FriendRequest>?,
     ) as $Val);
   }
 }
@@ -284,7 +295,8 @@ abstract class _$$IdentifyDataImplCopyWith<$Res>
   @useResult
   $Res call(
       {List<Friend>? friends,
-      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies});
+      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies,
+      @JsonKey(name: 'friend_requests') List<FriendRequest>? friendRequests});
 }
 
 /// @nodoc
@@ -300,6 +312,7 @@ class __$$IdentifyDataImplCopyWithImpl<$Res>
   $Res call({
     Object? friends = freezed,
     Object? privateLobbies = freezed,
+    Object? friendRequests = freezed,
   }) {
     return _then(_$IdentifyDataImpl(
       friends: freezed == friends
@@ -310,6 +323,10 @@ class __$$IdentifyDataImplCopyWithImpl<$Res>
           ? _value.privateLobbies
           : privateLobbies // ignore: cast_nullable_to_non_nullable
               as List<PrivateLobby>?,
+      friendRequests: freezed == friendRequests
+          ? _value.friendRequests
+          : friendRequests // ignore: cast_nullable_to_non_nullable
+              as List<FriendRequest>?,
     ));
   }
 }
@@ -318,7 +335,9 @@ class __$$IdentifyDataImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$IdentifyDataImpl implements _IdentifyData {
   _$IdentifyDataImpl(
-      {this.friends, @JsonKey(name: 'private_lobbies') this.privateLobbies});
+      {this.friends,
+      @JsonKey(name: 'private_lobbies') this.privateLobbies,
+      @JsonKey(name: 'friend_requests') this.friendRequests});
 
   factory _$IdentifyDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$IdentifyDataImplFromJson(json);
@@ -328,10 +347,13 @@ class _$IdentifyDataImpl implements _IdentifyData {
   @override
   @JsonKey(name: 'private_lobbies')
   List<PrivateLobby>? privateLobbies;
+  @override
+  @JsonKey(name: 'friend_requests')
+  List<FriendRequest>? friendRequests;
 
   @override
   String toString() {
-    return 'IdentifyData(friends: $friends, privateLobbies: $privateLobbies)';
+    return 'IdentifyData(friends: $friends, privateLobbies: $privateLobbies, friendRequests: $friendRequests)';
   }
 
   @JsonKey(ignore: true)
@@ -351,8 +373,9 @@ class _$IdentifyDataImpl implements _IdentifyData {
 abstract class _IdentifyData implements IdentifyData {
   factory _IdentifyData(
       {List<Friend>? friends,
-      @JsonKey(name: 'private_lobbies')
-      List<PrivateLobby>? privateLobbies}) = _$IdentifyDataImpl;
+      @JsonKey(name: 'private_lobbies') List<PrivateLobby>? privateLobbies,
+      @JsonKey(name: 'friend_requests')
+      List<FriendRequest>? friendRequests}) = _$IdentifyDataImpl;
 
   factory _IdentifyData.fromJson(Map<String, dynamic> json) =
       _$IdentifyDataImpl.fromJson;
@@ -365,6 +388,11 @@ abstract class _IdentifyData implements IdentifyData {
   List<PrivateLobby>? get privateLobbies;
   @JsonKey(name: 'private_lobbies')
   set privateLobbies(List<PrivateLobby>? value);
+  @override
+  @JsonKey(name: 'friend_requests')
+  List<FriendRequest>? get friendRequests;
+  @JsonKey(name: 'friend_requests')
+  set friendRequests(List<FriendRequest>? value);
   @override
   @JsonKey(ignore: true)
   _$$IdentifyDataImplCopyWith<_$IdentifyDataImpl> get copyWith =>

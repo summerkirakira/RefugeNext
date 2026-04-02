@@ -4,7 +4,9 @@ import '../../datasource/data_model.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'widgets/add_friend_modal.dart';
+import 'widgets/friend_request_modal.dart';
 import '../common/status_avatar.dart';
+import 'package:badges/badges.dart' as badges;
 
 
 class FriendsTopBar extends StatefulWidget {
@@ -55,6 +57,30 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                           // TODO: Implement search for friends
                         },
                         icon: const Icon(Icons.search),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          WoltModalSheet.show<void>(
+                            context: context,
+                            pageListBuilder: (modalSheetContext) {
+                              return [
+                                getFriendRequestBottomSheet(context),
+                              ];
+                            },
+                          );
+                        },
+                        icon: badges.Badge(
+                          showBadge: (dataModel.friendRequests?.length ?? 0) > 0,
+                          badgeContent: Text(
+                            (dataModel.friendRequests?.length ?? 0).toString(),
+                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                          ),
+                          badgeStyle: const badges.BadgeStyle(
+                            badgeColor: Colors.red,
+                            padding: EdgeInsets.all(4),
+                          ),
+                          child: const Icon(Icons.person_pin),
+                        ),
                       ),
                       IconButton(
                         onPressed: () {

@@ -168,14 +168,13 @@ class SpectrumWsService {
     // 忽略心跳响应
     final trimmed = rawData.trim();
     if (trimmed == '1' || trimmed.isEmpty) return;
-
     try {
       final json = jsonDecode(trimmed) as Map<String, dynamic>;
       _eventController.add(json);
     } catch (e) {
       print('SpectrumWS: Failed to parse message: $e');
-    }
   }
+}
 
   void _onDone() {
     print('SpectrumWS: Connection closed');

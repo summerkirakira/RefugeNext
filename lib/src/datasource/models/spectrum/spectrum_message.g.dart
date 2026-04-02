@@ -14,6 +14,10 @@ _$SpectrumMessageImpl _$$SpectrumMessageImplFromJson(
       memberId: json['member_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       plaintext: json['plaintext'] as String?,
+      contentState: json['content_state'] == null
+          ? null
+          : SpectrumContentState.fromJson(
+              json['content_state'] as Map<String, dynamic>),
       member: json['member'] == null
           ? null
           : SpectrumMessageMember.fromJson(
@@ -32,8 +36,39 @@ Map<String, dynamic> _$$SpectrumMessageImplToJson(
       'member_id': instance.memberId,
       'lobby_id': instance.lobbyId,
       'plaintext': instance.plaintext,
+      'content_state': instance.contentState,
       'member': instance.member,
       'lobby': instance.lobby,
+    };
+
+_$SpectrumContentStateImpl _$$SpectrumContentStateImplFromJson(
+        Map<String, dynamic> json) =>
+    _$SpectrumContentStateImpl(
+      blocks: (json['blocks'] as List<dynamic>?)
+          ?.map((e) => SpectrumContentBlock.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$$SpectrumContentStateImplToJson(
+        _$SpectrumContentStateImpl instance) =>
+    <String, dynamic>{
+      'blocks': instance.blocks,
+    };
+
+_$SpectrumContentBlockImpl _$$SpectrumContentBlockImplFromJson(
+        Map<String, dynamic> json) =>
+    _$SpectrumContentBlockImpl(
+      key: json['key'] as String?,
+      text: json['text'] as String? ?? '',
+      type: json['type'] as String?,
+    );
+
+Map<String, dynamic> _$$SpectrumContentBlockImplToJson(
+        _$SpectrumContentBlockImpl instance) =>
+    <String, dynamic>{
+      'key': instance.key,
+      'text': instance.text,
+      'type': instance.type,
     };
 
 _$SpectrumMessageMemberImpl _$$SpectrumMessageMemberImplFromJson(

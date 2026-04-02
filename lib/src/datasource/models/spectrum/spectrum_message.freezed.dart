@@ -36,6 +36,11 @@ mixin _$SpectrumMessage {
   set lobbyId(String? value) => throw _privateConstructorUsedError;
   String? get plaintext => throw _privateConstructorUsedError;
   set plaintext(String? value) => throw _privateConstructorUsedError;
+  @JsonKey(name: 'content_state')
+  SpectrumContentState? get contentState => throw _privateConstructorUsedError;
+  @JsonKey(name: 'content_state')
+  set contentState(SpectrumContentState? value) =>
+      throw _privateConstructorUsedError;
   SpectrumMessageMember? get member => throw _privateConstructorUsedError;
   set member(SpectrumMessageMember? value) =>
       throw _privateConstructorUsedError;
@@ -60,9 +65,11 @@ abstract class $SpectrumMessageCopyWith<$Res> {
       @JsonKey(name: 'member_id') String? memberId,
       @JsonKey(name: 'lobby_id') String? lobbyId,
       String? plaintext,
+      @JsonKey(name: 'content_state') SpectrumContentState? contentState,
       SpectrumMessageMember? member,
       SpectrumMessageLobby? lobby});
 
+  $SpectrumContentStateCopyWith<$Res>? get contentState;
   $SpectrumMessageMemberCopyWith<$Res>? get member;
   $SpectrumMessageLobbyCopyWith<$Res>? get lobby;
 }
@@ -85,6 +92,7 @@ class _$SpectrumMessageCopyWithImpl<$Res, $Val extends SpectrumMessage>
     Object? memberId = freezed,
     Object? lobbyId = freezed,
     Object? plaintext = freezed,
+    Object? contentState = freezed,
     Object? member = freezed,
     Object? lobby = freezed,
   }) {
@@ -109,6 +117,10 @@ class _$SpectrumMessageCopyWithImpl<$Res, $Val extends SpectrumMessage>
           ? _value.plaintext
           : plaintext // ignore: cast_nullable_to_non_nullable
               as String?,
+      contentState: freezed == contentState
+          ? _value.contentState
+          : contentState // ignore: cast_nullable_to_non_nullable
+              as SpectrumContentState?,
       member: freezed == member
           ? _value.member
           : member // ignore: cast_nullable_to_non_nullable
@@ -118,6 +130,18 @@ class _$SpectrumMessageCopyWithImpl<$Res, $Val extends SpectrumMessage>
           : lobby // ignore: cast_nullable_to_non_nullable
               as SpectrumMessageLobby?,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $SpectrumContentStateCopyWith<$Res>? get contentState {
+    if (_value.contentState == null) {
+      return null;
+    }
+
+    return $SpectrumContentStateCopyWith<$Res>(_value.contentState!, (value) {
+      return _then(_value.copyWith(contentState: value) as $Val);
+    });
   }
 
   @override
@@ -159,9 +183,12 @@ abstract class _$$SpectrumMessageImplCopyWith<$Res>
       @JsonKey(name: 'member_id') String? memberId,
       @JsonKey(name: 'lobby_id') String? lobbyId,
       String? plaintext,
+      @JsonKey(name: 'content_state') SpectrumContentState? contentState,
       SpectrumMessageMember? member,
       SpectrumMessageLobby? lobby});
 
+  @override
+  $SpectrumContentStateCopyWith<$Res>? get contentState;
   @override
   $SpectrumMessageMemberCopyWith<$Res>? get member;
   @override
@@ -184,6 +211,7 @@ class __$$SpectrumMessageImplCopyWithImpl<$Res>
     Object? memberId = freezed,
     Object? lobbyId = freezed,
     Object? plaintext = freezed,
+    Object? contentState = freezed,
     Object? member = freezed,
     Object? lobby = freezed,
   }) {
@@ -208,6 +236,10 @@ class __$$SpectrumMessageImplCopyWithImpl<$Res>
           ? _value.plaintext
           : plaintext // ignore: cast_nullable_to_non_nullable
               as String?,
+      contentState: freezed == contentState
+          ? _value.contentState
+          : contentState // ignore: cast_nullable_to_non_nullable
+              as SpectrumContentState?,
       member: freezed == member
           ? _value.member
           : member // ignore: cast_nullable_to_non_nullable
@@ -222,15 +254,17 @@ class __$$SpectrumMessageImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$SpectrumMessageImpl implements _SpectrumMessage {
+class _$SpectrumMessageImpl extends _SpectrumMessage {
   _$SpectrumMessageImpl(
       {required this.id,
       @JsonKey(name: 'time_created') this.timeCreated,
       @JsonKey(name: 'member_id') this.memberId,
       @JsonKey(name: 'lobby_id') this.lobbyId,
       this.plaintext,
+      @JsonKey(name: 'content_state') this.contentState,
       this.member,
-      this.lobby});
+      this.lobby})
+      : super._();
 
   factory _$SpectrumMessageImpl.fromJson(Map<String, dynamic> json) =>
       _$$SpectrumMessageImplFromJson(json);
@@ -249,13 +283,16 @@ class _$SpectrumMessageImpl implements _SpectrumMessage {
   @override
   String? plaintext;
   @override
+  @JsonKey(name: 'content_state')
+  SpectrumContentState? contentState;
+  @override
   SpectrumMessageMember? member;
   @override
   SpectrumMessageLobby? lobby;
 
   @override
   String toString() {
-    return 'SpectrumMessage(id: $id, timeCreated: $timeCreated, memberId: $memberId, lobbyId: $lobbyId, plaintext: $plaintext, member: $member, lobby: $lobby)';
+    return 'SpectrumMessage(id: $id, timeCreated: $timeCreated, memberId: $memberId, lobbyId: $lobbyId, plaintext: $plaintext, contentState: $contentState, member: $member, lobby: $lobby)';
   }
 
   @JsonKey(ignore: true)
@@ -273,15 +310,17 @@ class _$SpectrumMessageImpl implements _SpectrumMessage {
   }
 }
 
-abstract class _SpectrumMessage implements SpectrumMessage {
+abstract class _SpectrumMessage extends SpectrumMessage {
   factory _SpectrumMessage(
       {required String id,
       @JsonKey(name: 'time_created') int? timeCreated,
       @JsonKey(name: 'member_id') String? memberId,
       @JsonKey(name: 'lobby_id') String? lobbyId,
       String? plaintext,
+      @JsonKey(name: 'content_state') SpectrumContentState? contentState,
       SpectrumMessageMember? member,
       SpectrumMessageLobby? lobby}) = _$SpectrumMessageImpl;
+  _SpectrumMessage._() : super._();
 
   factory _SpectrumMessage.fromJson(Map<String, dynamic> json) =
       _$SpectrumMessageImpl.fromJson;
@@ -308,6 +347,11 @@ abstract class _SpectrumMessage implements SpectrumMessage {
   String? get plaintext;
   set plaintext(String? value);
   @override
+  @JsonKey(name: 'content_state')
+  SpectrumContentState? get contentState;
+  @JsonKey(name: 'content_state')
+  set contentState(SpectrumContentState? value);
+  @override
   SpectrumMessageMember? get member;
   set member(SpectrumMessageMember? value);
   @override
@@ -317,6 +361,302 @@ abstract class _SpectrumMessage implements SpectrumMessage {
   @JsonKey(ignore: true)
   _$$SpectrumMessageImplCopyWith<_$SpectrumMessageImpl> get copyWith =>
       throw _privateConstructorUsedError;
+}
+
+SpectrumContentState _$SpectrumContentStateFromJson(Map<String, dynamic> json) {
+  return _SpectrumContentState.fromJson(json);
+}
+
+/// @nodoc
+mixin _$SpectrumContentState {
+  List<SpectrumContentBlock>? get blocks => throw _privateConstructorUsedError;
+  set blocks(List<SpectrumContentBlock>? value) =>
+      throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $SpectrumContentStateCopyWith<SpectrumContentState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $SpectrumContentStateCopyWith<$Res> {
+  factory $SpectrumContentStateCopyWith(SpectrumContentState value,
+          $Res Function(SpectrumContentState) then) =
+      _$SpectrumContentStateCopyWithImpl<$Res, SpectrumContentState>;
+  @useResult
+  $Res call({List<SpectrumContentBlock>? blocks});
+}
+
+/// @nodoc
+class _$SpectrumContentStateCopyWithImpl<$Res,
+        $Val extends SpectrumContentState>
+    implements $SpectrumContentStateCopyWith<$Res> {
+  _$SpectrumContentStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? blocks = freezed,
+  }) {
+    return _then(_value.copyWith(
+      blocks: freezed == blocks
+          ? _value.blocks
+          : blocks // ignore: cast_nullable_to_non_nullable
+              as List<SpectrumContentBlock>?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$SpectrumContentStateImplCopyWith<$Res>
+    implements $SpectrumContentStateCopyWith<$Res> {
+  factory _$$SpectrumContentStateImplCopyWith(_$SpectrumContentStateImpl value,
+          $Res Function(_$SpectrumContentStateImpl) then) =
+      __$$SpectrumContentStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({List<SpectrumContentBlock>? blocks});
+}
+
+/// @nodoc
+class __$$SpectrumContentStateImplCopyWithImpl<$Res>
+    extends _$SpectrumContentStateCopyWithImpl<$Res, _$SpectrumContentStateImpl>
+    implements _$$SpectrumContentStateImplCopyWith<$Res> {
+  __$$SpectrumContentStateImplCopyWithImpl(_$SpectrumContentStateImpl _value,
+      $Res Function(_$SpectrumContentStateImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? blocks = freezed,
+  }) {
+    return _then(_$SpectrumContentStateImpl(
+      blocks: freezed == blocks
+          ? _value.blocks
+          : blocks // ignore: cast_nullable_to_non_nullable
+              as List<SpectrumContentBlock>?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$SpectrumContentStateImpl implements _SpectrumContentState {
+  _$SpectrumContentStateImpl({this.blocks});
+
+  factory _$SpectrumContentStateImpl.fromJson(Map<String, dynamic> json) =>
+      _$$SpectrumContentStateImplFromJson(json);
+
+  @override
+  List<SpectrumContentBlock>? blocks;
+
+  @override
+  String toString() {
+    return 'SpectrumContentState(blocks: $blocks)';
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SpectrumContentStateImplCopyWith<_$SpectrumContentStateImpl>
+      get copyWith =>
+          __$$SpectrumContentStateImplCopyWithImpl<_$SpectrumContentStateImpl>(
+              this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$SpectrumContentStateImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _SpectrumContentState implements SpectrumContentState {
+  factory _SpectrumContentState({List<SpectrumContentBlock>? blocks}) =
+      _$SpectrumContentStateImpl;
+
+  factory _SpectrumContentState.fromJson(Map<String, dynamic> json) =
+      _$SpectrumContentStateImpl.fromJson;
+
+  @override
+  List<SpectrumContentBlock>? get blocks;
+  set blocks(List<SpectrumContentBlock>? value);
+  @override
+  @JsonKey(ignore: true)
+  _$$SpectrumContentStateImplCopyWith<_$SpectrumContentStateImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+SpectrumContentBlock _$SpectrumContentBlockFromJson(Map<String, dynamic> json) {
+  return _SpectrumContentBlock.fromJson(json);
+}
+
+/// @nodoc
+mixin _$SpectrumContentBlock {
+  String? get key => throw _privateConstructorUsedError;
+  set key(String? value) => throw _privateConstructorUsedError;
+  String get text => throw _privateConstructorUsedError;
+  set text(String value) => throw _privateConstructorUsedError;
+  String? get type => throw _privateConstructorUsedError;
+  set type(String? value) => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $SpectrumContentBlockCopyWith<SpectrumContentBlock> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $SpectrumContentBlockCopyWith<$Res> {
+  factory $SpectrumContentBlockCopyWith(SpectrumContentBlock value,
+          $Res Function(SpectrumContentBlock) then) =
+      _$SpectrumContentBlockCopyWithImpl<$Res, SpectrumContentBlock>;
+  @useResult
+  $Res call({String? key, String text, String? type});
+}
+
+/// @nodoc
+class _$SpectrumContentBlockCopyWithImpl<$Res,
+        $Val extends SpectrumContentBlock>
+    implements $SpectrumContentBlockCopyWith<$Res> {
+  _$SpectrumContentBlockCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? key = freezed,
+    Object? text = null,
+    Object? type = freezed,
+  }) {
+    return _then(_value.copyWith(
+      key: freezed == key
+          ? _value.key
+          : key // ignore: cast_nullable_to_non_nullable
+              as String?,
+      text: null == text
+          ? _value.text
+          : text // ignore: cast_nullable_to_non_nullable
+              as String,
+      type: freezed == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$SpectrumContentBlockImplCopyWith<$Res>
+    implements $SpectrumContentBlockCopyWith<$Res> {
+  factory _$$SpectrumContentBlockImplCopyWith(_$SpectrumContentBlockImpl value,
+          $Res Function(_$SpectrumContentBlockImpl) then) =
+      __$$SpectrumContentBlockImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? key, String text, String? type});
+}
+
+/// @nodoc
+class __$$SpectrumContentBlockImplCopyWithImpl<$Res>
+    extends _$SpectrumContentBlockCopyWithImpl<$Res, _$SpectrumContentBlockImpl>
+    implements _$$SpectrumContentBlockImplCopyWith<$Res> {
+  __$$SpectrumContentBlockImplCopyWithImpl(_$SpectrumContentBlockImpl _value,
+      $Res Function(_$SpectrumContentBlockImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? key = freezed,
+    Object? text = null,
+    Object? type = freezed,
+  }) {
+    return _then(_$SpectrumContentBlockImpl(
+      key: freezed == key
+          ? _value.key
+          : key // ignore: cast_nullable_to_non_nullable
+              as String?,
+      text: null == text
+          ? _value.text
+          : text // ignore: cast_nullable_to_non_nullable
+              as String,
+      type: freezed == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$SpectrumContentBlockImpl implements _SpectrumContentBlock {
+  _$SpectrumContentBlockImpl({this.key, this.text = '', this.type});
+
+  factory _$SpectrumContentBlockImpl.fromJson(Map<String, dynamic> json) =>
+      _$$SpectrumContentBlockImplFromJson(json);
+
+  @override
+  String? key;
+  @override
+  @JsonKey()
+  String text;
+  @override
+  String? type;
+
+  @override
+  String toString() {
+    return 'SpectrumContentBlock(key: $key, text: $text, type: $type)';
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SpectrumContentBlockImplCopyWith<_$SpectrumContentBlockImpl>
+      get copyWith =>
+          __$$SpectrumContentBlockImplCopyWithImpl<_$SpectrumContentBlockImpl>(
+              this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$SpectrumContentBlockImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _SpectrumContentBlock implements SpectrumContentBlock {
+  factory _SpectrumContentBlock({String? key, String text, String? type}) =
+      _$SpectrumContentBlockImpl;
+
+  factory _SpectrumContentBlock.fromJson(Map<String, dynamic> json) =
+      _$SpectrumContentBlockImpl.fromJson;
+
+  @override
+  String? get key;
+  set key(String? value);
+  @override
+  String get text;
+  set text(String value);
+  @override
+  String? get type;
+  set type(String? value);
+  @override
+  @JsonKey(ignore: true)
+  _$$SpectrumContentBlockImplCopyWith<_$SpectrumContentBlockImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 SpectrumMessageMember _$SpectrumMessageMemberFromJson(

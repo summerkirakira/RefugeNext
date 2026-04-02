@@ -50,6 +50,7 @@ import 'models/game_log_status.dart';
 import './models/friend.dart';
 import './models/identify_response.dart' show IdentifyResponse;
 import './models/spectrum/private_lobby.dart';
+import './models/spectrum/friend_request.dart';
 import './models/spectrum/spectrum_message.dart';
 import '../services/spectrum_ws_service.dart';
 import '../services/notification_service.dart';
@@ -75,6 +76,8 @@ class MainDataModel extends ChangeNotifier {
   String get data => _data;
   
   StreamSubscription<Map<String, dynamic>>? _spectrumEventSub;
+
+  String? activeChatLobbyId;
 
   int _unreadMessageCount = 0;
 
@@ -104,6 +107,8 @@ class MainDataModel extends ChangeNotifier {
   List<Friend>? get friends => _identifyResponse?.data?.friends;
 
   List<PrivateLobby>? get privateLobbies => _identifyResponse?.data?.privateLobbies;
+
+  List<FriendRequest>? get friendRequests => _identifyResponse?.data?.friendRequests;
 
   FriendSortType _friendSortType = FriendSortType.byName;
 
@@ -175,12 +180,70 @@ class MainDataModel extends ChangeNotifier {
         _unreadMessageCount++;
         notifyListeners();
 
-        final sender = message.member?.displayname ?? '未知用户';
-        final text = message.plaintext ?? '';
-        showToast(message: '$sender: $text');
-        NotificationService().showMessageNotification(sender: sender, text: text);
+        // 订阅发送者的 presence 更新
+        final senderId = message.memberId;
+        final lobbyData = messageData['lobby'];
+        if (senderId != null && lobbyData != null && lobbyData['members'] != null) {
+          for (final member in lobbyData['members']) {
+            if (member['id']?.toString() == senderId) {
+              final subKey = member['subscription_key'];
+              if (subKey != null && subKey is String && subKey.isNotEmpty) {
+                SpectrumWsService().subscribe([subKey]);
+              }
+              break;
+            }
+          }
+        }
+
+        if (activeChatLobbyId != message.lobbyId) {
+          final sender = message.member?.displayname ?? '未知用户';
+          final text = message.displayText;
+          showToast(message: '$sender: $text');
+          NotificationService().showMessageNotification(sender: sender, text: text);
+        }
       } catch (e) {
         print('SpectrumWS: Failed to parse message.new: $e');
+      }
+    } else if (type == 'friend_request.new') {
+      final requestData = event['friendRequest'];
+      if (requestData == null) return;
+      try {
+        final request = FriendRequest.fromJson(requestData);
+        final requests = _identifyResponse?.data?.friendRequests;
+        if (requests != null) {
+          // 避免重复
+          if (!requests.any((r) => r.id == request.id)) {
+            requests.add(request);
+          }
+        }
+        notifyListeners();
+
+        // 收到别人发来的请求时通知（owner == false 表示是收到的）
+        final isOwner = event['owner'] == true;
+        if (!isOwner) {
+          final sender = request.members?.firstWhere(
+            (m) => m.id == request.requestingMemberId,
+            orElse: () => request.members!.first,
+          );
+          final name = sender?.displayname ?? '未知用户';
+          showToast(message: '$name 发来了好友请求');
+          NotificationService().showMessageNotification(sender: name, text: '发来了好友请求');
+        }
+      } catch (e) {
+        print('SpectrumWS: Failed to parse friend_request.new: $e');
+      }
+    } else if (type == 'friendship.remove') {
+      final friendMemberId = event['friendMemberId']?.toString();
+      if (friendMemberId == null) return;
+      final friendList = friends;
+      if (friendList == null) return;
+      final index = friendList.indexWhere((f) => f.id == friendMemberId);
+      if (index != -1) {
+        final name = friendList[index].displayname;
+        friendList.removeAt(index);
+        notifyListeners();
+        showToast(message: '$name 已将你从好友列表移除');
+        NotificationService().showMessageNotification(sender: name, text: '已将你从好友列表移除');
       }
     }
   }
