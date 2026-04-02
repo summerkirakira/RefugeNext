@@ -132,6 +132,9 @@ class SpectrumWsService {
     });
   }
 
+  /// 发送 JSON 消息（公开）
+  void sendJson(Map<String, dynamic> data) => _send(data);
+
   /// 发送 JSON 消息
   void _send(Map<String, dynamic> data) {
     if (_ws != null && _status == SpectrumWsStatus.connected) {

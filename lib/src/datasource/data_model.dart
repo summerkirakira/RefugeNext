@@ -178,6 +178,27 @@ class MainDataModel extends ChangeNotifier {
       try {
         final message = SpectrumMessage.fromJson(messageData);
         _unreadMessageCount++;
+
+        // 更新对应 lobby 的 lastMessage 和 newMessages
+        final lobbies = privateLobbies;
+        if (lobbies != null && message.lobbyId != null) {
+          for (final lobby in lobbies) {
+            if (lobby.id == message.lobbyId) {
+              lobby.lastMessage = LobbyLastMessage(
+                id: message.id,
+                timeCreated: message.timeCreated,
+                lobbyId: message.lobbyId,
+                memberId: message.memberId,
+                plaintext: message.displayText,
+              );
+              if (activeChatLobbyId != message.lobbyId) {
+                lobby.newMessages++;
+              }
+              break;
+            }
+          }
+        }
+
         notifyListeners();
 
         // 订阅发送者的 presence 更新
@@ -218,7 +239,7 @@ class MainDataModel extends ChangeNotifier {
         }
         notifyListeners();
 
-        // 判断是否是自己发出的请求：对比 requesting_member_id 与自己的 handle
+
         final isSentByMe = request.members?.any(
           (m) => m.nickname == _currentUser?.handle && m.id == request.requestingMemberId,
         ) ?? false;
@@ -243,13 +264,19 @@ class MainDataModel extends ChangeNotifier {
         requests?.removeWhere((r) => r.id == request.id);
         notifyListeners();
 
-        final target = request.members?.firstWhere(
-          (m) => m.id == request.targetMemberId,
-          orElse: () => request.members!.first,
-        );
-        final name = target?.nickname ?? target?.displayname ?? '未知用户';
-        showToast(message: '$name 接受了你的好友请求');
-        NotificationService().showMessageNotification(sender: name, text: '接受了你的好友请求');
+
+        final isAcceptedByMe = request.members?.any(
+          (m) => m.nickname == _currentUser?.handle && m.id == request.targetMemberId,
+        ) ?? false;
+        if (!isAcceptedByMe) {
+          final target = request.members?.firstWhere(
+            (m) => m.id == request.targetMemberId,
+            orElse: () => request.members!.first,
+          );
+          final name = target?.nickname ?? target?.displayname ?? '未知用户';
+          showToast(message: '$name 接受了你的好友请求');
+          NotificationService().showMessageNotification(sender: name, text: '接受了你的好友请求');
+        }
       } catch (e) {
         print('SpectrumWS: Failed to parse friend_request.accept: $e');
       }
@@ -290,6 +317,19 @@ class MainDataModel extends ChangeNotifier {
         notifyListeners();
         showAlert(message: '$name 已将你从好友列表移除');
         NotificationService().showMessageNotification(sender: name, text: '已将你从好友列表移除');
+      }
+    } else if (type == 'friendship.new') {
+      final memberData = event['friendMember'];
+      if (memberData == null) return;
+      try {
+        final newFriend = Friend.fromJson(memberData);
+        final friendList = friends;
+        if (friendList != null && !friendList.any((f) => f.id == newFriend.id)) {
+          friendList.add(newFriend);
+          notifyListeners();
+        }
+      } catch (e) {
+        print('SpectrumWS: Failed to parse friendship.new: $e');
       }
     }
   }

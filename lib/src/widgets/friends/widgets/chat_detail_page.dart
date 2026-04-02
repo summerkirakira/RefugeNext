@@ -67,7 +67,7 @@ class ChatDetailPage extends StatefulWidget {
   State<ChatDetailPage> createState() => _ChatDetailPageState();
 }
 
-class _ChatDetailPageState extends State<ChatDetailPage> {
+class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObserver {
   final List<SpectrumMessage> _messages = [];
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -77,6 +77,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   bool _loadingMore = false;
   bool _hasMore = true;
   String? _currentMemberId;
+  late final MainDataModel _dataModel;
 
   Friend? get _otherMember {
     if (widget.lobby.members == null) return null;
@@ -89,12 +90,34 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   void initState() {
     super.initState();
+    _dataModel = context.read<MainDataModel>();
+    WidgetsBinding.instance.addObserver(this);
     _resolveCurrentMemberId();
     _loadMessages();
     _subscribeToWs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MainDataModel>().activeChatLobbyId = widget.lobby.id;
+      _dataModel.activeChatLobbyId = widget.lobby.id;
+      // 清零该 lobby 的未读数
+      final lobbies = _dataModel.privateLobbies;
+      if (lobbies != null) {
+        for (final lobby in lobbies) {
+          if (lobby.id == widget.lobby.id) {
+            lobby.newMessages = 0;
+            _dataModel.notifyListeners();
+            break;
+          }
+        }
+      }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _dataModel.activeChatLobbyId = widget.lobby.id;
+    } else {
+      _dataModel.activeChatLobbyId = null;
+    }
   }
 
   void _resolveCurrentMemberId() {
@@ -117,6 +140,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         _loading = false;
       });
       _scrollToBottom();
+      _markAsRead();
     } catch (e) {
       setState(() => _loading = false);
     }
@@ -151,9 +175,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           if (msg.lobbyId == widget.lobby.id) {
             setState(() => _messages.add(msg));
             _scrollToBottom();
+            _markAsRead();
           }
         } catch (_) {}
       }
+    });
+  }
+
+  void _markAsRead() {
+    if (_messages.isEmpty) return;
+    final lastMsg = _messages.last;
+    SpectrumWsService().sendJson({
+      'type': 'message_lobby.read.update',
+      'lobby_id': widget.lobby.id,
+      'message_id': lastMsg.id,
     });
   }
 
@@ -178,7 +213,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
-    context.read<MainDataModel>().activeChatLobbyId = null;
+    WidgetsBinding.instance.removeObserver(this);
+    _dataModel.activeChatLobbyId = null;
     _wsSub?.cancel();
     _inputController.dispose();
     _scrollController.dispose();
