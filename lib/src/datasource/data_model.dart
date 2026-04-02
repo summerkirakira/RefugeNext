@@ -196,7 +196,7 @@ class MainDataModel extends ChangeNotifier {
         }
 
         if (activeChatLobbyId != message.lobbyId) {
-          final sender = message.member?.displayname ?? '未知用户';
+          final sender = message.member?.nickname ?? message.member?.displayname ?? '未知用户';
           final text = message.displayText;
           showToast(message: '$sender: $text');
           NotificationService().showMessageNotification(sender: sender, text: text);
@@ -218,19 +218,65 @@ class MainDataModel extends ChangeNotifier {
         }
         notifyListeners();
 
-        // 收到别人发来的请求时通知（owner == false 表示是收到的）
-        final isOwner = event['owner'] == true;
-        if (!isOwner) {
+        // 判断是否是自己发出的请求：对比 requesting_member_id 与自己的 handle
+        final isSentByMe = request.members?.any(
+          (m) => m.nickname == _currentUser?.handle && m.id == request.requestingMemberId,
+        ) ?? false;
+        if (!isSentByMe) {
           final sender = request.members?.firstWhere(
             (m) => m.id == request.requestingMemberId,
             orElse: () => request.members!.first,
           );
-          final name = sender?.displayname ?? '未知用户';
+          final name = sender?.nickname ?? sender?.displayname ?? '未知用户';
           showToast(message: '$name 发来了好友请求');
           NotificationService().showMessageNotification(sender: name, text: '发来了好友请求');
         }
       } catch (e) {
         print('SpectrumWS: Failed to parse friend_request.new: $e');
+      }
+    } else if (type == 'friend_request.accept') {
+      final requestData = event['friendRequest'];
+      if (requestData == null) return;
+      try {
+        final request = FriendRequest.fromJson(requestData);
+        final requests = _identifyResponse?.data?.friendRequests;
+        requests?.removeWhere((r) => r.id == request.id);
+        notifyListeners();
+
+        final target = request.members?.firstWhere(
+          (m) => m.id == request.targetMemberId,
+          orElse: () => request.members!.first,
+        );
+        final name = target?.nickname ?? target?.displayname ?? '未知用户';
+        showToast(message: '$name 接受了你的好友请求');
+        NotificationService().showMessageNotification(sender: name, text: '接受了你的好友请求');
+      } catch (e) {
+        print('SpectrumWS: Failed to parse friend_request.accept: $e');
+      }
+    } else if (type == 'friend_request.decline') {
+      final requestData = event['friendRequest'];
+      if (requestData == null) return;
+      try {
+        final request = FriendRequest.fromJson(requestData);
+        final requests = _identifyResponse?.data?.friendRequests;
+        requests?.removeWhere((r) => r.id == request.id);
+        notifyListeners();
+
+        // 只有自己发出的请求被拒绝时才通知
+        final isMyRequest = request.members?.any(
+          (m) => m.nickname == _currentUser?.handle && m.id == request.requestingMemberId,
+        ) ?? false;
+        if (isMyRequest) {
+          final target = request.members?.firstWhere(
+            (m) => m.id == request.targetMemberId,
+            orElse: () => request.members!.first,
+          );
+          final name = target?.nickname ?? target?.displayname ?? '未知用户';
+          showAlert(message: '$name 拒绝了你的好友请求');
+          NotificationService().showMessageNotification(sender: name, text: '拒绝了你的好友请求');
+        }
+      } catch (e) {
+        print('SpectrumWS: Failed to parse friend_request.decline: $e');
       }
     } else if (type == 'friendship.remove') {
       final friendMemberId = event['friendMemberId']?.toString();
@@ -239,10 +285,10 @@ class MainDataModel extends ChangeNotifier {
       if (friendList == null) return;
       final index = friendList.indexWhere((f) => f.id == friendMemberId);
       if (index != -1) {
-        final name = friendList[index].displayname;
+        final name = friendList[index].nickname.isNotEmpty ? friendList[index].nickname : friendList[index].displayname;
         friendList.removeAt(index);
         notifyListeners();
-        showToast(message: '$name 已将你从好友列表移除');
+        showAlert(message: '$name 已将你从好友列表移除');
         NotificationService().showMessageNotification(sender: name, text: '已将你从好友列表移除');
       }
     }

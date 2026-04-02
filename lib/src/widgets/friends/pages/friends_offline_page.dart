@@ -80,6 +80,7 @@ class FriendsOfflinePage extends StatelessWidget {
                                 showToast(message: '无法打开聊天');
                               }
                             },
+                            onLongPress: () => showRemoveFriendDialog(context, friend),
                           );
                         },
                       ),

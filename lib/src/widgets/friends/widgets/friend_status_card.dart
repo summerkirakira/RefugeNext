@@ -18,15 +18,17 @@ class FriendStatusCard extends StatelessWidget {
   final String? signature; // Added signature field
   final String? statusMessage;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const FriendStatusCard({
     super.key,
     required this.name,
     required this.avatarUrl,
     this.statusType = FriendStatusType.offline,
-    this.signature, // Initialize signature
+    this.signature,
     this.statusMessage,
     this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -37,6 +39,7 @@ class FriendStatusCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(6.0),
