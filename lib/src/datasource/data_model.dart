@@ -73,6 +73,18 @@ class MainDataModel extends ChangeNotifier {
   
   StreamSubscription<Map<String, dynamic>>? _spectrumEventSub;
 
+  String _currentPresenceStatus = 'online';
+
+  String get currentPresenceStatus => _currentPresenceStatus;
+
+  Future<void> setPresenceStatus(String status) async {
+    final success = await RsiApiClient().setPresenceStatus(status);
+    if (success) {
+      _currentPresenceStatus = status;
+      notifyListeners();
+    }
+  }
+
   IdentifyResponse? _identifyResponse;
 
   IdentifyResponse? get identifyResponse => _identifyResponse;
@@ -456,10 +468,10 @@ class MainDataModel extends ChangeNotifier {
       await readHangarLogs();
       // await refreshHangarLogs();
       if (_currentUser != null) {
-         await updateFriends();
          SpectrumWsService().connect();
          _spectrumEventSub?.cancel();
          _spectrumEventSub = SpectrumWsService().eventStream.listen(_onSpectrumEvent);
+         await updateFriends();
       }
     } catch (e) {
       print(e);

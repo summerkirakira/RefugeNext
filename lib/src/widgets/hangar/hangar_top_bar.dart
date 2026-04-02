@@ -1,18 +1,13 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:refuge_next/src/widgets/hangar/hangar_export_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/hangar/hangar_log/hangar_log_bottomsheet.dart';
-import '../../funcs/hangar/excel_utils.dart';
 import 'hangar_search_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import '../game_logs/game_log_modal.dart';
+import '../common/status_avatar.dart';
 
 class HangarTopBar extends StatefulWidget {
   final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
@@ -51,15 +46,11 @@ class _HangarTopBarState extends State<HangarTopBar> {
                     icon: const Icon(Icons.search))
                 : Row(
                     children: [
-                      AdvancedAvatar(
-                          name: 'Hangar',
-                          size: 40,
-                          image: CachedNetworkImageProvider(
-                              dataModel.currentUser!.profileImage),
-                          margin: EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                          )),
+                      Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: StatusAvatar(
+                              avatarUrl: dataModel.currentUser!.profileImage,
+                              size: 40)),
                       GestureDetector(
                         onDoubleTap: () {
                           widget.onScrollToTop?.call();

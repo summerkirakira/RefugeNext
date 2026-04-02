@@ -1,9 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/widgets/shop/upgrade_shop/upgrade_checkout_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
@@ -15,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import 'upgrade_shop/upgrade_ship_widget.dart';
 import 'package:badges/badges.dart' as badges;
+import '../common/status_avatar.dart';
 
 class ShopTopBar extends StatefulWidget {
   final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
@@ -54,17 +51,13 @@ class _ShopTopBarState extends State<ShopTopBar> {
               icon: const Icon(Icons.search))
               : Row(
             children: [
-              AdvancedAvatar(
-                  name: 'Shop',
-                  size: 40,
-                  image: CachedNetworkImageProvider(
-                      Provider.of<MainDataModel>(context)
+              Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: StatusAvatar(
+                      avatarUrl: Provider.of<MainDataModel>(context)
                           .currentUser!
-                          .profileImage),
-                  margin: EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                  )),
+                          .profileImage,
+                      size: 40)),
               const Text('商店', style: TextStyle(fontSize: 24)),
               const Spacer(),
               if (isDevMode)

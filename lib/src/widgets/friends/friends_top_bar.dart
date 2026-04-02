@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'widgets/add_friend_modal.dart';
+import '../common/status_avatar.dart';
 
 
 class FriendsTopBar extends StatefulWidget {
@@ -38,15 +37,11 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                     icon: const Icon(Icons.person)) // Use a relevant icon for login prompt
                 : Row(
                     children: [
-                      AdvancedAvatar(
-                          name: 'Friends',
-                          size: 40,
-                          image: CachedNetworkImageProvider(
-                              dataModel.currentUser!.profileImage),
-                          margin: EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                          )),
+                      Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: StatusAvatar(
+                              avatarUrl: dataModel.currentUser!.profileImage,
+                              size: 40)),
                       const Text('好友', style: TextStyle(fontSize: 24)),
                       const Spacer(),
                       IconButton(

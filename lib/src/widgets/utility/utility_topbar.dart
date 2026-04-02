@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
+import '../common/status_avatar.dart';
 
 class UtilityTopBar extends StatefulWidget {
   const UtilityTopBar({Key? key}) : super(key: key);
@@ -39,17 +38,13 @@ class _ShopTopBarState extends State<UtilityTopBar> {
               icon: const Icon(Icons.search))
               : Row(
             children: [
-              AdvancedAvatar(
-                  name: 'Shop',
-                  size: 40,
-                  image: CachedNetworkImageProvider(
-                      Provider.of<MainDataModel>(context)
+              Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: StatusAvatar(
+                      avatarUrl: Provider.of<MainDataModel>(context)
                           .currentUser!
-                          .profileImage),
-                  margin: EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                  )),
+                          .profileImage,
+                      size: 40)),
               const Text('实用工具', style: TextStyle(fontSize: 24)),
             ],
           ),
