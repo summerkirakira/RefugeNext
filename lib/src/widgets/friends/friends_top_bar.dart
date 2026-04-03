@@ -10,7 +10,10 @@ import 'package:badges/badges.dart' as badges;
 
 
 class FriendsTopBar extends StatefulWidget {
-  const FriendsTopBar({super.key});
+  final List<GlobalKey<RefreshIndicatorState>>? refreshKeys;
+  final PageController? pageController;
+
+  const FriendsTopBar({super.key, this.refreshKeys, this.pageController});
 
   @override
   _FriendsTopBarState createState() => _FriendsTopBarState();
@@ -48,7 +51,12 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                       const Spacer(),
                       IconButton(
                         onPressed: () {
-                          context.read<MainDataModel>().updateFriends();
+                          final index = widget.pageController?.page?.round() ?? 0;
+                          if (widget.refreshKeys != null && index < widget.refreshKeys!.length) {
+                            widget.refreshKeys![index].currentState?.show();
+                          } else {
+                            context.read<MainDataModel>().updateFriends();
+                          }
                         },
                         icon: const Icon(Icons.refresh),
                       ),

@@ -8,7 +8,8 @@ import '../../../datasource/models/friend.dart';
 import '../widgets/chat_detail_page.dart';
 
 class FriendsMessagesPage extends StatelessWidget {
-  const FriendsMessagesPage({super.key});
+  final GlobalKey<RefreshIndicatorState>? refreshKey;
+  const FriendsMessagesPage({super.key, this.refreshKey});
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +19,7 @@ class FriendsMessagesPage extends StatelessWidget {
         final currentHandle = dataModel.currentUser?.handle;
 
         return RefreshIndicator(
+          key: refreshKey,
           onRefresh: () async => await context.read<MainDataModel>().updateFriends(),
           child: lobbies.isEmpty
               ? LayoutBuilder(

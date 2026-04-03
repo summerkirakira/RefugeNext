@@ -16,10 +16,16 @@ class _FriendsStatusPageState extends State<FriendsStatusPage> {
   final PageController _controller = PageController();
   final CustomTabBarController _tabBarController = CustomTabBarController();
   final List<String> _titles = ["消息", "在线", "离线"];
-  final List<Widget> _pages = const [
-    FriendsMessagesPage(),
-    FriendsOnlinePage(),
-    FriendsOfflinePage(),
+  final List<GlobalKey<RefreshIndicatorState>> _refreshKeys = [
+    GlobalKey<RefreshIndicatorState>(), // 消息页面
+    GlobalKey<RefreshIndicatorState>(), // 在线页面
+    GlobalKey<RefreshIndicatorState>(), // 离线页面
+  ];
+
+  late final List<Widget> _pages = [
+    FriendsMessagesPage(refreshKey: _refreshKeys[0]),
+    FriendsOnlinePage(refreshKey: _refreshKeys[1]),
+    FriendsOfflinePage(refreshKey: _refreshKeys[2]),
   ];
 
   @override
@@ -53,7 +59,7 @@ class _FriendsStatusPageState extends State<FriendsStatusPage> {
     return Scaffold(
       body: Column(
         children: [
-          const FriendsTopBar(),
+          FriendsTopBar(refreshKeys: _refreshKeys, pageController: _controller),
           Center(
             child: SizedBox(
               width: 180,

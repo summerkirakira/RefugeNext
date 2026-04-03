@@ -9,7 +9,8 @@ import 'package:refuge_next/src/network/api_service.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 
 class FriendsOnlinePage extends StatelessWidget {
-  const FriendsOnlinePage({super.key});
+  final GlobalKey<RefreshIndicatorState>? refreshKey;
+  const FriendsOnlinePage({super.key, this.refreshKey});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,7 @@ class FriendsOnlinePage extends StatelessWidget {
             FriendSortBar(count: onlineFriends.length),
             Expanded(
               child: RefreshIndicator(
+                key: refreshKey,
                 onRefresh: () async => await context.read<MainDataModel>().updateFriends(),
                 child: onlineFriends.isEmpty
                     ? LayoutBuilder(
