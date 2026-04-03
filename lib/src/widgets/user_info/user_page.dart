@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -16,11 +17,18 @@ import 'package:refuge_next/src/widgets/user_info/referral_list_modal.dart';
 
 
 class TopBar extends StatefulWidget {
-  const TopBar({Key? key}) : super(key: key);
+  final GlobalKey<RefreshIndicatorState>? refreshKey;
+  const TopBar({Key? key, this.refreshKey}) : super(key: key);
 
   @override
   _TopBarState createState() => _TopBarState();
 }
+
+bool get _isDesktop =>
+    Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+
+// bool get _isDesktop =>
+//     true;
 
 class _TopBarState extends State<TopBar> {
   @override
@@ -68,6 +76,13 @@ class _TopBarState extends State<TopBar> {
                   ],
                 ),
                 Spacer(),
+                if (_isDesktop && widget.refreshKey != null)
+                  IconButton(
+                    onPressed: () {
+                      widget.refreshKey!.currentState?.show();
+                    },
+                    icon: const Icon(Icons.refresh),
+                  ),
                 AdvancedAvatar(
                     name: 'User',
                     size: 80,
@@ -540,6 +555,7 @@ class UserInfoPage extends StatefulWidget {
 
 class _UserInfoPageState extends State<UserInfoPage>
     with TickerProviderStateMixin {
+  final GlobalKey<RefreshIndicatorState> _refreshKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -557,6 +573,7 @@ class _UserInfoPageState extends State<UserInfoPage>
         return model.currentUser == null
             ? const Center(child: Text('No user data'))
             : RefreshIndicator(
+          key: _refreshKey,
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               return SingleChildScrollView(
@@ -568,7 +585,7 @@ class _UserInfoPageState extends State<UserInfoPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      TopBar(),
+                      TopBar(refreshKey: _refreshKey),
                       UserSimpleInfo(),
                       UserDetailInfo(),
                       Divider(),
