@@ -86,6 +86,13 @@ class HangarRepo {
       page += 10;
     }
 
+    // 按 id 去重
+    final Map<int, HangarItem> uniqueMap = {};
+    for (var item in hangarItems) {
+      uniqueMap[item.id] = item;
+    }
+    hangarItems = uniqueMap.values.toList();
+
     await writeHangarItems(hangarItems);
 
     return hangarItems;
