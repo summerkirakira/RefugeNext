@@ -76,6 +76,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
   bool _loading = true;
   bool _loadingMore = false;
   bool _hasMore = true;
+  bool _otherTyping = false;
   String? _currentMemberId;
   late final MainDataModel _dataModel;
 
@@ -93,6 +94,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     _dataModel = context.read<MainDataModel>();
     WidgetsBinding.instance.addObserver(this);
     _resolveCurrentMemberId();
+    _subscribeLobby();
     _loadMessages();
     _subscribeToWs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,6 +132,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     }
   }
 
+  void _subscribeLobby() {
+    final key = widget.lobby.subscriptionKey;
+    if (key != null && key.isNotEmpty) {
+      SpectrumWsService().subscribe([key]);
+    }
+  }
+
   Future<void> _loadMessages() async {
     setState(() => _loading = true);
     try {
@@ -139,7 +148,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
         _hasMore = history.length >= 50;
         _loading = false;
       });
-      _scrollToBottom();
+      _scrollToBottom(animate: false);
       _markAsRead();
     } catch (e) {
       setState(() => _loading = false);
@@ -167,17 +176,32 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
 
   void _subscribeToWs() {
     _wsSub = SpectrumWsService().eventStream.listen((event) {
-      if (event['type'] == 'message.new') {
+      final type = event['type'];
+      if (type == 'message.new') {
         final msgData = event['message'];
         if (msgData == null) return;
         try {
           final msg = SpectrumMessage.fromJson(msgData);
           if (msg.lobbyId == widget.lobby.id) {
-            setState(() => _messages.add(msg));
+            setState(() {
+              _messages.add(msg);
+              _otherTyping = false;
+            });
             _scrollToBottom();
             _markAsRead();
           }
-        } catch (_) {}
+        } catch (e) {
+          print('ChatDetail: Failed to parse message.new: $e');
+        }
+      } else if (type == 'message_lobby.typing.start') {
+        if (event['lobby_id']?.toString() == widget.lobby.id &&
+            event['member_id']?.toString() != _currentMemberId) {
+          setState(() => _otherTyping = true);
+        }
+      } else if (type == 'message_lobby.typing.end') {
+        if (event['lobby_id']?.toString() == widget.lobby.id) {
+          setState(() => _otherTyping = false);
+        }
       }
     });
   }
@@ -192,14 +216,22 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     });
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void _scrollToBottom({bool animate = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!animate) {
+        // 等待布局完全完成
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
+        if (animate) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        } else {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
       }
     });
   }
@@ -230,28 +262,38 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     return Scaffold(
       backgroundColor: chatTheme.backgroundColor,
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(otherName),
-            if (other?.nickname != null) ...[
-              const SizedBox(width: 6),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(otherName),
+                if (other?.nickname != null) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '@${other!.nickname}',
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5)),
+                  ),
+                ],
+                if (other?.presence != null) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _presenceColor(other!.presence!.status),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (_otherTyping)
               Text(
-                '@${other!.nickname}',
-                style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5)),
+                '正在输入...',
+                style: TextStyle(fontSize: 12, color: chatTheme.timeTextColor),
               ),
-            ],
-            if (other?.presence != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _presenceColor(other!.presence!.status),
-                ),
-              ),
-            ],
           ],
         ),
       ),

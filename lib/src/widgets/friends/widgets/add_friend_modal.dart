@@ -7,17 +7,36 @@ import '../../../datasource/models/friend.dart';
 
 WoltModalSheetPage getAddFriendBottomSheet(BuildContext context) {
   return WoltModalSheetPage(
-    navBarHeight: 50,
-    isTopBarLayerAlwaysVisible: true,
+    hasSabGradient: false,
+    navBarHeight: 60,
     pageTitle: const Padding(
       padding: EdgeInsets.only(left: 20),
       child: Text('添加好友',
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
     ),
-    trailingNavBarWidget: Padding(
-      padding: const EdgeInsets.only(right: 20),
+    leadingNavBarWidget: Container(
+      height: 38,
+      width: 38,
+      margin: const EdgeInsets.only(left: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
       child: IconButton(
-        icon: const Icon(Icons.close),
+        padding: const EdgeInsets.all(5),
+        icon: const Icon(Icons.arrow_back, size: 22),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    ),
+    trailingNavBarWidget: Container(
+      height: 38,
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        padding: const EdgeInsets.all(5),
+        icon: const Icon(Icons.close, size: 22),
         onPressed: Navigator.of(context).pop,
       ),
     ),
@@ -36,11 +55,10 @@ class _AddFriendContentState extends State<AddFriendContent> {
   final TextEditingController _searchController = TextEditingController();
   List<Friend> _searchResults = [];
   bool _isLoading = false;
+  final Set<String> _addingIds = {};
 
   Future<void> _search() async {
     if (_searchController.text.isEmpty) return;
-    
-    // Remove focus from text field to dismiss keyboard
     FocusScope.of(context).unfocus();
 
     setState(() {
@@ -51,26 +69,28 @@ class _AddFriendContentState extends State<AddFriendContent> {
     try {
       final results = await RsiApiClient().searchMember(_searchController.text);
       if (mounted) {
-        setState(() {
-          _searchResults = results;
-        });
+        setState(() => _searchResults = results);
       }
     } catch (e) {
-      // Handle error silently or show toast
       print('Search error: $e');
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
+  Future<void> _addFriend(Friend friend) async {
+    setState(() => _addingIds.add(friend.id));
+    await RsiApiClient().addFriend(friend.id);
+    if (mounted) setState(() => _addingIds.remove(friend.id));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return Container(
+      height: 600,
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
@@ -78,11 +98,13 @@ class _AddFriendContentState extends State<AddFriendContent> {
               Expanded(
                 child: TextField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: '输入玩家名称',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                   ),
                   textInputAction: TextInputAction.search,
                   onSubmitted: (_) => _search(),
@@ -91,63 +113,83 @@ class _AddFriendContentState extends State<AddFriendContent> {
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: _isLoading ? null : _search,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(80, 48),
-                ),
-                child: _isLoading 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('搜索'),
+                style: ElevatedButton.styleFrom(minimumSize: const Size(80, 48)),
+                child: _isLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('搜索'),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          if (_searchResults.isEmpty && !_isLoading)
-             const Padding(
-               padding: EdgeInsets.only(top: 20.0),
-               child: Center(child: Text('搜索玩家以添加好友', style: TextStyle(color: Colors.grey))),
-             ),
-          
-          if (_searchResults.isNotEmpty)
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _searchResults.length,
-              separatorBuilder: (context, index) => const Divider(),
-              itemBuilder: (context, index) {
-                final friend = _searchResults[index];
-                // 处理头像URL，加上base url
-                String? avatarUrl = friend.avatar;
-                if (avatarUrl != null && !avatarUrl.startsWith('http')) {
-                  avatarUrl = "https://robertsspaceindustries.com$avatarUrl";
-                }
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _searchResults.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.person_search, size: 50, color: Colors.grey),
+                            SizedBox(height: 12),
+                            Text('搜索玩家以添加好友', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, index) {
+                          final friend = _searchResults[index];
+                          return _buildUserCard(friend);
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: AdvancedAvatar(
-                    name: friend.displayname,
-                    size: 40,
-                    image: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
-                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                  ),
-                  title: Text(friend.nickname.isNotEmpty ? friend.nickname : friend.displayname),
-                  subtitle: Text(friend.displayname),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.person_add),
-                    onPressed: () async {
-                      // 可以添加一个状态来禁用按钮，防止重复点击，并在请求完成后恢复
-                      // setState(() { _isAddingFriend = true; }); // 示例加载状态
-                      final success = await RsiApiClient().addFriend(friend.id);
-                      if (success) {
-                        // 可以在此处进一步处理，例如：更新UI，禁用该条目的添加按钮等
-                        // 例如：可以在成功后刷新好友列表或者更新UI状态
-                      }
-                      // setState(() { _isAddingFriend = false; }); // 示例加载状态
-                    },
-                  ),
-                );
-              },
+  Widget _buildUserCard(Friend friend) {
+    String? avatarUrl = friend.avatar;
+    if (avatarUrl != null && !avatarUrl.startsWith('http')) {
+      avatarUrl = 'https://robertsspaceindustries.com$avatarUrl';
+    }
+    final isAdding = _addingIds.contains(friend.id);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          AdvancedAvatar(
+            name: friend.displayname,
+            size: 50,
+            image: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(friend.displayname,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                if (friend.nickname.isNotEmpty && friend.nickname != friend.displayname)
+                  Text('@${friend.nickname}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+              ],
             ),
-          const SizedBox(height: 50),
+          ),
+          isAdding
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : IconButton(
+                  onPressed: () => _addFriend(friend),
+                  icon: const Icon(Icons.person_add),
+                ),
         ],
       ),
     );

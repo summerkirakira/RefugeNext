@@ -58,7 +58,7 @@ class HangarRepo {
   
   Future<List<HangarItem>> refreshHangarItems() async {
     List<HangarItem> hangarItems = [];
-    
+
     int page = 1;
 
     int totalPages = await getHangarTotalPages();
@@ -69,14 +69,19 @@ class HangarRepo {
       if (pages.last > totalPages) {
         isEnd = true;
       }
-      List<List<HangarItem>> results = [];
-      results = await runAsyncFunctionWithParams(getHangarItemByPage, pages, pages.length);
+      try {
+        List<List<HangarItem>> results = [];
+        results = await runAsyncFunctionWithParams(getHangarItemByPage, pages, pages.length);
 
-      for (var element in results) {
-        // if (element.isEmpty) {
-        //   isEnd = true;
-        // }
-        hangarItems.addAll(element);
+        for (var element in results) {
+          hangarItems.addAll(element);
+        }
+      } catch (e) {
+        // 批次失败时保存已获取的数据并继续抛出
+        if (hangarItems.isNotEmpty) {
+          await writeHangarItems(hangarItems);
+        }
+        rethrow;
       }
       page += 10;
     }

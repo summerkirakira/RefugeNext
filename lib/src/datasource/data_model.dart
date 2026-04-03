@@ -1964,8 +1964,13 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> _updateHangarItems() async {
     List<HangarItem> items = [];
-    items = await hangarRepo.refreshHangarItems();
-    await hangarRepo.writeHangarItems(items);
+    try {
+      items = await hangarRepo.refreshHangarItems();
+    } catch (e) {
+      // 刷新失败时读取已保存的部分数据
+      items = await hangarRepo.readHangarItems();
+      if (items.isEmpty) rethrow;
+    }
 
 
     final filteredItems = filterHangarItemsByType(this, items);
@@ -2025,6 +2030,13 @@ class MainDataModel extends ChangeNotifier {
 
     rsiApiClient.setRSIToken(token: newUser.rsiToken);
     await rsiApiClient.refreshCsrfToken();
+
+    // 重连 WS（旧连接是前一个账号的）
+    await SpectrumWsService().disconnect();
+    SpectrumWsService().connect();
+    _spectrumEventSub?.cancel();
+    _spectrumEventSub = SpectrumWsService().eventStream.listen(_onSpectrumEvent);
+
     await updateFriends();
     notifyListeners();
   }

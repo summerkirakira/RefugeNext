@@ -13,7 +13,7 @@ import 'package:refuge_next/src/network/parsers/user_parser.dart' show parseNewU
 import 'package:refuge_next/src/network/api_service.dart';
 import 'package:refuge_next/src/widgets/settings/settings_page.dart';
 import 'package:refuge_next/src/widgets/user_info/referral_list_modal.dart';
-import 'package:refuge_next/src/widgets/common/status_avatar.dart';
+
 
 class TopBar extends StatefulWidget {
   const TopBar({Key? key}) : super(key: key);
@@ -68,11 +68,18 @@ class _TopBarState extends State<TopBar> {
                   ],
                 ),
                 Spacer(),
-                StatusAvatar(
-                    avatarUrl: Provider.of<MainDataModel>(context)
-                        .currentUser!
-                        .profileImage,
-                    size: 80)
+                AdvancedAvatar(
+                    name: 'User',
+                    size: 80,
+                    image: CachedNetworkImageProvider(
+                        Provider.of<MainDataModel>(context)
+                            .currentUser!
+                            .profileImage),
+                    margin: const EdgeInsets.only(),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(10),
+                    ))
               ],
             ),
           )
