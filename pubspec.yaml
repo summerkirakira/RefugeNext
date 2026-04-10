@@ -36,38 +36,38 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flex_color_scheme: ^7.3.1
+  flex_color_scheme: ^8.4.0
   provider: ^6.1.2
   dio: ^5.5.0+1
-  freezed_annotation: ^2.4.2
-  json_cache: ^1.0.0
+  freezed_annotation: ^3.1.0
+  json_cache: ^4.0.0
   json_serializable: ^6.8.0
   json_annotation: ^4.9.0
   path_provider: ^2.1.3
   html: ^0.15.4
-  intl: ^0.19.0
+  intl: ^0.20.2
   cached_network_image: ^3.3.1
-  fast_cached_network_image: 1.2.9
+  fast_cached_network_image: ^1.3.3+5
   loading_animation_widget: ^1.2.1
   flutter_advanced_avatar: ^1.5.0
-  wolt_modal_sheet: ^0.7.0
-  syncfusion_flutter_sliders: ^26.1.40
-  local_auth: ^2.3.0
-  shared_preferences: 2.0.15
+  wolt_modal_sheet: ^0.11.0
+  syncfusion_flutter_sliders: ^33.1.47
+  local_auth: ^3.0.1
+  shared_preferences: ^2.5.5
   flutter_keyboard_visibility: ^6.0.0
-  share_plus: ^9.0.0
+  share_plus: ^12.0.2
   image: ^4.3.0
   qr_flutter: ^4.1.0
   flutter_multi_select_items: ^0.4.3
-  fluttertoast: ^8.2.6
+  fluttertoast: ^9.0.0
   flutter_custom_tab_bar: ^1.2.1
-  loader_overlay: ^4.0.1
+  loader_overlay: ^5.0.0
   badges: ^3.1.2
   url_launcher: ^6.3.0
   uuid: ^4.5.0
-  package_info_plus: ^8.0.2
-  device_info_plus: ^10.1.2
-  ota_update: ^6.0.0
+  package_info_plus: ^9.0.1
+  device_info_plus: ^12.4.0
+  ota_update: ^7.1.0
   quickalert: ^1.1.0
   babstrap_settings_screen: ^0.1.7
   flutter_material_color_picker: ^1.2.0
@@ -75,25 +75,25 @@ dependencies:
   animated_custom_dropdown: ^3.1.1
   animated_tree_view: ^2.3.0
   vector_math: ^2.1.4
-  toastification: ^2.3.0
-  flutter_local_notifications: ^19.0.0
+  toastification: ^3.0.3
+  flutter_local_notifications: ^21.0.0
   msix: ^3.16.7
   excel: ^4.0.6
   open_file: ^3.5.4
   synchronized: ^3.1.0+1
   sqflite: ^2.3.3+1
   sqflite_common_ffi: ^2.3.3
-  sqlite3_flutter_libs: ^0.5.24
+  sqlite3_flutter_libs: ^0.6.0+eol
   path: ^1.9.0
-  file_picker: ^8.0.7
-  tray_manager: ^0.2.3
-  window_manager: ^0.4.2
-  launch_at_startup: ^0.3.1
+  file_picker: ^11.0.2
+  tray_manager: ^0.5.2
+  window_manager: ^0.5.1
+  launch_at_startup: ^0.5.1
   windows_single_instance: ^1.0.1
 
 
 dev_dependencies:
-  ferry_generator: ^0.10.0
+  ferry_generator: ^0.12.0+3
   flutter_test:
     sdk: flutter
 
@@ -102,9 +102,9 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
   build_runner: ^2.4.11
-  freezed: ^2.5.2
+  freezed: ^3.2.5
   json_serializable: ^6.8.0
 
 dependency_overrides:

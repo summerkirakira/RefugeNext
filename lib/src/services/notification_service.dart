@@ -26,7 +26,7 @@ class NotificationService {
       linux: linuxSettings,
     );
 
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(settings: initSettings);
     _initialized = true;
   }
 
@@ -56,10 +56,10 @@ class NotificationService {
     );
 
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      sender,
-      text,
-      details,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: sender,
+      body: text,
+      notificationDetails: details,
     );
   }
 }

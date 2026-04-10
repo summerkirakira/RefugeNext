@@ -274,7 +274,7 @@ Future<void> _unbindDevice(String deviceUuid) async {
   /// 选择并上传头像
   Future<void> _pickAndUploadAvatar() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );

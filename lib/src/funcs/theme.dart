@@ -131,6 +131,7 @@ class ThemeManager {
     if (!_instance.isInitialized) {
       return FlexColorScheme.light(
         scheme: FlexScheme.material,
+        useMaterial3: false,
         fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
       ).toTheme;
     }
@@ -138,11 +139,13 @@ class ThemeManager {
     if (_instance.isDark) {
       return FlexColorScheme.dark(
         scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme),
+        useMaterial3: false,
         fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
       ).toTheme;
     } else {
       return FlexColorScheme.light(
         scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme),
+        useMaterial3: false,
         fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
       ).toTheme;
     }

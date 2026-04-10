@@ -594,7 +594,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                           ),
                           const SizedBox(height: 12),
                           Theme(
-                            data: FlexColorScheme.light(scheme: FlexScheme.blue).toTheme,
+                            data: FlexColorScheme.light(scheme: FlexScheme.blue, useMaterial3: false).toTheme,
                             child: CustomDropdown<String>.search(
                               decoration: getUpgradeDropdownDecoration(Theme.of(context).brightness == Brightness.dark),
                               hintText: '选择起始舰船',
@@ -612,7 +612,7 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
                           ),
                           const SizedBox(height: 10),
                           Theme(
-                            data: FlexColorScheme.light(scheme: FlexScheme.blue).toTheme,
+                            data: FlexColorScheme.light(scheme: FlexScheme.blue, useMaterial3: false).toTheme,
                             child: CustomDropdown<String>.search(
                               hintText: '选择目标舰船',
                               searchHintText: '搜索舰船名称...',

@@ -35,10 +35,29 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>避难所会在回收或礼物时请求生物验证来保证安全，拒绝后会使用密码进行验证</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>此应用需要访问您的照片库以便选择和设置头像等</string>
-	<key>io.flutter.embedded_views_preview</key>
-	<string>YES</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>此应用需要访问您的照片库以便选择和设置头像等</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -60,5 +79,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>io.flutter.embedded_views_preview</key>
+	<string>YES</string>
 </dict>
 </plist>

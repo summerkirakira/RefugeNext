@@ -30,6 +30,7 @@ class _ShopTopBarState extends State<ShopTopBar> {
   Widget build(BuildContext context) {
     final isDevMode = Provider.of<MainDataModel>(context, listen: false).isDevMode;
     return SafeArea(
+        bottom: false,
         child: Container(
           // color: Colors.black,
           padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),

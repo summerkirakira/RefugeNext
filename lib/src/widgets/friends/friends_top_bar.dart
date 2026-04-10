@@ -25,6 +25,7 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
     return Consumer<MainDataModel>(
       builder: (context, dataModel, child) {
         return SafeArea(
+          bottom: false,
           child: Container(
             padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),
             height: 60,

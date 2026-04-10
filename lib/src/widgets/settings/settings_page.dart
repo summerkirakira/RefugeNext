@@ -115,7 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> selectGameDirectory(BuildContext context) async {
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+    String? selectedDirectory = await FilePicker.getDirectoryPath(
       dialogTitle: '选择Star Citizen游戏目录',
     );
 
