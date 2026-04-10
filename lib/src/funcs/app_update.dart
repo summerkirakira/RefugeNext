@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:refuge_next/src/datasource/models/cirno/property.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // IMPORT PACKAGE
@@ -43,10 +44,11 @@ void onIosUpdateConfirmClicked(RefugeVersionProperty property) {
 void onConfirmClicked(RefugeVersionProperty property) {
   if (Platform.isAndroid) {
     onAndroidUpdateConfirmClicked(property);
-  } else if (Platform.isIOS) {
+  } else if (Platform.isIOS || Platform.isMacOS) {
     onIosUpdateConfirmClicked(property);
   } else {
-    showToast(message: "前往QQ群获取最新版本~");
+    Clipboard.setData(const ClipboardData(text: "689970313"));
+    showToast(message: "已复制群号到剪贴板，QQ群: 689970313");
   }
 }
 
