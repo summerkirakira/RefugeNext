@@ -1966,6 +1966,8 @@ class MainDataModel extends ChangeNotifier {
     List<HangarItem> items = [];
     try {
       items = await hangarRepo.refreshHangarItems();
+    } on ParserError {
+      rethrow;
     } catch (e) {
       // 刷新失败时读取已保存的部分数据
       items = await hangarRepo.readHangarItems();
