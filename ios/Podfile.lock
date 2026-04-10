@@ -40,6 +40,8 @@ PODS:
   - Flutter (1.0.0)
   - flutter_keyboard_visibility (0.0.1):
     - Flutter
+  - flutter_local_notifications (0.0.1):
+    - Flutter
   - fluttertoast (0.0.2):
     - Flutter
     - Toast
@@ -101,6 +103,7 @@ DEPENDENCIES:
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - open_file_ios (from `.symlinks/plugins/open_file_ios/ios`)
@@ -133,6 +136,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_keyboard_visibility:
     :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
   fluttertoast:
     :path: ".symlinks/plugins/fluttertoast/ios"
   local_auth_darwin:
@@ -164,6 +169,7 @@ SPEC CHECKSUMS:
   file_picker: 9b3292d7c8bc68c8a7bf8eb78f730e49c8efc517
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_keyboard_visibility: 4625131e43015dbbe759d9b20daaf77e0e3f6619
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   fluttertoast: 76fea30fcf04176325f6864c87306927bd7d2038
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   open_file_ios: 5ff7526df64e4394b4fe207636b67a95e83078bb

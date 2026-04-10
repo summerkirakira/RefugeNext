@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/widgets/hangar/hangar_log/hangar_log_bottomsheet.dart';
 import 'hangar_search_bottomsheet.dart';
+import 'hangar_export_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../user_info/user_login_bottomsheet.dart';
 import 'package:provider/provider.dart';
@@ -74,34 +75,6 @@ class _HangarTopBarState extends State<HangarTopBar> {
                           },
                           icon: const Icon(Icons.refresh),
                         ),
-                      // IconButton(
-                      //   onPressed: () async {
-                      //     WoltModalSheet.show<void>(
-                      //         context: context,
-                      //         pageListBuilder: (modalSheetContext) {
-                      //           return [
-                      //             getHangarExportPage(
-                      //                 modalSheetContext, context)
-                      //           ];
-                      //         });
-                      //   },
-                      //   icon: const Icon(Icons.file_download_outlined),
-                      // ),
-                      IconButton(
-                        onPressed: () {
-                          GameLogModal.show(context);
-                        },
-                        icon: const Icon(Icons.games_outlined),
-                      ),
-                      IconButton(onPressed: () {
-                        WoltModalSheet.show<void>(
-                            context: context,
-                            pageListBuilder: (modalSheetContext) {
-                              return [
-                                getHangarLogBottomSheet(context, null)
-                              ];
-                            });
-                      }, icon: const Icon(Icons.description_outlined)),
                       IconButton(
                           onPressed: () {
                             WoltModalSheet.show<void>(
@@ -113,6 +86,55 @@ class _HangarTopBarState extends State<HangarTopBar> {
                                 });
                           },
                           icon: const Icon(Icons.search)),
+                      IconButton(onPressed: () {
+                        WoltModalSheet.show<void>(
+                            context: context,
+                            pageListBuilder: (modalSheetContext) {
+                              return [
+                                getHangarLogBottomSheet(context, null)
+                              ];
+                            });
+                      }, icon: const Icon(Icons.description_outlined)),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'export':
+                              WoltModalSheet.show<void>(
+                                  context: context,
+                                  pageListBuilder: (modalSheetContext) {
+                                    return [
+                                      getHangarExportPage(
+                                          modalSheetContext, context)
+                                    ];
+                                  });
+                              break;
+                            case 'game_log':
+                              GameLogModal.show(context);
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'export',
+                            child: ListTile(
+                              leading: Icon(Icons.file_download_outlined),
+                              title: Text('导出机库'),
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'game_log',
+                            child: ListTile(
+                              leading: Icon(Icons.games_outlined),
+                              title: Text('游戏日志'),
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
           ),
