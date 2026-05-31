@@ -14,26 +14,25 @@ Map<String, String> getRsiHeaders() {
   return rsiApiClient.getHeaders();
 }
 
-void openRsiWebview({ required BuildContext context, bool replace = false, required String url, bool isAnonymous = false}) {
+Future<void> openRsiWebview({ required BuildContext context, bool replace = false, required String url, bool isAnonymous = false}) {
 
   // WebView现在支持iOS、Android和Windows平台
   if (!Platform.isIOS && !Platform.isAndroid && !Platform.isWindows && !Platform.isMacOS) {
     showAlert(message: '暂不支持此平台QAQ');
-    return;
+    return Future.value();
   }
 
   final headers = getRsiHeaders();
 
   if (replace) {
-    Navigator.pushReplacement(
+    return Navigator.pushReplacement(
       context,
       CupertinoPageRoute(
         builder: (context) => isAnonymous ? AnonymousWebpage(url: url, headers: headers,) : FullScreenWebView(url: url, headers: headers,),
       ),
     );
-    return;
   } else {
-    Navigator.push(
+    return Navigator.push(
       context,
       CupertinoPageRoute(
         builder: (context) => isAnonymous ? AnonymousWebpage(url: url, headers: headers,) : FullScreenWebView(url: url, headers: headers,),
@@ -44,9 +43,9 @@ void openRsiWebview({ required BuildContext context, bool replace = false, requi
 }
 
 
-void openRsiCartWebview({ required BuildContext context, bool replace = false}) {
+Future<void> openRsiCartWebview({ required BuildContext context, bool replace = false}) {
   final String url = 'https://robertsspaceindustries.com/store/pledge/cart';
-  openRsiWebview(context: context, replace: replace, url: url);
+  return openRsiWebview(context: context, replace: replace, url: url);
 }
 
 void openRsiHangarWebview({ required BuildContext context, bool replace = false, int page = 1}) {
