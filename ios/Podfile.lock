@@ -1,6 +1,4 @@
 PODS:
-  - babstrap_settings_screen (0.0.1):
-    - Flutter
   - device_info_plus (0.0.1):
     - Flutter
   - DKImagePickerController/Core (4.3.9):
@@ -72,7 +70,6 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
-  - babstrap_settings_screen (from `.symlinks/plugins/babstrap_settings_screen/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
@@ -97,8 +94,6 @@ SPEC REPOS:
     - SwiftyGif
 
 EXTERNAL SOURCES:
-  babstrap_settings_screen:
-    :path: ".symlinks/plugins/babstrap_settings_screen/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
   file_picker:
@@ -131,7 +126,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
-  babstrap_settings_screen: 51c832e89db990fc6e64500db0f0e68bcb84fbca
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60

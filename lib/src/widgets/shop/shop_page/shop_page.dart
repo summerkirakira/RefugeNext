@@ -20,6 +20,21 @@ class CatalogPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<CatalogPage> {
+  bool _autoRefreshTriggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_autoRefreshTriggered || !mounted) return;
+      _autoRefreshTriggered = true;
+      final model = context.read<MainDataModel>();
+      if (model.getCataLog(widget.catalogTypes).isEmpty) {
+        await model.refreshCatalog(widget.catalogTypes);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(

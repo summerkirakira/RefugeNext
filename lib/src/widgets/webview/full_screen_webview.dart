@@ -68,7 +68,7 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
             print('WebView Navigation request: ${request.url}');
 
             // 只对特定的支付跳转进行拦截
-            if (request.url.startsWith("https://hooks.stripe.com/redirect/authenticate")) {
+            if (request.url.startsWith("https://g.alipayplus.com/page/checkout")) {
               final alipayUrl = Uri.parse(request.url);
               launchUrl(alipayUrl, mode: LaunchMode.inAppBrowserView);
               return NavigationDecision.prevent;
