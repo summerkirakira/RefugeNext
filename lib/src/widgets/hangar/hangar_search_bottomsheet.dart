@@ -268,6 +268,7 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
                 suffix: tagSuffix,
                 items: [
                   MultiSelectCard(value: "all", label: "全部"),
+                  MultiSelectCard(value: "non_zero", label: "非0"),
                   MultiSelectCard(value: "0-100", label: "0-100"),
                   MultiSelectCard(value: "100-500", label: "100-500"),
                   MultiSelectCard(value: "500+", label: "500+")
@@ -297,6 +298,7 @@ WoltModalSheetPage getSearchBottomSheet(BuildContext context) {
                 items: [
                   MultiSelectCard(value: "all", label: "全部"),
                   MultiSelectCard(value: "giftable", label: "可礼物"),
+                  MultiSelectCard(value: "non_giftable", label: "不可礼物"),
                   MultiSelectCard(value: "reclaimable", label: "可融"),
                 ],
                 onChange: (allSelectedItems, selectedItem) {

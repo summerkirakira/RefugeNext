@@ -97,6 +97,9 @@ bool isPriceRange(HangarItem item, List<String> rangees) {
     if (range == 'all') {
       return true;
     }
+    if (range == 'non_zero' && item.price > 0) {
+      return true;
+    }
     if (range == '0-100' && item.price > 0 && item.currentPrice <= 10000) {
       return true;
     }
@@ -113,18 +116,26 @@ bool isPriceRange(HangarItem item, List<String> rangees) {
 
 
 bool isSearchReclaimable(HangarItem item, List<String> reclaimStatuses) {
-  for (var status in reclaimStatuses) {
-    if (status == 'all') {
-      return true;
-    }
-    if (status == 'giftable' && item.canGit) {
-      return true;
-    }
-    if (status == 'reclaimable' && item.canReclaim) {
-      return true;
+  if (reclaimStatuses.isEmpty || reclaimStatuses.contains('all')) {
+    return true;
+  }
+
+  // 礼物维度：可礼物 / 不可礼物（组内 OR）
+  final hasGiftable = reclaimStatuses.contains('giftable');
+  final hasNonGiftable = reclaimStatuses.contains('non_giftable');
+  if (hasGiftable || hasNonGiftable) {
+    final giftPass = (hasGiftable && item.canGit) || (hasNonGiftable && !item.canGit);
+    if (!giftPass) {
+      return false;
     }
   }
-  return false;
+
+  // 可融维度，与礼物维度 AND 组合
+  if (reclaimStatuses.contains('reclaimable') && !item.canReclaim) {
+    return false;
+  }
+
+  return true;
 }
 
 bool isContainSearchKey(HangarItem item, String? searchKey) {
