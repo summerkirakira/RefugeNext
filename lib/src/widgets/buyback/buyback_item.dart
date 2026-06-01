@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
-import '../../datasource/data_model.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../datasource/models/buyback.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -13,7 +10,8 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:intl/intl.dart';
 
 import '../../funcs/shop/buyback.dart';
-import '../shop/cart/cart.dart';
+import '../hangar/hangar_item_detail_widget.dart' show priceString;
+import 'buyback_item_detail_widget.dart';
 
 String formatTimestamp(int timestamp, {String format = 'yyyy年MM月dd日'}) {
   // 创建 DateTime 对象
@@ -142,95 +140,15 @@ class BuybackItemWidget extends StatelessWidget {
 
   const BuybackItemWidget({Key? key, required this.buybackItem}) : super(key: key);
 
-  /// iOS 暂不支持批量回购，保留原有单个回购流程。
-  void _showSingleBuybackDialog(BuildContext context) {
-    final dialog = AlertDialog(
-      title: Text('回购确认'),
-      content: Text('确认回购 ${buybackItem.chinesName} 吗？'),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            Navigator.of(context).pop();
-          },
-          child: const Text('关闭'),
-        ),
-        TextButton(
-          onPressed: () async {
-            try {
-              if (buybackItem.isUpgrade) {
-                await addUpgradeBuybackItemToCart(buybackItem);
-              } else {
-                await addBuybackPledgeToCart(buybackItem);
-              }
-            } catch (e) {
-              showAlert(message: "回购失败: $e");
-              Navigator.of(context).pop();
-              return;
-            }
-            Navigator.of(context).pop();
-            showToast(message: '成功添加回购到购物车');
-            showCartBottomSheet(context);
-          },
-          child: const Text('确认'),
-        ),
-      ],
-    );
-    showDialog(context: context, builder: (context) => dialog);
-  }
-
-
-  void _showBatchBuybackDialog(BuildContext context) {
-    final controller = TextEditingController(text: '1');
-    final maxNumber = buybackItem.number;
-    final dialog = AlertDialog(
-      title: const Text('回购确认'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('确认回购 ${buybackItem.chinesName} 吗？'),
-          const SizedBox(height: 12),
-          TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: '回购数量（1~$maxNumber）',
-              border: const OutlineInputBorder(),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
-        ),
-        TextButton(
-          onPressed: () {
-            final quantity = int.tryParse(controller.text.trim());
-            if (quantity == null || quantity < 1 || quantity > maxNumber) {
-              showToast(message: '请输入 1~$maxNumber 之间的数量');
-              return;
-            }
-            Navigator.of(context).pop();
-            performBatchBuyback(context, buybackItem, quantity);
-          },
-          child: const Text('确认'),
-        ),
-      ],
-    );
-    showDialog(context: context, builder: (context) => dialog);
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (Platform.isIOS) {
-          _showSingleBuybackDialog(context);
-        } else {
-          _showBatchBuybackDialog(context);
-        }
+        WoltModalSheet.show<void>(
+          context: context,
+          pageListBuilder: (modalSheetContext) =>
+              [getBuybackItemDetailSheet(modalSheetContext, context, buybackItem)],
+        );
       },
       child: Container(
         height: 108,
@@ -257,8 +175,18 @@ class BuybackItemWidget extends StatelessWidget {
                         Text(buybackItem.chinesName!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),),
                         Spacer(),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-
+                            if (buybackItem.isUpgrade && buybackItem.price > 0)
+                              Row(
+                                children: [
+                                  Text('\$', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+                                  Text(
+                                    priceString(buybackItem.price),
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ],
+                              ),
                             const Spacer(),
                             Text(formatTimestamp(buybackItem.date)),
                           ],

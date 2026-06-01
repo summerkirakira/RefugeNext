@@ -50,9 +50,24 @@ class BuybackRepo {
   }
 
 
+  /// 逐行翻译回购物品的「包含」内容（RSI 抓来的 contains 为多行文本）。
+  /// 无法匹配的行回退原文，整体不会因个别条目缺翻译而失败。
+  String _translateContains(String contains) {
+    final translated = <String>[];
+    for (var line in contains.split('\n')) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        continue;
+      }
+      translated.add(translationRepo.getTranslationSync(trimmed));
+    }
+    return translated.join('\n');
+  }
+
   List<BuybackItem> translateBuybackItems(List<BuybackItem> items) {
     return items.map((e) {
       e.chinesName = translationRepo.getTranslationSync(e.title);
+      e.chineseContains = _translateContains(e.contains);
       return e;
     }).toList();
   }
