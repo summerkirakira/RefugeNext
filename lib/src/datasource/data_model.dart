@@ -1881,6 +1881,15 @@ class MainDataModel extends ChangeNotifier {
     return null;
   }
 
+  BuybackItem? getBuybackItemById(int id) {
+    for (var item in _buybackItems) {
+      if (item.id == id || item.idList.contains(id)) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   void readBuybackItems() {
     buybackRepo.readBuybackItems().then((value) {
       final stackedItems = stackBuybackItems(value);

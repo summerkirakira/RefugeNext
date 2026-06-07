@@ -1,8 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:provider/provider.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../../datasource/ai_chat_model.dart';
+import '../../datasource/data_model.dart';
+import '../../datasource/models/ai/ai_message.dart';
+import '../../datasource/models/hangar.dart';
+import '../../datasource/models/buyback.dart';
+import '../hangar/hangar_item_widget.dart';
+import '../hangar/hangar_item_detail_widget.dart';
+import '../hangar/ship_reclaim_modal.dart';
+import '../hangar/ship_gift_modal.dart';
+import '../hangar/ship_recall_modal.dart';
+import '../buyback/buyback_item.dart';
+
+/// 解析 assistant 消息里指定工具调用的 id 列表（show_hangar_cards / show_buyback_cards）。
+List<int> _cardIdsOf(AiMessage m, String toolName) {
+  if (m.role != 'assistant') return const [];
+  final calls = m.toolCalls;
+  if (calls == null) return const [];
+  for (final c in calls) {
+    if (c.name == toolName) {
+      final raw = c.arguments['ids'];
+      if (raw is List) {
+        return raw
+            .map((e) => e is int ? e : int.tryParse('$e') ?? -1)
+            .where((x) => x >= 0)
+            .toList();
+      }
+    }
+  }
+  return const [];
+}
+
+/// 机库卡片 id 列表（show_hangar_cards）。
+List<int> hangarCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_hangar_cards');
+
+/// 回购卡片 id 列表（show_buyback_cards）。
+List<int> buybackCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_buyback_cards');
+
+/// 复用机库的点击弹窗（详情/回收/赠送/撤回）。
+void _openHangarItemSheet(HangarItem item, BuildContext context) {
+  WoltModalSheet.show<void>(
+    context: context,
+    pageListBuilder: (modalSheetContext) {
+      return [
+        getHangarItemDetailSheet(modalSheetContext, item),
+        getReclaimPage(modalSheetContext, context, item),
+        getGiftPage(modalSheetContext, context, item),
+        getRecallPage(modalSheetContext, context, item),
+      ];
+    },
+  );
+}
 
 /// AI 聊天界面（qa 问答 MVP）。绑定 AiChatModel：
 /// 渲染已提交 messages + 一条由 streamingText 构成的在途气泡，token 到达即逐字出现。
@@ -59,15 +110,22 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<AiChatModel>();
-    // 渲染 user，及有正文的 assistant；跳过 role=tool 和「纯工具调用」的空 assistant 轮。
-    final rendered = model.messages.where((m) {
-      if (m.role == 'user') return true;
-      if (m.role == 'assistant') {
-        final c = m.content;
-        return c is String && c.trim().isNotEmpty;
+    // 异构渲染：user/assistant 气泡 + show_hangar_cards 的机库卡片块；跳过 role=tool 与纯工具调用空 assistant。
+    final items = <Widget>[];
+    for (final m in model.messages) {
+      final c = m.content;
+      final hasText = c is String && c.trim().isNotEmpty;
+      if (m.role == 'user') {
+        if (hasText) items.add(_AiBubble(isUser: true, text: c));
+      } else if (m.role == 'assistant') {
+        if (hasText) items.add(_AiBubble(isUser: false, text: c));
+        final hangarIds = hangarCardIdsOf(m);
+        if (hangarIds.isNotEmpty) items.add(_HangarCards(ids: hangarIds));
+        final buybackIds = buybackCardIdsOf(m);
+        if (buybackIds.isNotEmpty) items.add(_BuybackCards(ids: buybackIds));
       }
-      return false;
-    }).toList();
+    }
+    final showEmpty = items.isEmpty && !model.isGenerating;
 
     // 有新内容时滚到底
     _scrollToBottom();
@@ -75,40 +133,26 @@ class _AiChatPageState extends State<AiChatPage> {
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: _SessionDrawer(onDeleteSession: _confirmDeleteSession),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(model.currentTitle.isEmpty ? 'AI 助手' : model.currentTitle),
-        actions: [
-          IconButton(
-            tooltip: '会话',
-            icon: const Icon(Icons.menu),
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-          ),
-        ],
-      ),
       body: Column(
         children: [
+          _AiTopBar(
+            title: '小九',
+            onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
           Expanded(
-            child: (rendered.isEmpty && !model.isGenerating)
+            child: showEmpty
                 ? const _EmptyState()
-                : ListView.builder(
+                : ListView(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    itemCount: rendered.length + (model.isGenerating ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index < rendered.length) {
-                        final msg = rendered[index];
-                        return _AiBubble(
-                          isUser: msg.role == 'user',
-                          text: msg.content?.toString() ?? '',
-                        );
-                      }
-                      // 在途气泡
-                      return _StreamingBubble(
-                        text: model.streamingText,
-                        toolLabel: model.toolStatusLabel,
-                      );
-                    },
+                    children: [
+                      ...items,
+                      if (model.isGenerating)
+                        _StreamingBubble(
+                          text: model.streamingText,
+                          toolLabel: model.toolStatusLabel,
+                        ),
+                    ],
                   ),
           ),
           if (model.errorMessage != null)
@@ -361,6 +405,123 @@ class _EmptyState extends StatelessWidget {
             '问我点什么吧～',
             style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// AI 页顶栏：与其它主页面一致（头像 + 标题），右侧汉堡打开会话抽屉。
+class _AiTopBar extends StatelessWidget {
+  final String title;
+  final VoidCallback? onMenuPressed;
+
+  const _AiTopBar({required this.title, this.onMenuPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        height: 60,
+        padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),
+        child: Row(
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(right: 10),
+              child: ClipOval(
+                child: Image(
+                  image: AssetImage('assets/images/cirno_ai.jpg'),
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 24),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              tooltip: '会话',
+              icon: const Icon(Icons.menu),
+              onPressed: onMenuPressed,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 内联机库卡片块：把 ids 解析成本地 HangarItem，复用机库卡片 + 点击弹窗。
+class _HangarCards extends StatelessWidget {
+  final List<int> ids;
+
+  const _HangarCards({required this.ids});
+
+  @override
+  Widget build(BuildContext context) {
+    MainDataModel? model;
+    try {
+      model = context.read<MainDataModel>();
+    } catch (_) {
+      model = null; // dev/preview 入口无 MainDataModel：不渲染卡片。
+    }
+    if (model == null) return const SizedBox.shrink();
+    final items = ids
+        .map((id) => model!.getHangarItemById(id))
+        .whereType<HangarItem>()
+        .toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        children: [
+          for (final it in items)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: HangarItemWidget(hangarItem: it, onTap: _openHangarItemSheet),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 内联回购卡片块：把 ids 解析成本地 BuybackItem，复用回购卡片（卡片自带点击弹窗）。
+class _BuybackCards extends StatelessWidget {
+  final List<int> ids;
+
+  const _BuybackCards({required this.ids});
+
+  @override
+  Widget build(BuildContext context) {
+    MainDataModel? model;
+    try {
+      model = context.read<MainDataModel>();
+    } catch (_) {
+      model = null;
+    }
+    if (model == null) return const SizedBox.shrink();
+    final items = ids
+        .map((id) => model!.getBuybackItemById(id))
+        .whereType<BuybackItem>()
+        .toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        children: [
+          for (final it in items)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: BuybackItemWidget(buybackItem: it),
+            ),
         ],
       ),
     );

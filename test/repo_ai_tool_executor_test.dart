@@ -18,6 +18,7 @@ HangarSubItem _sub({String title = '', String kind = '', String? chineseTitle}) 
     );
 
 HangarItem _hi({
+  int id = 0,
   String name = '',
   String? chineseName,
   int number = 1,
@@ -29,7 +30,7 @@ HangarItem _hi({
   String? chineseAlsoContains,
 }) =>
     HangarItem(
-      id: 0,
+      id: id,
       idList: const [],
       name: name,
       chineseName: chineseName,
@@ -98,11 +99,12 @@ void main() {
       expect(list[1]['name'], 'S2');
     });
 
-    test('name 优先中文名，price 优先 currentPrice', () {
+    test('name 优先中文名，price 优先 currentPrice，含 id', () {
       final r = shapeHangarItems([
-        _hi(name: 'Carrack', chineseName: '卡拉克', price: 100, currentPrice: 80, items: [_sub(kind: 'Ship')]),
+        _hi(id: 42, name: 'Carrack', chineseName: '卡拉克', price: 100, currentPrice: 80, items: [_sub(kind: 'Ship')]),
       ], {});
       final it = (r['items'] as List).single;
+      expect(it['id'], 42);
       expect(it['name'], '卡拉克');
       expect(it['type'], 'ship');
       expect(it['qty'], 1);
@@ -112,6 +114,32 @@ void main() {
     test('currentPrice<=0 时回退 price', () {
       final r = shapeHangarItems([_hi(name: 'X', price: 50, currentPrice: 0)], {});
       expect((r['items'] as List).single['price'], 50);
+    });
+
+    test('contents 含子项(name 优先中文 + kind)，alsoContains 按 # 拆分', () {
+      final r = shapeHangarItems([
+        _hi(
+          name: 'Pack',
+          items: [
+            _sub(title: 'Cutlass Black', kind: 'Ship', chineseTitle: '弯刀黑'),
+            _sub(title: 'Some Paint', kind: 'Paint'), // 无中文 → 回退英文
+          ],
+          chineseAlsoContains: '6个月保险#星图',
+        ),
+      ], {});
+      final it = (r['items'] as List).single;
+      final contents = it['contents'] as List;
+      expect(contents.length, 2);
+      expect(contents[0], {'name': '弯刀黑', 'kind': 'Ship'});
+      expect(contents[1], {'name': 'Some Paint', 'kind': 'Paint'});
+      expect(it['alsoContains'], ['6个月保险', '星图']);
+    });
+
+    test('无额外内容时不含 alsoContains 键', () {
+      final r = shapeHangarItems([_hi(name: 'X', items: [_sub(kind: 'Ship')])], {});
+      final it = (r['items'] as List).single;
+      expect(it.containsKey('alsoContains'), false);
+      expect((it['contents'] as List).length, 1);
     });
   });
 

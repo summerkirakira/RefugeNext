@@ -16,6 +16,8 @@ class RepoAiToolExecutor implements AiToolExecutor {
     'get_user_ships',
     'get_user_info',
     'get_buyback',
+    'show_hangar_cards',
+    'show_buyback_cards',
   ];
 
   @override
@@ -36,12 +38,48 @@ class RepoAiToolExecutor implements AiToolExecutor {
           return await _getUserInfo();
         case 'get_buyback':
           return await _getBuyback(arguments);
+        case 'show_hangar_cards':
+          return _showHangarCards(arguments);
+        case 'show_buyback_cards':
+          return _showBuybackCards(arguments);
         default:
           return {'is_error': true, 'error': 'tool not allowed: $name'};
       }
     } catch (e) {
       return {'is_error': true, 'error': '$e'};
     }
+  }
+
+  /// 让客户端内联展示机库卡片：仅校验 ids 并 ack；真正渲染由 UI 从 transcript 读取 tool_calls 完成。
+  Map<String, dynamic> _showHangarCards(Map<String, dynamic> args) {
+    final raw = (args['ids'] is List) ? args['ids'] as List : const [];
+    final shown = <int>[];
+    final missing = <int>[];
+    for (final e in raw) {
+      final id = _asInt(e, -1);
+      if (id >= 0 && _model.getHangarItemById(id) != null) {
+        shown.add(id);
+      } else {
+        missing.add(id);
+      }
+    }
+    return {'ok': true, 'shown': shown, 'missing': missing};
+  }
+
+  /// 让客户端内联展示回购卡片：仅校验 ids 并 ack；渲染由 UI 从 transcript 读取。
+  Map<String, dynamic> _showBuybackCards(Map<String, dynamic> args) {
+    final raw = (args['ids'] is List) ? args['ids'] as List : const [];
+    final shown = <int>[];
+    final missing = <int>[];
+    for (final e in raw) {
+      final id = _asInt(e, -1);
+      if (id >= 0 && _model.getBuybackItemById(id) != null) {
+        shown.add(id);
+      } else {
+        missing.add(id);
+      }
+    }
+    return {'ok': true, 'shown': shown, 'missing': missing};
   }
 
   Future<Map<String, dynamic>> _getUserInfo() async {
@@ -62,8 +100,9 @@ class RepoAiToolExecutor implements AiToolExecutor {
     final shaped = items.take(limit < 0 ? 0 : limit).map((b) {
       final cn = b.chinesName;
       return {
+        'id': b.id,
         'name': (cn != null && cn.isNotEmpty) ? cn : b.title,
-        'price': b.price,
+        'qty': b.number,
       };
     }).toList();
     return {'total': items.length, 'items': shaped};
@@ -84,6 +123,11 @@ int _asInt(Object? v, int fallback) {
 String _displayName(HangarItem item) {
   final cn = item.chineseName;
   return (cn != null && cn.isNotEmpty) ? cn : item.name;
+}
+
+String _subName(HangarSubItem s) {
+  final cn = s.chineseTitle;
+  return (cn != null && cn.isNotEmpty) ? cn : s.title;
 }
 
 int _displayPrice(HangarItem item) =>
@@ -141,12 +185,26 @@ Map<String, dynamic> shapeHangarItems(
   final page = list
       .skip(offset < 0 ? 0 : offset)
       .take(limit < 0 ? 0 : limit)
-      .map((i) => {
-            'name': _displayName(i),
-            'type': hangarItemType(i),
-            'qty': i.number,
-            'price': _displayPrice(i),
-          })
+      .map((i) {
+        // 额外内容（# 分隔），优先中文，回退英文。
+        final extras = (i.chineseAlsoContains ?? i.alsoContains)
+            .split('#')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+        return {
+          'id': i.id,
+          'name': _displayName(i),
+          'type': hangarItemType(i),
+          'qty': i.number,
+          'price': _displayPrice(i),
+          // 包内容：结构化子项（船/涂装等）
+          'contents': i.items
+              .map((s) => {'name': _subName(s), 'kind': s.kind})
+              .toList(),
+          if (extras.isNotEmpty) 'alsoContains': extras,
+        };
+      })
       .toList();
 
   return {'total': total, 'items': page};
