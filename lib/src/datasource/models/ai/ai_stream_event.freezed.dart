@@ -53,6 +53,7 @@ extension AiStreamEventPatterns on AiStreamEvent {
     TResult Function(AiTokenEvent value)? token,
     TResult Function(AiToolRunningEvent value)? toolRunning,
     TResult Function(AiToolRequestEvent value)? toolRequest,
+    TResult Function(AiToolResultEvent value)? toolResult,
     TResult Function(AiCardEvent value)? card,
     TResult Function(AiDoneEvent value)? done,
     TResult Function(AiErrorEvent value)? error,
@@ -66,6 +67,8 @@ extension AiStreamEventPatterns on AiStreamEvent {
         return toolRunning(_that);
       case AiToolRequestEvent() when toolRequest != null:
         return toolRequest(_that);
+      case AiToolResultEvent() when toolResult != null:
+        return toolResult(_that);
       case AiCardEvent() when card != null:
         return card(_that);
       case AiDoneEvent() when done != null:
@@ -95,6 +98,7 @@ extension AiStreamEventPatterns on AiStreamEvent {
     required TResult Function(AiTokenEvent value) token,
     required TResult Function(AiToolRunningEvent value) toolRunning,
     required TResult Function(AiToolRequestEvent value) toolRequest,
+    required TResult Function(AiToolResultEvent value) toolResult,
     required TResult Function(AiCardEvent value) card,
     required TResult Function(AiDoneEvent value) done,
     required TResult Function(AiErrorEvent value) error,
@@ -107,6 +111,8 @@ extension AiStreamEventPatterns on AiStreamEvent {
         return toolRunning(_that);
       case AiToolRequestEvent():
         return toolRequest(_that);
+      case AiToolResultEvent():
+        return toolResult(_that);
       case AiCardEvent():
         return card(_that);
       case AiDoneEvent():
@@ -133,6 +139,7 @@ extension AiStreamEventPatterns on AiStreamEvent {
     TResult? Function(AiTokenEvent value)? token,
     TResult? Function(AiToolRunningEvent value)? toolRunning,
     TResult? Function(AiToolRequestEvent value)? toolRequest,
+    TResult? Function(AiToolResultEvent value)? toolResult,
     TResult? Function(AiCardEvent value)? card,
     TResult? Function(AiDoneEvent value)? done,
     TResult? Function(AiErrorEvent value)? error,
@@ -145,6 +152,8 @@ extension AiStreamEventPatterns on AiStreamEvent {
         return toolRunning(_that);
       case AiToolRequestEvent() when toolRequest != null:
         return toolRequest(_that);
+      case AiToolResultEvent() when toolResult != null:
+        return toolResult(_that);
       case AiCardEvent() when card != null:
         return card(_that);
       case AiDoneEvent() when done != null:
@@ -173,6 +182,7 @@ extension AiStreamEventPatterns on AiStreamEvent {
     TResult Function(String text)? token,
     TResult Function(String label)? toolRunning,
     TResult Function(AiMessage assistant)? toolRequest,
+    TResult Function(AiMessage message)? toolResult,
     TResult Function(Map<String, dynamic> data)? card,
     TResult Function(Map<String, dynamic> usage)? done,
     TResult Function(String message, bool retryable)? error,
@@ -186,6 +196,8 @@ extension AiStreamEventPatterns on AiStreamEvent {
         return toolRunning(_that.label);
       case AiToolRequestEvent() when toolRequest != null:
         return toolRequest(_that.assistant);
+      case AiToolResultEvent() when toolResult != null:
+        return toolResult(_that.message);
       case AiCardEvent() when card != null:
         return card(_that.data);
       case AiDoneEvent() when done != null:
@@ -215,6 +227,7 @@ extension AiStreamEventPatterns on AiStreamEvent {
     required TResult Function(String text) token,
     required TResult Function(String label) toolRunning,
     required TResult Function(AiMessage assistant) toolRequest,
+    required TResult Function(AiMessage message) toolResult,
     required TResult Function(Map<String, dynamic> data) card,
     required TResult Function(Map<String, dynamic> usage) done,
     required TResult Function(String message, bool retryable) error,
@@ -227,6 +240,8 @@ extension AiStreamEventPatterns on AiStreamEvent {
         return toolRunning(_that.label);
       case AiToolRequestEvent():
         return toolRequest(_that.assistant);
+      case AiToolResultEvent():
+        return toolResult(_that.message);
       case AiCardEvent():
         return card(_that.data);
       case AiDoneEvent():
@@ -253,6 +268,7 @@ extension AiStreamEventPatterns on AiStreamEvent {
     TResult? Function(String text)? token,
     TResult? Function(String label)? toolRunning,
     TResult? Function(AiMessage assistant)? toolRequest,
+    TResult? Function(AiMessage message)? toolResult,
     TResult? Function(Map<String, dynamic> data)? card,
     TResult? Function(Map<String, dynamic> usage)? done,
     TResult? Function(String message, bool retryable)? error,
@@ -265,6 +281,8 @@ extension AiStreamEventPatterns on AiStreamEvent {
         return toolRunning(_that.label);
       case AiToolRequestEvent() when toolRequest != null:
         return toolRequest(_that.assistant);
+      case AiToolResultEvent() when toolResult != null:
+        return toolResult(_that.message);
       case AiCardEvent() when card != null:
         return card(_that.data);
       case AiDoneEvent() when done != null:
@@ -477,6 +495,82 @@ class _$AiToolRequestEventCopyWithImpl<$Res>
   $AiMessageCopyWith<$Res> get assistant {
     return $AiMessageCopyWith<$Res>(_self.assistant, (value) {
       return _then(_self.copyWith(assistant: value));
+    });
+  }
+}
+
+/// @nodoc
+
+class AiToolResultEvent implements AiStreamEvent {
+  const AiToolResultEvent(this.message);
+
+  final AiMessage message;
+
+  /// Create a copy of AiStreamEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $AiToolResultEventCopyWith<AiToolResultEvent> get copyWith =>
+      _$AiToolResultEventCopyWithImpl<AiToolResultEvent>(this, _$identity);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is AiToolResultEvent &&
+            (identical(other.message, message) || other.message == message));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, message);
+
+  @override
+  String toString() {
+    return 'AiStreamEvent.toolResult(message: $message)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $AiToolResultEventCopyWith<$Res>
+    implements $AiStreamEventCopyWith<$Res> {
+  factory $AiToolResultEventCopyWith(
+          AiToolResultEvent value, $Res Function(AiToolResultEvent) _then) =
+      _$AiToolResultEventCopyWithImpl;
+  @useResult
+  $Res call({AiMessage message});
+
+  $AiMessageCopyWith<$Res> get message;
+}
+
+/// @nodoc
+class _$AiToolResultEventCopyWithImpl<$Res>
+    implements $AiToolResultEventCopyWith<$Res> {
+  _$AiToolResultEventCopyWithImpl(this._self, this._then);
+
+  final AiToolResultEvent _self;
+  final $Res Function(AiToolResultEvent) _then;
+
+  /// Create a copy of AiStreamEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? message = null,
+  }) {
+    return _then(AiToolResultEvent(
+      null == message
+          ? _self.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as AiMessage,
+    ));
+  }
+
+  /// Create a copy of AiStreamEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $AiMessageCopyWith<$Res> get message {
+    return $AiMessageCopyWith<$Res>(_self.message, (value) {
+      return _then(_self.copyWith(message: value));
     });
   }
 }

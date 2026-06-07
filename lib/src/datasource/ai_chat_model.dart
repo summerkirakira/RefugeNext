@@ -10,8 +10,11 @@ import 'models/ai/ai_stream_event.dart';
 class AiChatModel extends ChangeNotifier {
   final AiRepo _repo;
 
-  /// 会话标识，决定持久化文件（一会话一文件）。单会话直接用固定值。
-  final String sessionId;
+  /// 当前会话标识（决定持久化文件 `ai_chat_<id>.json`）。可通过切换会话改变。
+  String _sessionId;
+
+  /// 会话列表（元数据）。
+  final List<AiSessionMeta> _sessions = [];
 
   /// 当前场景：qa | recommend | plan。
   String scene;
@@ -27,10 +30,38 @@ class AiChatModel extends ChangeNotifier {
   CancelToken? _cancelToken;
 
   AiChatModel({
-    required this.sessionId,
+    String sessionId = 'main',
     this.scene = 'qa',
     AiRepo? repo,
-  }) : _repo = repo ?? AiRepo();
+  })  : _sessionId = sessionId,
+        _repo = repo ?? AiRepo();
+
+  /// 当前会话 id。
+  String get currentSessionId => _sessionId;
+
+  /// 当前会话标题（用于 AppBar）。
+  String get currentTitle {
+    for (final s in _sessions) {
+      if (s.id == _sessionId) return s.title;
+    }
+    return '新对话';
+  }
+
+  /// 会话列表，按最近更新倒序。
+  List<AiSessionMeta> get sessions {
+    final list = [..._sessions];
+    list.sort((a, b) => b.updatedAt - a.updatedAt);
+    return List.unmodifiable(list);
+  }
+
+  AiSessionMeta? get _currentMeta {
+    for (final s in _sessions) {
+      if (s.id == _sessionId) return s;
+    }
+    return null;
+  }
+
+  int get _now => DateTime.now().millisecondsSinceEpoch;
 
   /// 已提交的对话历史（持久化 / 发送给服务端的内容）。
   List<AiMessage> get messages => List.unmodifiable(_messages);
@@ -53,12 +84,72 @@ class AiChatModel extends ChangeNotifier {
   /// 供 UI 决定是否显示「重试」入口。
   bool get lastErrorRetryable => _lastErrorRetryable;
 
-  /// 从磁盘加载历史（应在进入会话时调用一次）。
+  /// 多会话初始化：加载会话列表 + 当前会话历史（进入页面时调用一次，名称沿用）。
   Future<void> loadFromDisk() async {
-    final history = await _repo.loadHistory(sessionId);
+    final list = await _repo.loadSessions();
+    _sessions
+      ..clear()
+      ..addAll(list);
+    if (_sessions.isEmpty) {
+      // 首次：建默认会话，id 用 'main' 以接住可能已存在的 ai_chat_main.json。
+      _sessions.add(AiSessionMeta(id: 'main', title: '新对话', updatedAt: _now));
+      await _repo.saveSessions(_sessions);
+      _sessionId = 'main';
+    } else {
+      // 选最近更新的会话作为当前。
+      _sessions.sort((a, b) => b.updatedAt - a.updatedAt);
+      _sessionId = _sessions.first.id;
+    }
+    final history = await _repo.loadHistory(_sessionId);
     _messages
       ..clear()
       ..addAll(history);
+    notifyListeners();
+  }
+
+  /// 切换到已有会话。
+  Future<void> switchSession(String id) async {
+    if (_isGenerating || id == _sessionId) return;
+    _sessionId = id;
+    _streamingText = '';
+    _cards.clear();
+    _errorMessage = null;
+    final history = await _repo.loadHistory(id);
+    _messages
+      ..clear()
+      ..addAll(history);
+    notifyListeners();
+  }
+
+  /// 新建会话并切换过去（空白）。
+  Future<void> newSession() async {
+    if (_isGenerating) return;
+    final meta = AiSessionMeta(id: _now.toString(), title: '新对话', updatedAt: _now);
+    _sessions.add(meta);
+    await _repo.saveSessions(_sessions);
+    _sessionId = meta.id;
+    _messages.clear();
+    _streamingText = '';
+    _cards.clear();
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  /// 删除会话；若删的是当前会话，自动切到最近剩余的（没有则新建）。
+  Future<void> deleteSession(String id) async {
+    if (_isGenerating) return;
+    _sessions.removeWhere((s) => s.id == id);
+    await _repo.clearHistory(id);
+    await _repo.saveSessions(_sessions);
+    if (id == _sessionId) {
+      if (_sessions.isEmpty) {
+        await newSession();
+        return;
+      }
+      _sessions.sort((a, b) => b.updatedAt - a.updatedAt);
+      await switchSession(_sessions.first.id);
+      return;
+    }
     notifyListeners();
   }
 
@@ -73,6 +164,15 @@ class AiChatModel extends ChangeNotifier {
     final text = userInput.trim();
     if (text.isEmpty || _isGenerating) return;
     _messages.add(userMessage(text));
+    // 更新会话元数据：标题取首条用户消息，刷新更新时间。
+    final meta = _currentMeta;
+    if (meta != null) {
+      meta.updatedAt = _now;
+      if (meta.title.isEmpty || meta.title == '新对话') {
+        meta.title = text.length > 18 ? '${text.substring(0, 18)}…' : text;
+      }
+      await _repo.saveSessions(_sessions);
+    }
     notifyListeners();
     await _runTurn();
   }
@@ -93,14 +193,14 @@ class AiChatModel extends ChangeNotifier {
     _cancelToken?.cancel('user_stop');
   }
 
-  /// 清空会话（内存 + 磁盘）。
+  /// 清空当前会话内容（保留会话本身）。
   Future<void> clear() async {
     if (_isGenerating) return;
     _messages.clear();
     _streamingText = '';
     _cards.clear();
     _errorMessage = null;
-    await _repo.clearHistory(sessionId);
+    await _repo.clearHistory(_sessionId);
     notifyListeners();
   }
 
@@ -126,8 +226,21 @@ class AiChatModel extends ChangeNotifier {
             _toolStatusLabel = null;
           case AiToolRunningEvent(:final label):
             _toolStatusLabel = label;
-          case AiToolRequestEvent():
+          case AiToolRequestEvent(:final assistant):
+            // 把「调用工具」的助手轮（含 content+tool_calls+provider_state）纳入完整历史。
+            // assistant.content 即工具调用前的文本；若为空则回退到已流式累积的文本。
+            final c = assistant.content;
+            final hasContent = c is String && c.isNotEmpty;
+            _messages.add(
+              hasContent || _streamingText.isEmpty
+                  ? assistant
+                  : assistant.copyWith(content: _streamingText),
+            );
+            _streamingText = '';
             _toolStatusLabel = '正在调用工具…';
+          case AiToolResultEvent(:final message):
+            // 工具结果轮纳入完整历史（UI 不渲染 role=tool）。
+            _messages.add(message);
           case AiCardEvent(:final data):
             _cards.add(data);
           case AiDoneEvent():
@@ -157,15 +270,16 @@ class AiChatModel extends ChangeNotifier {
     }
   }
 
-  /// 把累积的流式文本提交为一条助手消息并持久化。
-  /// 出错时不提交；无内容时不提交。
+  /// 收尾：把最终助手文本（若有）追加为一条消息，并持久化**完整** transcript
+  /// （已含本轮工具往返：assistant(tool_calls)+tool 结果）。出错时不提交、不持久化。
   Future<void> _commitAssistant() async {
     if (_errorMessage != null) return;
     final text = _streamingText.trim();
-    if (text.isEmpty) return;
-    _messages.add(AiMessage(role: 'assistant', content: text));
+    if (text.isNotEmpty) {
+      _messages.add(AiMessage(role: 'assistant', content: text));
+    }
     _streamingText = '';
-    await _repo.saveHistory(sessionId, _messages);
+    await _repo.saveHistory(_sessionId, _messages);
   }
 
   @override

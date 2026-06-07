@@ -22,6 +22,8 @@ import 'package:refuge_next/src/datasource/config_storage.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 import 'src/widgets/friends/friends_status_page.dart';
 import 'src/datasource/ai_chat_model.dart';
+import 'src/repo/ai_chat.dart';
+import 'src/repo/repo_ai_tool_executor.dart';
 import 'src/widgets/ai_chat/ai_chat_page.dart';
 
 void main(List<String> args) async {
@@ -95,8 +97,12 @@ void main(List<String> args) async {
         create: (context) => MainDataModel(),
       ),
       // 全局注册：会话在 Tab 间切换时存活，不丢在途流。lazy（默认）→ 首次进 AI Tab 才创建。
+      // 注入 RepoAiToolExecutor，使服务端可经端侧工具查询本地机库/账号数据。
       ChangeNotifierProvider<AiChatModel>(
-        create: (context) => AiChatModel(sessionId: 'main')..loadFromDisk(),
+        create: (context) => AiChatModel(
+          sessionId: 'main',
+          repo: AiRepo(tools: RepoAiToolExecutor(context.read<MainDataModel>())),
+        )..loadFromDisk(),
       ),
     ],
     child: RefugeApp(),

@@ -15,7 +15,12 @@ sealed class AiStreamEvent with _$AiStreamEvent {
   const factory AiStreamEvent.toolRunning(String label) = AiToolRunningEvent;
 
   /// 端侧工具调用：客户端须执行 assistant.toolCalls 并发起续请求，本段流随后结束。
+  /// assistant 含 content + tool_calls + provider_state，须纳入完整历史。
   const factory AiStreamEvent.toolRequest(AiMessage assistant) = AiToolRequestEvent;
+
+  /// 端侧工具执行后的结果消息（role=tool）。由 AiRepo 在执行工具后透出，
+  /// 供上层把完整工具往返纳入会话历史（KEEP 完整 transcript）。
+  const factory AiStreamEvent.toolResult(AiMessage message) = AiToolResultEvent;
 
   /// 结构化结果（船卡片等），与 token 穿插。
   const factory AiStreamEvent.card(Map<String, dynamic> data) = AiCardEvent;

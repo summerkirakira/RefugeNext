@@ -10,6 +10,23 @@ import '../datasource/models/ai/tool_call.dart';
 import '../network/cirno/ai_chat_service.dart';
 import '../utils/storage_path.dart';
 
+/// 会话元数据（多会话列表用）。普通类，手写 JSON —— 不用 freezed，避免触发 build_runner 删生成文件。
+class AiSessionMeta {
+  final String id;
+  String title; // 取首条用户消息；默认「新对话」
+  int updatedAt; // 毫秒，排序用
+
+  AiSessionMeta({required this.id, required this.title, required this.updatedAt});
+
+  Map<String, dynamic> toJson() => {'id': id, 'title': title, 'updatedAt': updatedAt};
+
+  factory AiSessionMeta.fromJson(Map<String, dynamic> j) => AiSessionMeta(
+        id: j['id'] as String,
+        title: (j['title'] as String?) ?? '新对话',
+        updatedAt: (j['updatedAt'] as int?) ?? 0,
+      );
+}
+
 /// 端侧工具执行接口。allowedToolNames 作为 client_tools 上报，runTool 执行单个工具。
 /// 真实实现（映射到 hangarRepo/userRepo 等）见 planning/docs/ai_module_contract.md §4，留待后续阶段。
 abstract class AiToolExecutor {
@@ -40,6 +57,9 @@ class AiRepo {
 
   /// 历史读写锁，避免并发读写同一会话文件（同 UserRepo 的 synchronized 用法）。
   final Lock _historyLock = Lock();
+
+  /// 会话列表读写锁。
+  final Lock _sessionsLock = Lock();
 
   AiRepo({AiChatService? service, AiToolExecutor? tools})
       : _service = service ?? AiChatService(),
@@ -88,6 +108,36 @@ class AiRepo {
     });
   }
 
+  // ---- 会话列表持久化（ai_sessions.json）----
+
+  Future<File> get _sessionsFile async {
+    final path = await StoragePath.getAppDataPath();
+    return File('$path/ai_sessions.json');
+  }
+
+  /// 读取会话列表；文件不存在或解析失败返回空列表。
+  Future<List<AiSessionMeta>> loadSessions() async {
+    return await _sessionsLock.synchronized(() async {
+      try {
+        final file = await _sessionsFile;
+        final List<dynamic> json = jsonDecode(await file.readAsString());
+        return json
+            .map((e) => AiSessionMeta.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        return [];
+      }
+    });
+  }
+
+  /// 覆盖写入会话列表。
+  Future<void> saveSessions(List<AiSessionMeta> sessions) async {
+    await _sessionsLock.synchronized(() async {
+      final file = await _sessionsFile;
+      await file.writeAsString(jsonEncode(sessions.map((s) => s.toJson()).toList()));
+    });
+  }
+
   /// 自动续跑循环：
   /// 消费一段流 → 遇 tool_request 则执行端侧工具、追加结果 → 发续请求继续；
   /// 遇 done/error 结束整轮。所有事件原样透传给上层。
@@ -119,10 +169,13 @@ class AiRepo {
       if (pending == null) return;
 
       // 执行本轮全部端侧工具，追加 assistant 轮与各工具结果，再发续请求。
+      // 同时把工具结果作为事件透出，供上层把完整工具往返纳入会话历史（KEEP）。
       messages.add(pending);
       for (final ToolCall call in pending.toolCalls ?? const <ToolCall>[]) {
         final result = await _tools.runTool(call.name, call.arguments);
-        messages.add(toolResultMessage(toolCallId: call.id, content: result));
+        final resultMsg = toolResultMessage(toolCallId: call.id, content: result);
+        messages.add(resultMsg);
+        yield AiStreamEvent.toolResult(resultMsg);
       }
     }
   }

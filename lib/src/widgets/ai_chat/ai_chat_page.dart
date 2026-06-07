@@ -16,6 +16,7 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
@@ -39,43 +40,50 @@ class _AiChatPageState extends State<AiChatPage> {
     context.read<AiChatModel>().send(text);
   }
 
-  Future<void> _confirmClear() async {
+  Future<void> _confirmDeleteSession(String id, String title) async {
     final model = context.read<AiChatModel>();
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空对话'),
-        content: const Text('确定清空当前会话的全部消息？'),
+        title: const Text('删除会话'),
+        content: Text('确定删除「$title」及其全部消息？'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('清空')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('删除')),
         ],
       ),
     );
-    if (ok == true) await model.clear();
+    if (ok == true) await model.deleteSession(id);
   }
 
   @override
   Widget build(BuildContext context) {
     final model = context.watch<AiChatModel>();
-    final rendered = model.messages
-        .where((m) => m.role == 'user' || m.role == 'assistant')
-        .toList();
+    // 渲染 user，及有正文的 assistant；跳过 role=tool 和「纯工具调用」的空 assistant 轮。
+    final rendered = model.messages.where((m) {
+      if (m.role == 'user') return true;
+      if (m.role == 'assistant') {
+        final c = m.content;
+        return c is String && c.trim().isNotEmpty;
+      }
+      return false;
+    }).toList();
 
     // 有新内容时滚到底
     _scrollToBottom();
 
     return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: _SessionDrawer(onDeleteSession: _confirmDeleteSession),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('AI 助手'),
+        title: Text(model.currentTitle.isEmpty ? 'AI 助手' : model.currentTitle),
         actions: [
-          if (rendered.isNotEmpty && !model.isGenerating)
-            IconButton(
-              tooltip: '清空对话',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _confirmClear,
-            ),
+          IconButton(
+            tooltip: '会话',
+            icon: const Icon(Icons.menu),
+            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
         ],
       ),
       body: Column(
@@ -354,6 +362,78 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 右侧会话抽屉：新建 + 会话列表（切换/删除）。
+class _SessionDrawer extends StatelessWidget {
+  final Future<void> Function(String id, String title) onDeleteSession;
+
+  const _SessionDrawer({required this.onDeleteSession});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final model = context.watch<AiChatModel>();
+    final sessions = model.sessions;
+    final disabled = model.isGenerating;
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text('会话', style: Theme.of(context).textTheme.titleMedium),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_comment_outlined),
+              title: const Text('新建对话'),
+              enabled: !disabled,
+              onTap: () {
+                Navigator.pop(context);
+                context.read<AiChatModel>().newSession();
+              },
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.builder(
+                itemCount: sessions.length,
+                itemBuilder: (context, index) {
+                  final s = sessions[index];
+                  final selected = s.id == model.currentSessionId;
+                  return ListTile(
+                    selected: selected,
+                    selectedTileColor: cs.primary.withOpacity(0.10),
+                    leading: Icon(
+                      Icons.chat_bubble_outline,
+                      color: selected ? cs.primary : null,
+                    ),
+                    title: Text(
+                      s.title.isEmpty ? '新对话' : s.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: '删除',
+                      onPressed: disabled ? null : () => onDeleteSession(s.id, s.title),
+                    ),
+                    onTap: disabled
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                            context.read<AiChatModel>().switchSession(s.id);
+                          },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
