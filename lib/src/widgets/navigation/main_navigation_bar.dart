@@ -18,7 +18,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
   @override
   void initState() {
     super.initState();
-    _controllers = List<AnimationController>.generate(5, (int index) {
+    _controllers = List<AnimationController>.generate(6, (int index) {
       return AnimationController(
         duration: const Duration(milliseconds: 300),
         vsync: this,
@@ -78,6 +78,12 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
               Provider.of<MainDataModel>(context).selectedPage == 4 ?
               Icons.account_circle_rounded : Icons.account_circle_outlined),
           label: '我的',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(
+              Provider.of<MainDataModel>(context).selectedPage == 5 ?
+              Icons.auto_awesome : Icons.auto_awesome_outlined),
+          label: 'AI',
         ),
       ],
       currentIndex: context.watch<MainDataModel>().selectedPage,

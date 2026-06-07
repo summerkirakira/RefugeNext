@@ -21,6 +21,8 @@ import 'package:refuge_next/src/funcs/launch_at_startup_service.dart';
 import 'package:refuge_next/src/datasource/config_storage.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 import 'src/widgets/friends/friends_status_page.dart';
+import 'src/datasource/ai_chat_model.dart';
+import 'src/widgets/ai_chat/ai_chat_page.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,8 +89,16 @@ void main(List<String> args) async {
     await TrayManagerService().initialize();
   }
 
-  runApp(ChangeNotifierProvider<MainDataModel>(
-    create: (context) => MainDataModel(),
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider<MainDataModel>(
+        create: (context) => MainDataModel(),
+      ),
+      // 全局注册：会话在 Tab 间切换时存活，不丢在途流。lazy（默认）→ 首次进 AI Tab 才创建。
+      ChangeNotifierProvider<AiChatModel>(
+        create: (context) => AiChatModel(sessionId: 'main')..loadFromDisk(),
+      ),
+    ],
     child: RefugeApp(),
   ));
 
@@ -211,6 +221,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         return FeatureSelectionPage();
       case 4:
         return UserInfoPage();
+      case 5:
+        return const AiChatPage();
       default:
         return Text('Home Page');
     }

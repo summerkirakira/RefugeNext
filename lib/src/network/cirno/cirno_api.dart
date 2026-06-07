@@ -68,6 +68,28 @@ class CirnoApiClient {
     return response;
   }
 
+  /// SSE 原始流请求（复用本类的拦截器：cirno-token / JWT 自动注入）。
+  /// 返回 ResponseBody，由调用方按 SSE 帧解析（见 AiChatService）。
+  /// [baseUrlOverride] 用于测试时指向本地/其它服务器（如 http://localhost:8080/），
+  /// 不传则用默认的生产 baseUrl。
+  Future<ResponseBody> postSse({
+    required String endpoint,
+    required Map<String, dynamic> data,
+    CancelToken? cancelToken,
+    String? baseUrlOverride,
+  }) async {
+    final response = await _dio.post<ResponseBody>(
+      "${baseUrlOverride ?? baseUrl}$endpoint",
+      data: data,
+      cancelToken: cancelToken,
+      options: Options(
+        responseType: ResponseType.stream,
+        headers: {"Accept": "text/event-stream"},
+      ),
+    );
+    return response.data!;
+  }
+
   Future<Response> basicPostList({required String endpoint, required List<String> data}) async {
     final response = await _dio.post("$baseUrl$endpoint", data: jsonEncode(data), options: Options());
     return response;

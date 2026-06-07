@@ -90,6 +90,7 @@ dependencies:
   window_manager: ^0.5.1
   launch_at_startup: ^0.5.1
   windows_single_instance: ^1.0.1
+  gpt_markdown: ^1.1.7
 
 
 dev_dependencies:
