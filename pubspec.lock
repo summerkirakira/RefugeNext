@@ -184,6 +184,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.4"
+  chopper:
+    dependency: "direct main"
+    description:
+      name: chopper
+      sha256: "2e7535c174752c6b051e18baa6f9a7dcaa13fc2159f77b755ab58b5537a8545c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.6.0"
+  chopper_generator:
+    dependency: "direct dev"
+    description:
+      name: chopper_generator
+      sha256: "3a4b34e9844414108ae14bfa29d6c920e8d7d35993a70b2fa40d7e11d3139019"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.6.2"
   cli_util:
     dependency: transitive
     description:
@@ -1007,6 +1023,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  markdown:
+    dependency: transitive
+    description:
+      name: markdown
+      sha256: ee85086ad7698b42522c6ad42fe195f1b9898e4d974a1af4576c1a3a176cada9
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.3.1"
   matcher:
     dependency: transitive
     description:
@@ -1335,6 +1359,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  qs_dart:
+    dependency: transitive
+    description:
+      name: qs_dart
+      sha256: "05576b9ffb321a975aa474fada3e09394cd7c05657def0153a231488c38da251"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.7.6"
   quickalert:
     dependency: "direct main"
     description:
@@ -1343,6 +1375,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  recase:
+    dependency: transitive
+    description:
+      name: recase
+      sha256: e4eb4ec2dcdee52dcf99cb4ceabaffc631d7424ee55e56f280bc039737f89213
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   rxdart:
     dependency: transitive
     description:
@@ -1628,6 +1668,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  swagger_dart_code_generator:
+    dependency: "direct dev"
+    description:
+      name: swagger_dart_code_generator
+      sha256: "23e5c0748fa9328faf39f6d8c92e06021f55b9b9ef68352af8f376088a44e5ff"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.1"
   syncfusion_flutter_core:
     dependency: transitive
     description:
@@ -1708,6 +1756,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_io:
+    dependency: transitive
+    description:
+      name: universal_io
+      sha256: f63cbc48103236abf48e345e07a03ce5757ea86285ed313a6a032596ed9301e2
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.1"
   url_launcher:
     dependency: "direct main"
     description:

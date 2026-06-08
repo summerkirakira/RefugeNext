@@ -91,6 +91,7 @@ dependencies:
   launch_at_startup: ^0.5.1
   windows_single_instance: ^1.0.1
   gpt_markdown: ^1.1.7
+  chopper: ^8.6.0
 
 
 dev_dependencies:
@@ -107,6 +108,8 @@ dev_dependencies:
   build_runner: ^2.4.11
   freezed: ^3.2.5
   json_serializable: ^6.8.0
+  swagger_dart_code_generator: ^4.1.1
+  chopper_generator: ^8.6.2
 
 dependency_overrides:
   babstrap_settings_screen:

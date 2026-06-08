@@ -1,0 +1,12 @@
+targets:
+  $default:
+    sources:
+      - lib/**
+      - api/**
+    builders:
+      swagger_dart_code_generator:
+        options:
+          input_folder: "api/"
+          output_folder: "lib/src/network/wiki/generated/"
+          separate_models: true
+          with_converter: true
