@@ -40,6 +40,42 @@ List<int> hangarCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_hangar_cards');
 /// 回购卡片 id 列表（show_buyback_cards）。
 List<int> buybackCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_buyback_cards');
 
+/// 把一组内联卡片裹成单块悬浮面板（仅限 AI 聊天界面，不影响机库/回购原卡片）：
+/// 统一 cardColor 背景 + 圆角 + 单层阴影，整组一起悬浮。
+Widget _cardListPanel(BuildContext context, List<Widget> cards) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.12),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: cards,
+        ),
+      ),
+    ),
+  );
+}
+
+/// 卡片面板最大宽度：宽屏沿用 0.78 留白对齐气泡；窄屏（0.78 撑不到舒适宽度）放开到全宽。
+double _cardPanelMaxWidth(BuildContext context) {
+  final w = MediaQuery.of(context).size.width;
+  const minComfortable = 330.0; // 卡片舒适最小宽度
+  final preferred = w * 0.78;
+  return preferred >= minComfortable ? preferred : double.infinity;
+}
+
 /// 复用机库的点击弹窗（详情/回收/赠送/撤回）。
 void _openHangarItemSheet(HangarItem item, BuildContext context) {
   WoltModalSheet.show<void>(
@@ -208,6 +244,13 @@ class _AiBubble extends StatelessWidget {
                     bottomLeft: Radius.circular(isUser ? 12 : 4),
                     bottomRight: Radius.circular(isUser ? 4 : 12),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 // 用户消息纯文本可选中；助手消息走 Markdown
                 child: isUser
@@ -273,6 +316,13 @@ class _StreamingBubble extends StatelessWidget {
                     bottomLeft: Radius.circular(4),
                     bottomRight: Radius.circular(12),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: content,
               ),
@@ -478,8 +528,8 @@ class _HangarCards extends StatelessWidget {
         .whereType<HangarItem>()
         .toList();
     if (items.isEmpty) return const SizedBox.shrink();
-    // 与助手气泡同步:左对齐并限制到 0.78 屏宽,使右边距一致。
-    final maxWidth = MediaQuery.of(context).size.width * 0.78;
+    // 左对齐;宽屏限到 0.78 屏宽对齐气泡,窄屏放开到全宽。
+    final maxWidth = _cardPanelMaxWidth(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -488,14 +538,11 @@ class _HangarCards extends StatelessWidget {
           Flexible(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+              child: _cardListPanel(
+                context,
+                [
                   for (final it in items)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: HangarItemWidget(hangarItem: it, onTap: _openHangarItemSheet),
-                    ),
+                    HangarItemWidget(hangarItem: it, onTap: _openHangarItemSheet),
                 ],
               ),
             ),
@@ -526,8 +573,8 @@ class _BuybackCards extends StatelessWidget {
         .whereType<BuybackItem>()
         .toList();
     if (items.isEmpty) return const SizedBox.shrink();
-    // 与助手气泡同步:左对齐并限制到 0.78 屏宽,使右边距一致。
-    final maxWidth = MediaQuery.of(context).size.width * 0.78;
+    // 左对齐;宽屏限到 0.78 屏宽对齐气泡,窄屏放开到全宽。
+    final maxWidth = _cardPanelMaxWidth(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -536,15 +583,9 @@ class _BuybackCards extends StatelessWidget {
           Flexible(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final it in items)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: BuybackItemWidget(buybackItem: it),
-                    ),
-                ],
+              child: _cardListPanel(
+                context,
+                [for (final it in items) BuybackItemWidget(buybackItem: it)],
               ),
             ),
           ),
