@@ -478,15 +478,28 @@ class _HangarCards extends StatelessWidget {
         .whereType<HangarItem>()
         .toList();
     if (items.isEmpty) return const SizedBox.shrink();
+    // 与助手气泡同步:左对齐并限制到 0.78 屏宽,使右边距一致。
+    final maxWidth = MediaQuery.of(context).size.width * 0.78;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          for (final it in items)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: HangarItemWidget(hangarItem: it, onTap: _openHangarItemSheet),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final it in items)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: HangarItemWidget(hangarItem: it, onTap: _openHangarItemSheet),
+                    ),
+                ],
+              ),
             ),
+          ),
         ],
       ),
     );
@@ -513,15 +526,28 @@ class _BuybackCards extends StatelessWidget {
         .whereType<BuybackItem>()
         .toList();
     if (items.isEmpty) return const SizedBox.shrink();
+    // 与助手气泡同步:左对齐并限制到 0.78 屏宽,使右边距一致。
+    final maxWidth = MediaQuery.of(context).size.width * 0.78;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          for (final it in items)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: BuybackItemWidget(buybackItem: it),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final it in items)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: BuybackItemWidget(buybackItem: it),
+                    ),
+                ],
+              ),
             ),
+          ),
         ],
       ),
     );
