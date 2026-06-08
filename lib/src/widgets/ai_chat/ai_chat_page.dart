@@ -222,7 +222,7 @@ class _AiBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = isUser ? cs.primary : cs.surfaceContainerHighest;
+    final bg = isUser ? cs.primary : cs.surfaceContainer;
     final fg = isUser ? cs.onPrimary : cs.onSurface;
     final maxWidth = MediaQuery.of(context).size.width * 0.78;
 
