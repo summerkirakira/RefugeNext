@@ -93,6 +93,10 @@ dependencies:
   gpt_markdown: ^1.1.7
   chopper: ^8.6.0
 
+  # Star Citizen Wiki API 客户端(openapi-generator 生成,见 tool/regen_wiki_api.sh)
+  starcitizen_wiki_api:
+    path: packages/starcitizen_wiki_api
+
 
 dev_dependencies:
   ferry_generator: ^0.12.0+3

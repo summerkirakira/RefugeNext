@@ -1,0 +1,26 @@
+import 'package:test/test.dart';
+import 'package:starcitizen_wiki_api/starcitizen_wiki_api.dart';
+
+// tests for ListStarsystems200Response
+void main() {
+  final ListStarsystems200Response? instance = /* ListStarsystems200Response(...) */ null;
+  // TODO add properties to the entity
+
+  group(ListStarsystems200Response, () {
+    // List<Starsystem> data
+    test('to test the property `data`', () async {
+      // TODO
+    });
+
+    // PaginationLinks links
+    test('to test the property `links`', () async {
+      // TODO
+    });
+
+    // PaginationMeta meta
+    test('to test the property `meta`', () async {
+      // TODO
+    });
+
+  });
+}

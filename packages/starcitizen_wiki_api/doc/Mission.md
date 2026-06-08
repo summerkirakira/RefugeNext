@@ -1,0 +1,78 @@
+# starcitizen_wiki_api.model.Mission
+
+## Load the model package
+```dart
+import 'package:starcitizen_wiki_api/api.dart';
+```
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**uuid** | **String** |  | [optional] 
+**title** | **String** |  | [optional] 
+**description** | **String** |  | [optional] 
+**descriptionHtml** | **String** | HTML-rendered mission description. Escapes raw text, preserves EM4 styling, and renders exact mission token placeholders as tooltip spans. | [optional] 
+**descriptionVariants** | **List&lt;String&gt;** | Rendered HTML variants when the raw description is a single mission token with multiple possible values. | [optional] 
+**missionType** | **String** |  | [optional] 
+**missionGiver** | **String** |  | [optional] 
+**faction** | [**MissionFaction**](MissionFaction.md) |  | [optional] 
+**rankIndex** | **int** |  | [optional] 
+**illegal** | **bool** |  | [optional] 
+**legalityLabel** | **String** |  | [optional] 
+**shareable** | **bool** |  | [optional] 
+**onceOnly** | **bool** |  | [optional] 
+**availableInPrison** | **bool** |  | [optional] 
+**notForRelease** | **bool** |  | [optional] 
+**workInProgress** | **bool** |  | [optional] 
+**hasCombat** | **bool** |  | [optional] 
+**hasDefendObjective** | **bool** |  | [optional] 
+**enemyCountMin** | **int** |  | [optional] 
+**enemyCountMax** | **int** |  | [optional] 
+**minCrimeStat** | **int** |  | [optional] 
+**maxCrimeStat** | **int** |  | [optional] 
+**rewardMin** | **int** |  | [optional] 
+**rewardMax** | **int** |  | [optional] 
+**rewardCurrency** | **String** |  | [optional] 
+**timeToCompleteMinutes** | **double** |  | [optional] 
+**starSystems** | **List&lt;String&gt;** |  | [optional] 
+**cooldown** | [**MissionCooldown**](MissionCooldown.md) |  | [optional] 
+**lifetime** | [**MissionLifetime**](MissionLifetime.md) |  | [optional] 
+**reacceptAfterFailing** | **bool** |  | [optional] 
+**reacceptAfterAbandoning** | **bool** |  | [optional] 
+**blueprints** | [**List&lt;MissionBlueprintPool&gt;**](MissionBlueprintPool.md) | Array of blueprint pools | [optional] 
+**rewardItems** | [**List&lt;MissionRewardItem&gt;**](MissionRewardItem.md) |  | [optional] 
+**combat** | [**MissionCombat**](MissionCombat.md) |  | [optional] 
+**completionTags** | [**List&lt;MissionCompletionTag&gt;**](MissionCompletionTag.md) |  | [optional] 
+**reputationGained** | [**List&lt;MissionReputation&gt;**](MissionReputation.md) |  | [optional] 
+**reputationLost** | [**List&lt;MissionReputation&gt;**](MissionReputation.md) |  | [optional] 
+**haulingOrders** | [**List&lt;MissionHaulingOrder&gt;**](MissionHaulingOrder.md) |  | [optional] 
+**cost** | **int** |  | [optional] 
+**maxPlayersPerInstance** | **int** |  | [optional] 
+**failIfBecameCriminal** | **bool** |  | [optional] 
+**minStanding** | [**MissionIndexMinStanding**](MissionIndexMinStanding.md) |  | [optional] 
+**maxStanding** | [**MissionIndexMinStanding**](MissionIndexMinStanding.md) |  | [optional] 
+**missionTokens** | [**Map&lt;String, List&lt;String&gt;&gt;**](List.md) | Resolved mission token values. Keys are token identifiers (e.g. \"Location|Address\", \"Danger\", \"Contractor\"). Values are arrays of possible resolved strings. Keys preserve original case and pipe syntax exactly. | [optional] 
+**deadline** | [**MissionDeadline**](MissionDeadline.md) |  | [optional] 
+**brokerReputationPrerequisites** | [**MissionBrokerReputationPrerequisites**](MissionBrokerReputationPrerequisites.md) |  | [optional] 
+**itemCounts** | [**MissionItemCounts**](MissionItemCounts.md) |  | [optional] 
+**entitySpawns** | [**List&lt;MissionEntitySpawnsInner&gt;**](MissionEntitySpawnsInner.md) |  | [optional] 
+**hiddenInMobiglas** | **bool** |  | [optional] 
+**notifyOnAvailable** | **bool** |  | [optional] 
+**rewardScope** | **String** |  | [optional] 
+**reputationAmount** | **int** |  | [optional] 
+**gameVersion** | **String** |  | [optional] 
+**starmapLocations** | [**List&lt;MissionStarmapLocationGroup&gt;**](MissionStarmapLocationGroup.md) |  | [optional] 
+**prerequisiteGroups** | [**List&lt;MissionPrerequisiteGroup&gt;**](MissionPrerequisiteGroup.md) |  | [optional] 
+**unlockGroups** | [**List&lt;MissionUnlockGroup&gt;**](MissionUnlockGroup.md) | Completion tag groups that become available after completing this mission | [optional] 
+**mergedLocations** | **Object** | Starmap locations grouped by logical purpose categories (Destinations, Locations, Availability) | [optional] 
+**hasRewards** | **bool** |  | [optional] 
+**hasCombatSection** | **bool** |  | [optional] 
+**hasLocations** | **bool** |  | [optional] 
+**hasChain** | **bool** |  | [optional] 
+**hasBlueprints** | **bool** |  | [optional] 
+**released** | **bool** | Whether this mission is released (not marked as not_for_release or work_in_progress). | [optional] 
+**link** | **String** |  | [optional] 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+
