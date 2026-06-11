@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 import '../../datasource/data_model.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 
 class MainNavigationBar extends StatefulWidget {
@@ -64,7 +65,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
         BottomNavigationBarItem(
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 2 ?
-              Icons.home_rounded : Icons.home_outlined),
+              FontAwesome.home : FontAwesome.home),
           label: '机库',
         ),
         BottomNavigationBarItem(

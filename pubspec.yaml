@@ -96,6 +96,7 @@ dependencies:
   # Star Citizen Wiki API 客户端(openapi-generator 生成,见 tool/regen_wiki_api.sh)
   starcitizen_wiki_api:
     path: packages/starcitizen_wiki_api
+  flutter_vector_icons: ^2.0.0
 
 
 dev_dependencies:

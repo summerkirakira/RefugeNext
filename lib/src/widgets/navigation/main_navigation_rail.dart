@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 import '../../datasource/data_model.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 
 class MainNavigationRail extends StatefulWidget {
@@ -89,8 +90,8 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
           label: Text('商店'),
         ),
         const NavigationRailDestination(
-          icon: Icon(Icons.home),
-          selectedIcon: Icon(Icons.home_filled),
+          icon: Icon(FontAwesome.home),
+          selectedIcon: Icon(FontAwesome.home),
           label: Text('机库'),
         ),
         const NavigationRailDestination(

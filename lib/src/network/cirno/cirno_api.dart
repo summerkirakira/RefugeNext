@@ -18,8 +18,8 @@ import 'package:refuge_next/src/repo/refuge_account.dart';
 class CirnoApiClient {
   static final CirnoApiClient _instance = CirnoApiClient._internal();
   late final Dio _dio;
-  final String baseUrl = "https://biaoju.site:6188/";
-
+  // final String baseUrl = "https://biaoju.site:6188/";
+  final String baseUrl = "http://localhost:8080/";
 
   CirnoApiClient._internal() {
     _dio = Dio();

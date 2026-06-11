@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -74,6 +75,32 @@ double _cardPanelMaxWidth(BuildContext context) {
   const minComfortable = 330.0; // 卡片舒适最小宽度
   final preferred = w * 0.78;
   return preferred >= minComfortable ? preferred : double.infinity;
+}
+
+/// 圆形填充图标按钮（Telegram 风格发送键）：自带 Material 圆形表面，
+/// 使墨水波纹画在按钮自身之上并裁剪成圆形，避免在 M2 下波纹沉到输入栏背景下层。
+Widget _filledRoundIconButton(
+  BuildContext context, {
+  required IconData icon,
+  required VoidCallback onPressed,
+  required String tooltip,
+}) {
+  final cs = Theme.of(context).colorScheme;
+  return Material(
+    color: cs.primary,
+    shape: const CircleBorder(),
+    clipBehavior: Clip.antiAlias,
+    child: IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      iconSize: 22,
+      color: cs.onPrimary,
+      tooltip: tooltip,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      visualDensity: VisualDensity.compact,
+    ),
+  );
 }
 
 /// 复用机库的点击弹窗（详情/回收/赠送/撤回）。
@@ -309,7 +336,7 @@ class _StreamingBubble extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
+                  color: cs.surfaceContainer,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -384,7 +411,7 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
-      color: cs.surfaceContainerLow,
+      color: cs.surfaceContainer,
       padding: EdgeInsets.only(
         left: 12,
         right: 12,
@@ -416,16 +443,10 @@ class _InputBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           isGenerating
-              ? IconButton.filled(
-                  onPressed: onStop,
-                  icon: const Icon(Icons.stop),
-                  tooltip: '停止',
-                )
-              : IconButton.filled(
-                  onPressed: onSend,
-                  icon: const Icon(Icons.send),
-                  tooltip: '发送',
-                ),
+              ? _filledRoundIconButton(context,
+                  icon: Icons.stop, onPressed: onStop, tooltip: '停止')
+              : _filledRoundIconButton(context,
+                  icon: Entypo.paper_plane, onPressed: onSend, tooltip: '发送'),
         ],
       ),
     );
@@ -508,7 +529,7 @@ class _AiTopBar extends StatelessWidget {
   }
 }
 
-/// 内联机库卡片块：把 ids 解析成本地 HangarItem，复用机库卡片 + 点击弹窗。
+
 class _HangarCards extends StatelessWidget {
   final List<int> ids;
 
