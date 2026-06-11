@@ -3,6 +3,43 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'versioned_json_store.dart';
 
+/// 版本化列表仓库的公共接口。
+///
+/// UI(如通用测试页)只依赖这一层抽象:
+/// 既可由真正持有存储的 [VersionedListRepo] 实现,
+/// 也可由 FilteredRepoView 这类无独立存储的过滤视图实现。
+abstract class VersionedItemsRepo<E> {
+  /// 同步获取当前选中版本的数据(未加载过则为空列表)。
+  List<E> get itemsSync;
+
+  /// 获取当前选中版本的全部数据;本地无数据返回空列表(不触发网络请求)。
+  Future<List<E>> getItems();
+
+  /// 获取当前选中的版本码;本地无数据返回 null。
+  Future<String?> getSelectedVersion();
+
+  /// 切换到指定版本并加载该版本数据(仅限本地已有版本)。
+  Future<void> switchVersion(String version);
+
+  /// 列出本地已存储的版本码(升序)。
+  Future<List<String>> listLocalVersions();
+
+  /// 指定版本数据的最后落盘时间;无数据返回 null。
+  Future<DateTime?> lastUpdated(String version);
+
+  /// 删除指定版本的本地数据。
+  Future<void> deleteVersion(String version);
+
+  /// 获取最新可用的版本码;失败返回 null。
+  Future<String?> fetchLatestVersion();
+
+  /// 检测是否有新版本可刷新:最新版本本地无数据 → true。
+  Future<bool> checkForUpdate();
+
+  /// 从远端拉取全量数据并写入本地。
+  Future<void> refresh();
+}
+
 /// 按游戏版本管理的列表型仓库基类。
 ///
 /// 在 [VersionedJsonStore] 之上统一处理各版本化仓库重复的逻辑:
@@ -14,7 +51,7 @@ import 'versioned_json_store.dart';
 /// 2. 实现 [fetchLatestVersion](通常调 WikiApiClient 拿默认游戏版本);
 /// 3. 实现 [refresh],拉取数据后调用 [saveAndSelect] 落盘并切换;
 /// 4. 按需添加领域查询方法(基于 [itemsSync])。
-abstract class VersionedListRepo<E> {
+abstract class VersionedListRepo<E> implements VersionedItemsRepo<E> {
   VersionedListRepo({
     required String dirName,
     required String versionPrefKey,
@@ -38,13 +75,14 @@ abstract class VersionedListRepo<E> {
   /// 当前选中版本数据的内存缓存。
   List<E> _items = [];
 
-  /// 同步获取当前选中版本的数据(未加载过则为空列表)。
+  @override
   List<E> get itemsSync => _items;
 
   // --- 版本管理 ---
 
   /// 获取当前选中的版本码;
   /// 未选过则回退到本地已有的最新版本(并写入 prefs),本地无数据返回 null。
+  @override
   Future<String?> getSelectedVersion() async {
     if (_selectedVersion != null) {
       return _selectedVersion;
@@ -64,6 +102,7 @@ abstract class VersionedListRepo<E> {
   }
 
   /// 切换到指定版本并加载该版本数据(仅限本地已有版本,否则抛出 [ArgumentError])。
+  @override
   Future<void> switchVersion(String version) async {
     final key = VersionedJsonStore.sanitizeVersion(version);
     if (!await _store.hasVersion(key)) {
@@ -76,20 +115,22 @@ abstract class VersionedListRepo<E> {
     await prefs.setString(_versionPrefKey, key);
   }
 
-  /// 列出本地已存储的版本码(升序)。
+  @override
   Future<List<String>> listLocalVersions() => _store.listLocalVersions();
 
-  /// 指定版本数据的最后落盘时间;无数据返回 null。
+  @override
   Future<DateTime?> lastUpdated(String version) => _store.lastUpdated(version);
 
-  /// 删除指定版本的本地数据。
+  @override
   Future<void> deleteVersion(String version) => _store.delete(version);
 
   /// 获取最新可用的版本码(通常来自 Wiki API 的默认游戏版本);失败返回 null。
+  @override
   Future<String?> fetchLatestVersion();
 
   /// 检测是否有新版本可刷新:最新版本本地无数据 → true。
   /// UI 可据此提示用户或直接调用 [refresh]。
+  @override
   Future<bool> checkForUpdate() async {
     final latest = await fetchLatestVersion();
     if (latest == null) {
@@ -100,7 +141,7 @@ abstract class VersionedListRepo<E> {
 
   // --- 数据访问 ---
 
-  /// 获取当前选中版本的全部数据;本地无数据返回空列表(不触发网络请求)。
+  @override
   Future<List<E>> getItems() async {
     if (_items.isNotEmpty) {
       return _items;
@@ -117,6 +158,7 @@ abstract class VersionedListRepo<E> {
 
   /// 从远端拉取全量数据并写入本地;由子类实现,
   /// 拉取成功后应调用 [saveAndSelect]。
+  @override
   Future<void> refresh();
 
   /// 将 [items] 写入 [version] 对应的本地文件,并切换到该版本

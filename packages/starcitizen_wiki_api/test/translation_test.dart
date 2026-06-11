@@ -7,23 +7,23 @@ void main() {
   // TODO add properties to the entity
 
   group(Translation, () {
-    // String en
-    test('to test the property `en`', () async {
+    // String enEN
+    test('to test the property `enEN`', () async {
       // TODO
     });
 
-    // String de
-    test('to test the property `de`', () async {
+    // String deDE
+    test('to test the property `deDE`', () async {
       // TODO
     });
 
-    // String zh
-    test('to test the property `zh`', () async {
+    // String zhCN
+    test('to test the property `zhCN`', () async {
       // TODO
     });
 
-    // String fr
-    test('to test the property `fr`', () async {
+    // String frFR
+    test('to test the property `frFR`', () async {
       // TODO
     });
 

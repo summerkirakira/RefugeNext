@@ -4,9 +4,10 @@ import 'package:refuge_next/src/repo/base/versioned_list_repo.dart';
 
 /// 版本化仓库通用测试页。
 ///
-/// 适用于任意 [VersionedListRepo] 子类:拉取真实数据、按游戏版本
-/// 写入本地、版本切换与读取。新仓库只需在 DebugPage 注册一个入口,
-/// 传入 repo 与条目展示 builder 即可。仅作开发调试用。
+/// 适用于任意 [VersionedItemsRepo] 实现(持有存储的仓库或过滤视图):
+/// 拉取真实数据、按游戏版本写入本地、版本切换与读取。
+/// 新仓库只需在 DebugPage 注册一个入口,传入 repo 与条目展示 builder
+/// 即可。仅作开发调试用。
 class VersionedRepoTestPage<E> extends StatefulWidget {
   const VersionedRepoTestPage({
     super.key,
@@ -18,7 +19,7 @@ class VersionedRepoTestPage<E> extends StatefulWidget {
   /// 页面标题,如 `Ship Matrix`。
   final String title;
 
-  final VersionedListRepo<E> repo;
+  final VersionedItemsRepo<E> repo;
 
   /// 单条数据的展示组件(通常返回 ListTile)。
   final Widget Function(BuildContext context, E item) itemBuilder;

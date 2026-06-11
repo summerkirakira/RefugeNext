@@ -18,60 +18,60 @@ class Translation {
   /// Returns a new [Translation] instance.
   Translation({
 
-     this.en,
+     this.enEN,
 
-     this.de,
+     this.deDE,
 
-     this.zh,
+     this.zhCN,
 
-     this.fr,
+     this.frFR,
   });
 
   @JsonKey(
     
-    name: r'en',
+    name: r'en_EN',
     required: false,
     includeIfNull: false,
   )
 
 
-  final String? en;
+  final String? enEN;
 
 
 
   @JsonKey(
     
-    name: r'de',
+    name: r'de_DE',
     required: false,
     includeIfNull: false,
   )
 
 
-  final String? de;
+  final String? deDE;
 
 
 
   @JsonKey(
     
-    name: r'zh',
+    name: r'zh_CN',
     required: false,
     includeIfNull: false,
   )
 
 
-  final String? zh;
+  final String? zhCN;
 
 
 
   @JsonKey(
     
-    name: r'fr',
+    name: r'fr_FR',
     required: false,
     includeIfNull: false,
   )
 
 
-  final String? fr;
+  final String? frFR;
 
 
 
@@ -79,17 +79,17 @@ class Translation {
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is Translation &&
-      other.en == en &&
-      other.de == de &&
-      other.zh == zh &&
-      other.fr == fr;
+      other.enEN == enEN &&
+      other.deDE == deDE &&
+      other.zhCN == zhCN &&
+      other.frFR == frFR;
 
     @override
     int get hashCode =>
-        en.hashCode +
-        de.hashCode +
-        zh.hashCode +
-        fr.hashCode;
+        enEN.hashCode +
+        deDE.hashCode +
+        zhCN.hashCode +
+        frFR.hashCode;
 
   factory Translation.fromJson(Map<String, dynamic> json) => _$TranslationFromJson(json);
 

@@ -3,6 +3,7 @@ import 'package:refuge_next/src/network/wiki/wiki_api.dart'
     show GameVehicle, ShipMatrixVehicle;
 import 'package:refuge_next/src/repo/game_vehicle.dart';
 import 'package:refuge_next/src/repo/ship_matrix.dart';
+import 'package:refuge_next/src/widgets/debug/vehicle_detail_test_page.dart';
 import 'package:refuge_next/src/widgets/debug/versioned_repo_test_page.dart';
 
 /// 通用开发测试中心。
@@ -13,6 +14,21 @@ import 'package:refuge_next/src/widgets/debug/versioned_repo_test_page.dart';
 /// 仅作开发调试用,后续可整体移除或隐藏。
 class DebugPage extends StatelessWidget {
   const DebugPage({super.key});
+
+  /// GameVehicle 类条目的统一展示(全部/地面/悬浮载具共用)。
+  static Widget _gameVehicleTile(BuildContext context, GameVehicle vehicle) {
+    return ListTile(
+      dense: true,
+      title: Text(vehicle.name ?? vehicle.className ?? '未知'),
+      subtitle: Text(
+        '${vehicle.manufacturer?.name ?? ''} · '
+        '${vehicle.className ?? ''}',
+      ),
+      trailing: vehicle.cargoCapacity != null
+          ? Text('${vehicle.cargoCapacity} SCU')
+          : null,
+    );
+  }
 
   static final List<DebugEntry> _entries = [
     DebugEntry(
@@ -28,7 +44,7 @@ class DebugPage extends StatelessWidget {
           title: Text(vehicle.name ?? '未知'),
           subtitle: Text(
             '${vehicle.manufacturer?.name ?? ''} · '
-            '${vehicle.productionStatus?.en ?? ''}',
+            '${vehicle.productionStatus?.zhCN ?? vehicle.productionStatus?.enEN ?? ''}',
           ),
           trailing: vehicle.msrp != null
               ? Text('\$${vehicle.msrp!.toStringAsFixed(0)}')
@@ -37,24 +53,40 @@ class DebugPage extends StatelessWidget {
       ),
     ),
     DebugEntry(
-      icon: Icons.directions_car_outlined,
+      icon: Icons.rocket_outlined,
       title: 'Game Vehicle',
-      subtitle: '游戏内载具实测数据:拉取/按游戏版本存储/切换/读取',
+      subtitle: '全部游戏内载具实测数据:拉取/按游戏版本存储/切换/读取',
       builder: (context) => VersionedRepoTestPage<GameVehicle>(
         title: 'Game Vehicle',
         repo: GameVehicleRepo(),
-        itemBuilder: (context, vehicle) => ListTile(
-          dense: true,
-          title: Text(vehicle.name ?? vehicle.className ?? '未知'),
-          subtitle: Text(
-            '${vehicle.manufacturer?.name ?? ''} · '
-            '${vehicle.className ?? ''}',
-          ),
-          trailing: vehicle.cargoCapacity != null
-              ? Text('${vehicle.cargoCapacity} SCU')
-              : null,
-        ),
+        itemBuilder: _gameVehicleTile,
       ),
+    ),
+    DebugEntry(
+      icon: Icons.directions_car_outlined,
+      title: 'Ground Vehicle',
+      subtitle: '地面载具:Game Vehicle 全集的内存过滤视图(共享存储)',
+      builder: (context) => VersionedRepoTestPage<GameVehicle>(
+        title: 'Ground Vehicle',
+        repo: GroundVehicleRepo(),
+        itemBuilder: _gameVehicleTile,
+      ),
+    ),
+    DebugEntry(
+      icon: Icons.two_wheeler_outlined,
+      title: 'Gravlev Vehicle',
+      subtitle: '悬浮载具:Game Vehicle 全集的内存过滤视图(共享存储)',
+      builder: (context) => VersionedRepoTestPage<GameVehicle>(
+        title: 'Gravlev Vehicle',
+        repo: GravlevVehicleRepo(),
+        itemBuilder: _gameVehicleTile,
+      ),
+    ),
+    DebugEntry(
+      icon: Icons.info_outline,
+      title: '载具详情',
+      subtitle: '仿 wiki 网页的单船详情(本地数据,可搜索舰船名)',
+      builder: (context) => const VehicleDetailTestPage(),
     ),
     // 在此追加新的测试入口。
   ];

@@ -6,21 +6,30 @@ part of 'translation.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Translation _$TranslationFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('Translation', json, ($checkedConvert) {
-      final val = Translation(
-        en: $checkedConvert('en', (v) => v as String?),
-        de: $checkedConvert('de', (v) => v as String?),
-        zh: $checkedConvert('zh', (v) => v as String?),
-        fr: $checkedConvert('fr', (v) => v as String?),
-      );
-      return val;
-    });
+Translation _$TranslationFromJson(Map<String, dynamic> json) => $checkedCreate(
+  'Translation',
+  json,
+  ($checkedConvert) {
+    final val = Translation(
+      enEN: $checkedConvert('en_EN', (v) => v as String?),
+      deDE: $checkedConvert('de_DE', (v) => v as String?),
+      zhCN: $checkedConvert('zh_CN', (v) => v as String?),
+      frFR: $checkedConvert('fr_FR', (v) => v as String?),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'enEN': 'en_EN',
+    'deDE': 'de_DE',
+    'zhCN': 'zh_CN',
+    'frFR': 'fr_FR',
+  },
+);
 
 Map<String, dynamic> _$TranslationToJson(Translation instance) =>
     <String, dynamic>{
-      'en': ?instance.en,
-      'de': ?instance.de,
-      'zh': ?instance.zh,
-      'fr': ?instance.fr,
+      'en_EN': ?instance.enEN,
+      'de_DE': ?instance.deDE,
+      'zh_CN': ?instance.zhCN,
+      'fr_FR': ?instance.frFR,
     };
