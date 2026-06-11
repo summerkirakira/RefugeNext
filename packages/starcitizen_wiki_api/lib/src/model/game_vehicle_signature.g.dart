@@ -19,19 +19,23 @@ GameVehicleSignature _$GameVehicleSignatureFromJson(
       emShields: $checkedConvert('em_shields', (v) => v as num?),
       emGroupsQuantum: $checkedConvert(
         'em_groups_quantum',
-        (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+        (v) =>
+            (v as Map<String, dynamic>?)?.map((k, e) => MapEntry(k, e as num)),
       ),
       emGroupsShields: $checkedConvert(
         'em_groups_shields',
-        (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+        (v) =>
+            (v as Map<String, dynamic>?)?.map((k, e) => MapEntry(k, e as num)),
       ),
       emSegmentGroupsQuantum: $checkedConvert(
         'em_segment_groups_quantum',
-        (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+        (v) =>
+            (v as Map<String, dynamic>?)?.map((k, e) => MapEntry(k, e as num)),
       ),
       emSegmentGroupsShields: $checkedConvert(
         'em_segment_groups_shields',
-        (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+        (v) =>
+            (v as Map<String, dynamic>?)?.map((k, e) => MapEntry(k, e as num)),
       ),
       emPerSegment: $checkedConvert('em_per_segment', (v) => v as num?),
     );

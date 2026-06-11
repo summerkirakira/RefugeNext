@@ -107,7 +107,7 @@ class GameVehicleCooling {
   )
 
 
-  final List<num>? usedSegmentsShieldsGrouped;
+  final Map<String, num>? usedSegmentsShieldsGrouped;
 
 
 
@@ -120,7 +120,7 @@ class GameVehicleCooling {
   )
 
 
-  final List<num>? usedSegmentsQuantumGrouped;
+  final Map<String, num>? usedSegmentsQuantumGrouped;
 
 
 

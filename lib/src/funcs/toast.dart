@@ -22,6 +22,8 @@ void showToast({required String message}) {
     return;
   }
 
+  debugPrint("Toast: $message");
+
   if (message.length < 20) {
     toastification.show(
       type: ToastificationType.success,

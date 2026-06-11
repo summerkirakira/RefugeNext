@@ -10,9 +10,11 @@
 #   - dart / flutter     (用于 dart pub get + build_runner)
 #
 # 流程:
-#   1. 用 openapi-generator(dart-dio + json_serializable)从 api/starcitizen_wiki.yaml 生成包。
-#   2. 应用两处必要的产物修补(见下)。
-#   3. dart pub get + build_runner 生成 .g.dart 序列化代码。
+#   1. 调用 tool/preprocess_wiki_spec.sh 预处理 spec(修正与线上 API 实际
+#      行为不符的字段类型,不改动 api/starcitizen_wiki.yaml 本体)。
+#   2. 用 openapi-generator(dart-dio + json_serializable)从预处理后的 spec 生成包。
+#   3. 应用两处必要的产物修补(见下)。
+#   4. dart pub get + build_runner 生成 .g.dart 序列化代码。
 #
 # 修补原因(均为 dart-dio json_serializable 模板的已知问题):
 #   A. 生成的 pubspec SDK 下限为 >=3.5.0,但 json_serializable 6.9.x 会产出
@@ -29,10 +31,16 @@ OUT="$REPO_ROOT/packages/starcitizen_wiki_api"
 
 DART="$(command -v dart)"
 
+echo "==> 预处理 spec"
+PREPROCESSED_DIR="$(mktemp -d)"
+trap 'rm -rf "$PREPROCESSED_DIR"' EXIT
+PREPROCESSED="$PREPROCESSED_DIR/starcitizen_wiki.yaml"
+"$REPO_ROOT/tool/preprocess_wiki_spec.sh" "$SPEC" "$PREPROCESSED"
+
 echo "==> 生成客户端到 $OUT"
 rm -rf "$OUT"
 openapi-generator generate \
-  -i "$SPEC" \
+  -i "$PREPROCESSED" \
   -g dart-dio \
   -o "$OUT" \
   --additional-properties=pubName=starcitizen_wiki_api,serializationLibrary=json_serializable,skipCopyWith=true

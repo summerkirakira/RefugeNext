@@ -75,7 +75,7 @@ class GameVehiclePower {
   )
 
 
-  final List<num>? usedSegmentsGrouped;
+  final Map<String, num>? usedSegmentsGrouped;
 
 
 

@@ -98,7 +98,7 @@ class GameVehicleSignature {
   )
 
 
-  final List<num>? emGroupsQuantum;
+  final Map<String, num>? emGroupsQuantum;
 
 
 
@@ -111,7 +111,7 @@ class GameVehicleSignature {
   )
 
 
-  final List<num>? emGroupsShields;
+  final Map<String, num>? emGroupsShields;
 
 
 
@@ -124,7 +124,7 @@ class GameVehicleSignature {
   )
 
 
-  final List<num>? emSegmentGroupsQuantum;
+  final Map<String, num>? emSegmentGroupsQuantum;
 
 
 
@@ -137,7 +137,7 @@ class GameVehicleSignature {
   )
 
 
-  final List<num>? emSegmentGroupsShields;
+  final Map<String, num>? emSegmentGroupsShields;
 
 
 

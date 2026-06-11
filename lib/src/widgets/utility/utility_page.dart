@@ -3,6 +3,7 @@ import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_full_page.dart';
 import 'package:refuge_next/src/widgets/utility/player_search_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/utility/promote_bottomsheet.dart';
+import 'package:refuge_next/src/widgets/debug/debug_page.dart';
 import 'package:refuge_next/src/widgets/utility/utility_topbar.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -39,6 +40,12 @@ class FeatureSelectionPage extends StatelessWidget {
     }),
     FeatureItem(icon: Icons.bug_report_outlined, title: '转移账号', onTap: (context) {
       showToast(message: "该功能未实现~");
+    }),
+    FeatureItem(icon: Icons.science_outlined, title: '测试中心', onTap: (context) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const DebugPage()),
+      );
     }),
   ];
 

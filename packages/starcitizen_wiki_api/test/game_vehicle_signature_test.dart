@@ -32,25 +32,25 @@ void main() {
     });
 
     // EM signature groups with quantum drive active.
-    // List<num> emGroupsQuantum
+    // Map<String, num> emGroupsQuantum
     test('to test the property `emGroupsQuantum`', () async {
       // TODO
     });
 
     // EM signature groups with shields active.
-    // List<num> emGroupsShields
+    // Map<String, num> emGroupsShields
     test('to test the property `emGroupsShields`', () async {
       // TODO
     });
 
     // EM segment groups with quantum drive active.
-    // List<num> emSegmentGroupsQuantum
+    // Map<String, num> emSegmentGroupsQuantum
     test('to test the property `emSegmentGroupsQuantum`', () async {
       // TODO
     });
 
     // EM segment groups with shields active.
-    // List<num> emSegmentGroupsShields
+    // Map<String, num> emSegmentGroupsShields
     test('to test the property `emSegmentGroupsShields`', () async {
       // TODO
     });

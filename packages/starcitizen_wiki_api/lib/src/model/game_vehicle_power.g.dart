@@ -26,7 +26,9 @@ GameVehiclePower _$GameVehiclePowerFromJson(Map<String, dynamic> json) =>
           ),
           usedSegmentsGrouped: $checkedConvert(
             'used_segments_grouped',
-            (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+            (v) => (v as Map<String, dynamic>?)?.map(
+              (k, e) => MapEntry(k, e as num),
+            ),
           ),
         );
         return val;

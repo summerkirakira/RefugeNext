@@ -29,11 +29,13 @@ GameVehicleCooling _$GameVehicleCoolingFromJson(
       ),
       usedSegmentsShieldsGrouped: $checkedConvert(
         'used_segments_shields_grouped',
-        (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+        (v) =>
+            (v as Map<String, dynamic>?)?.map((k, e) => MapEntry(k, e as num)),
       ),
       usedSegmentsQuantumGrouped: $checkedConvert(
         'used_segments_quantum_grouped',
-        (v) => (v as List<dynamic>?)?.map((e) => e as num).toList(),
+        (v) =>
+            (v as Map<String, dynamic>?)?.map((k, e) => MapEntry(k, e as num)),
       ),
     );
     return val;

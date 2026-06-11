@@ -26,7 +26,7 @@ void main() {
     });
 
     // Grouped power segments consumed.
-    // List<num> usedSegmentsGrouped
+    // Map<String, num> usedSegmentsGrouped
     test('to test the property `usedSegmentsGrouped`', () async {
       // TODO
     });

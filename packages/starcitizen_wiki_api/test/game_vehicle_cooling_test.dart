@@ -38,13 +38,13 @@ void main() {
     });
 
     // Grouped cooling segments for shields.
-    // List<num> usedSegmentsShieldsGrouped
+    // Map<String, num> usedSegmentsShieldsGrouped
     test('to test the property `usedSegmentsShieldsGrouped`', () async {
       // TODO
     });
 
     // Grouped cooling segments for quantum drive.
-    // List<num> usedSegmentsQuantumGrouped
+    // Map<String, num> usedSegmentsQuantumGrouped
     test('to test the property `usedSegmentsQuantumGrouped`', () async {
       // TODO
     });
