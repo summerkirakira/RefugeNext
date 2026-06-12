@@ -274,7 +274,7 @@ class ItemRelatedLinkExt {
   )
 
 
-  final int? grade;
+  final String? grade;
 
 
 

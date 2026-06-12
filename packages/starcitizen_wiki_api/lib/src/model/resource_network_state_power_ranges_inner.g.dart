@@ -15,7 +15,7 @@ _$ResourceNetworkStatePowerRangesInnerFromJson(Map<String, dynamic> json) =>
         final val = ResourceNetworkStatePowerRangesInner(
           start: $checkedConvert('start', (v) => (v as num?)?.toDouble()),
           modifier: $checkedConvert('modifier', (v) => (v as num?)?.toDouble()),
-          registerRange: $checkedConvert('register_range', (v) => v as bool?),
+          registerRange: $checkedConvert('register_range', (v) => v as num?),
         );
         return val;
       },

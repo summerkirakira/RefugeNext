@@ -27,7 +27,7 @@ Name | Type | Description | Notes
 **webUrl** | **String** | Web URL for item detail page. | [optional] 
 **size** | **int** | Maximum port size as proxy for item size. | [optional] 
 **mass** | **double** | Generated from SEntityRigidPhysicsControllerParams | [optional] 
-**grade** | **int** | Grade from loadout data. | [optional] 
+**grade** | **String** | Grade from loadout data. | [optional] 
 **class_** | **String** | From DescriptionData.Class if not set directly | [optional] 
 **manufacturer** | [**GamePortItemSummaryManufacturer**](GamePortItemSummaryManufacturer.md) |  | [optional] 
 **resourceNetwork** | [**ResourceNetwork**](ResourceNetwork.md) | Present when stdItem.ResourceNetwork exists | [optional] 

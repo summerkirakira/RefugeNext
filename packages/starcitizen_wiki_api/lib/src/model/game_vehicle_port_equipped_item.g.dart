@@ -50,7 +50,7 @@ GameVehiclePortEquippedItem _$GameVehiclePortEquippedItemFromJson(
       webUrl: $checkedConvert('web_url', (v) => v as String?),
       size: $checkedConvert('size', (v) => (v as num?)?.toInt()),
       mass: $checkedConvert('mass', (v) => (v as num?)?.toDouble()),
-      grade: $checkedConvert('grade', (v) => (v as num?)?.toInt()),
+      grade: $checkedConvert('grade', (v) => v as String?),
       class_: $checkedConvert('class', (v) => v as String?),
       manufacturer: $checkedConvert(
         'manufacturer',

@@ -18,7 +18,7 @@ GamePortItemSummary _$GamePortItemSummaryFromJson(Map<String, dynamic> json) =>
           type: $checkedConvert('type', (v) => v as String?),
           subType: $checkedConvert('sub_type', (v) => v as String?),
           size: $checkedConvert('size', (v) => (v as num?)?.toInt()),
-          grade: $checkedConvert('grade', (v) => (v as num?)?.toInt()),
+          grade: $checkedConvert('grade', (v) => v as String?),
           manufacturer: $checkedConvert(
             'manufacturer',
             (v) => v == null

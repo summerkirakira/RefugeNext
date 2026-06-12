@@ -40,10 +40,15 @@ class WikiApiClient {
     'used_segments_grouped',
   };
 
-  /// 递归归一化 PHP 空数组怪癖:
-  /// 1. [_phpEmptyArrayObjectKeys] 中字段的值若为空数组 → null;
+  /// 递归归一化 PHP 后端的类型怪癖:
+  /// 1. [_phpEmptyArrayObjectKeys] 中字段的值若为空数组 → null
+  ///    (空关联数组被序列化成 [] 而非 {});
   /// 2. `penetration_multiplier.components`(数值字段)若为空数组 → null
-  ///    (`components` 在别处是合法数组,故按父字段限定作用域)。
+  ///    (`components` 在别处是合法数组,故按父字段限定作用域);
+  /// 3. `grade`:列表端点给数字、单船端点给字符串("1"/"A"/"C"),
+  ///    spec 已统一为 string,这里把数字侧转为字符串;
+  /// 4. `register_range`:实际为 0/1 整数(spec 已改 number),
+  ///    若后端某天返回 true/false 则转回 0/1。
   static void normalizePhpEmptyArrays(Object? node, {String? parentKey}) {
     if (node is Map) {
       for (final key in node.keys.toList()) {
@@ -54,6 +59,14 @@ class WikiApiClient {
             node[key] = null;
             continue;
           }
+        }
+        if (key == 'grade' && value is num) {
+          node[key] = value.toString();
+          continue;
+        }
+        if (key == 'register_range' && value is bool) {
+          node[key] = value ? 1 : 0;
+          continue;
         }
         normalizePhpEmptyArrays(value, parentKey: key is String ? key : null);
       }

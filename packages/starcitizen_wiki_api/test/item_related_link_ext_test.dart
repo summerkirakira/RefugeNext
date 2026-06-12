@@ -103,7 +103,7 @@ void main() {
     });
 
     // Item grade.
-    // int grade
+    // String grade
     test('to test the property `grade`', () async {
       // TODO
     });

@@ -60,7 +60,7 @@ class ResourceNetworkStatePowerRangesInner {
   )
 
 
-  final bool? registerRange;
+  final num? registerRange;
 
 
 

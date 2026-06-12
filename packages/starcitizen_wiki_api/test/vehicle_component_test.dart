@@ -22,7 +22,7 @@ void main() {
       // TODO
     });
 
-    // int componentSize
+    // String componentSize
     test('to test the property `componentSize`', () async {
       // TODO
     });
@@ -32,7 +32,7 @@ void main() {
       // TODO
     });
 
-    // int size
+    // String size
     test('to test the property `size`', () async {
       // TODO
     });

@@ -328,7 +328,7 @@ class GameVehiclePortEquippedItem {
   )
 
 
-  final int? grade;
+  final String? grade;
 
 
 

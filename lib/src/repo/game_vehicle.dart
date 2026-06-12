@@ -131,6 +131,35 @@ class GameVehicleRepo extends VersionedListRepo<GameVehicle>
     }
     await saveAndSelect(targetVersion, all);
   }
+
+  /// 用单船端点返回的完整 ports(含嵌套装载,如导弹架上的导弹)替换
+  /// 当前选中版本中对应载具的 ports 字段,并持久化到本地版本文件。
+  ///
+  /// 列表端点的 ports 是扁平的(无子槽位),嵌套装载只有
+  /// `/api/vehicles/{identifier}` 提供;详情页按需拉取后调本方法写回,
+  /// 一次拉取永久生效。注意 [refresh] 全量重拉会用扁平 ports 覆盖
+  /// 已补全的数据(下次进详情页会重新补全)。
+  ///
+  /// 返回更新后的载具实例;本地无该载具或无选中版本返回 null。
+  Future<GameVehicle?> updateVehiclePorts(
+      String uuid, List<GameVehiclePort> ports) async {
+    final version = await getSelectedVersion();
+    if (version == null) {
+      return null;
+    }
+    final items = await getItems();
+    final index = items.indexWhere((v) => v.uuid == uuid);
+    if (index < 0) {
+      return null;
+    }
+    // 模型字段为 final,经 JSON 重建一个替换了 ports 的新实例
+    final json = items[index].toJson();
+    json['ports'] = ports.map((p) => p.toJson()).toList();
+    final updated = GameVehicle.fromJson(json);
+
+    await saveAndSelect(version, [...items]..[index] = updated);
+    return updated;
+  }
 }
 
 /// 地面载具仓库:[GameVehicleRepo] 全集的内存过滤视图,无独立存储。

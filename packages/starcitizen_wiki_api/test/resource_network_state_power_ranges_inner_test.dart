@@ -20,7 +20,7 @@ void main() {
     });
 
     // Whether this range should be registered.
-    // bool registerRange
+    // num registerRange
     test('to test the property `registerRange`', () async {
       // TODO
     });

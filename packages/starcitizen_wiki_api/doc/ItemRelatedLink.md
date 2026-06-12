@@ -24,7 +24,7 @@ Name | Type | Description | Notes
 **link** | **String** | API URL for the related item. | [optional] 
 **webUrl** | **String** | Web URL for the related item. | [optional] 
 **size** | **int** | Item size. | [optional] 
-**grade** | **int** | Item grade. | [optional] 
+**grade** | **String** | Item grade. | [optional] 
 **gradeLabel** | **String** | Grade (A/B/C/D for Ship items) | [optional] 
 **class_** | **String** | Item class. | [optional] 
 

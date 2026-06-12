@@ -1,3 +1,4 @@
+import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,16 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
   GameVehicle? _selected;
   bool _loading = true;
 
+  /// 结构部件树缓存:TreeView 在 didUpdateWidget 时按节点 key diff 新旧树,
+  /// 若每次 build 都重建树(key 是随机 UUID),会触发全量删除+新增的动画
+  /// churn,渲染出旧节点快照。因此同一载具必须复用同一棵树实例。
+  TreeNode<GameVehiclePart>? _partsTree;
+  String? _partsTreeVehicleUuid;
+
+  /// 本会话已尝试补全嵌套装载的载具 uuid(防失败后重试风暴)。
+  final Set<String> _detailFetched = {};
+  bool _portsLoading = false;
+
   static const _valueStyle = TextStyle(fontSize: 13);
   static const _valueStyleBold =
       TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
@@ -47,7 +58,58 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
         _selected = vehicles.isNotEmpty ? vehicles.first : null;
         _loading = false;
       });
+      if (_selected != null) {
+        _enrichPorts(_selected!);
+      }
     });
+  }
+
+  /// 按需补全嵌套装载:列表端点的 ports 是扁平的,挂载关系
+  /// (导弹架上的导弹等)只有单船端点提供。拉取成功后写回
+  /// [GameVehicleRepo] 并落盘,一次拉取永久生效。
+  Future<void> _enrichPorts(GameVehicle v) async {
+    final uuid = v.uuid;
+    if (uuid == null || _detailFetched.contains(uuid)) {
+      return;
+    }
+    // 已有任一非空子槽位 → 此前已补全过(本地落盘数据),跳过
+    final ports = v.ports;
+    if (ports != null &&
+        ports.any((p) => p.ports != null && p.ports!.isNotEmpty)) {
+      return;
+    }
+    _detailFetched.add(uuid);
+    setState(() => _portsLoading = true);
+    try {
+      final version = await GameVehicleRepo().getSelectedVersion();
+      final res = await WikiApiClient()
+          .api
+          .getVehiclesApi()
+          .getVehicle(identifier: uuid, version: version);
+      final detailPorts = res.data?.data?.ports;
+      if (detailPorts == null || detailPorts.isEmpty) {
+        return;
+      }
+      final updated =
+          await GameVehicleRepo().updateVehiclePorts(uuid, detailPorts);
+      if (updated != null && mounted) {
+        setState(() {
+          final index = _all.indexWhere((e) => e.uuid == uuid);
+          if (index >= 0) {
+            _all[index] = updated;
+          }
+          if (_selected?.uuid == uuid) {
+            _selected = updated;
+          }
+        });
+      }
+    } catch (e) {
+      // 离线/请求失败:静默回退本地扁平数据
+    } finally {
+      if (mounted) {
+        setState(() => _portsLoading = false);
+      }
+    }
   }
 
   /// 取载具缩略图 URL:优先用 wiki 数据自带的 images 字段
@@ -101,10 +163,12 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
           body: Column(
             children: [
               ShipInfoMenu(
-                titles: const ['总览', '武装', '飞行', '组件'],
+                barWidth: 300,
+                titles: const ['总览', '武装', '货运', '飞行', '组件'],
                 children: [
                   _tabPage(_overviewCards(selected)),
                   _tabPage(_combatCards(selected)),
+                  _tabPage(_cargoCards(selected)),
                   _tabPage(_flightCards(selected)),
                   _tabPage(_portsCards(selected)),
                 ],
@@ -443,6 +507,7 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
                               onTap: () {
                                 setState(() => _selected = vehicle);
                                 Navigator.pop(context);
+                                _enrichPorts(vehicle);
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -545,7 +610,12 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
             _row('装配质量', _n(v.massLoadout), unit: 'kg'),
             _row('货舱', _n(v.cargoCapacity), unit: 'SCU', orange: true),
             _row('矿舱', _n(v.oreCapacity), unit: 'SCU'),
-            _row('随身储物', _n(v.vehicleInventory), unit: 'KµSCU'),
+            // vehicle_inventory 原始单位为 µSCU,换算为 SCU 展示
+            _row('个人存储',
+                _n(v.vehicleInventory == null
+                    ? null
+                    : v.vehicleInventory! / 1000000),
+                unit: 'SCU'),
             _row('最大箱规', _n(v.maxScuBox), unit: 'SCU'),
           ])),
       _card(
@@ -567,27 +637,134 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     ].whereType<Card>().toList();
   }
 
-  Widget _partsCard(GameVehicle v) {
-    final parts = v.parts;
-    if (parts == null || parts.isEmpty) {
-      return const SizedBox.shrink();
+  /// 部件属性小徽章(关键/可脱落)。
+  Widget _partBadge(String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建(或返回缓存的)结构部件树。同一载具复用同一实例,见 [_partsTree]。
+  TreeNode<GameVehiclePart>? _buildPartsTree(GameVehicle v) {
+    if (_partsTreeVehicleUuid == v.uuid && _partsTree != null) {
+      return _partsTree;
     }
-    final rows = <Widget>[];
-    void walk(List<GameVehiclePart> list, int depth) {
+    var parts = v.parts;
+    if (parts == null || parts.isEmpty) {
+      return null;
+    }
+    // 数据通常只有一个根(载具自身,hp 0),提升其子部件为顶层,
+    // 对齐 wiki 网页直接展示 Nose/Body 的做法。
+    if (parts.length == 1 && (parts.first.children?.isNotEmpty ?? false)) {
+      parts = parts.first.children!;
+    }
+
+    final tree = TreeNode<GameVehiclePart>.root();
+    void attach(
+        TreeNode<GameVehiclePart> parent, List<GameVehiclePart> list) {
       for (final part in list) {
-        final name = part.displayName ?? part.name;
-        if (name != null && part.damageMax != null) {
-          rows.add(
-              _smallRow('${'　' * depth}$name', '${_n(part.damageMax)} HP')!);
-        }
-        if (part.children != null) {
-          walk(part.children!, depth + 1);
+        final node = TreeNode<GameVehiclePart>(data: part);
+        parent.add(node);
+        final children = part.children;
+        if (children != null && children.isNotEmpty) {
+          attach(node, children);
         }
       }
     }
 
-    walk(parts, 0);
-    return _card('结构部件', rows) as Card? ?? const Card();
+    attach(tree, parts);
+    _partsTree = tree;
+    _partsTreeVehicleUuid = v.uuid;
+    return tree;
+  }
+
+  /// 结构部件:可展开/收缩的树状列表(animated_tree_view)。
+  Widget _partsCard(GameVehicle v) {
+    final tree = _buildPartsTree(v);
+    if (tree == null) {
+      return const SizedBox.shrink();
+    }
+
+    return _card('结构部件', [
+      TreeView.simple<GameVehiclePart>(
+        // 切换载具时强制重建 TreeView 状态(否则会跨载具 diff,
+        // 且 onTreeReady 的默认展开只在状态创建时触发一次)
+        key: ValueKey('parts-tree-${v.uuid}'),
+        tree: tree,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        showRootNode: false,
+        expansionBehavior: ExpansionBehavior.none,
+        padding: const EdgeInsets.only(top: 4),
+        // 默认展开第一层,主要部件(机鼻/机身等)直接可见
+        onTreeReady: (controller) => controller.expandAllChildren(tree),
+        // 展开箭头放在行左侧,避免与右侧 HP 数值重叠
+        expansionIndicatorBuilder: (context, node) =>
+            ChevronIndicator.rightDown(
+          tree: node,
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.only(left: 14),
+          color: Colors.grey,
+        ),
+        builder: (context, node) {
+          final part = node.data;
+          final name = part?.displayName ?? part?.name ?? '未知';
+          final hp = _n(part?.damageMax);
+          // destruction_damage 非空:打爆即摧毁整船(关键部件);
+          // detach_damage 非空:可被打脱落。与 wiki 网页 Critical/Detachable 一致。
+          final isCritical = part?.destructionDamage != null;
+          final isDetachable = part?.detachDamage != null;
+          final isLeaf = node.children.isEmpty;
+          return Padding(
+            padding: const EdgeInsets.only(
+                left: 38, right: 20, top: 6, bottom: 6),
+            child: Row(
+              children: [
+                // 名称 + 徽章作为整体占满左侧,HP 贴齐最右
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight:
+                                isLeaf ? FontWeight.normal : FontWeight.bold,
+                            // 关键部件(打爆即摧毁整船)名字标红
+                            color: isCritical ? Colors.red : null,
+                          ),
+                        ),
+                      ),
+                      if (isCritical) _partBadge('关键', Colors.red),
+                      if (isDetachable) _partBadge('可脱落', Colors.blueGrey),
+                    ],
+                  ),
+                ),
+                if (hp != null)
+                  Text('$hp HP', style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+          );
+        },
+      ),
+    ]);
   }
 
   // ============ 武装 ============
@@ -664,6 +841,129 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     ].whereType<Card>().toList();
   }
 
+  // ============ 货运 ============
+
+  List<Widget> _cargoCards(GameVehicle v) {
+    final grids = v.cargoGrids ?? const <ItemInventory>[];
+    final containers = v.inventoryContainers ?? const <ItemInventory>[];
+    final limits = v.cargoLimits;
+
+    final cards = <Widget>[
+      _card(
+          '货运总览',
+          _rows([
+            _row('货舱总量', _n(v.cargoCapacity), unit: 'SCU', orange: true),
+            _row('矿舱', _n(v.oreCapacity), unit: 'SCU'),
+            // vehicle_inventory 原始单位为 µSCU,换算为 SCU 展示
+            _row('个人存储',
+                _n(v.vehicleInventory == null
+                    ? null
+                    : v.vehicleInventory! / 1000000),
+                unit: 'SCU'),
+            _row('货舱格数',
+                grids.isEmpty ? null : grids.length.toString()),
+            _row(
+                '箱规范围',
+                (limits?.minScuBox == null && limits?.maxScuBox == null)
+                    ? _n(v.maxScuBox)
+                    : '${_n(limits?.minScuBox) ?? '-'} – ${_n(limits?.maxScuBox) ?? '-'}',
+                unit: 'SCU'),
+          ])),
+      if (grids.isNotEmpty)
+        _card(
+            '货舱区块(${grids.length})',
+            grids
+                .asMap()
+                .entries
+                .map((e) => _cargoGridItem('货舱 #${e.key + 1}', e.value))
+                .toList()),
+      if (containers.isNotEmpty)
+        _card(
+            '个人存储容器(${containers.length})',
+            containers
+                .asMap()
+                .entries
+                .map((e) => _cargoGridItem('容器 #${e.key + 1}', e.value))
+                .toList()),
+    ].whereType<Card>().toList();
+
+    if (cards.isEmpty) {
+      return [
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: Text('无货运数据'),
+        ),
+      ];
+    }
+    return cards;
+  }
+
+  /// 货舱/储物容器条目:灰底圆角(仿组件条目),
+  /// 左侧绿框 SCU 徽章,中间名称 + 区块尺寸,右侧属性标签。
+  Widget _cargoGridItem(String label, ItemInventory inv) {
+    final dims = (inv.length != null || inv.width != null || inv.height != null)
+        ? '${_n(inv.length) ?? '-'} × ${_n(inv.width) ?? '-'} × ${_n(inv.height) ?? '-'} m'
+        : null;
+    final isDarkMode = Provider.of<MainDataModel>(context).isDarkMode;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.green),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${_n(inv.scu) ?? '-'} SCU',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(label,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold)),
+                      if (inv.open == true)
+                        _partBadge('开放式', Colors.teal),
+                      if (inv.external_ == true)
+                        _partBadge('外置', Colors.blueGrey),
+                    ],
+                  ),
+                  if (dims != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(dims,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey[600])),
+                    ),
+                  if (inv.maxScuBox != null)
+                    Text('最大 ${_n(inv.maxScuBox)} SCU 箱',
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey[600])),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ============ 飞行 ============
 
   List<Widget> _flightCards(GameVehicle v) {
@@ -676,19 +976,26 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
           _rows([
             _row('SCM 速度', _n(s?.scm), unit: 'm/s', orange: true),
             _row('最大速度', _n(s?.max), unit: 'm/s', orange: true),
-            _row('推进(前)', _n(s?.boostForward), unit: 'm/s'),
-            _row('推进(后)', _n(s?.boostBackward), unit: 'm/s'),
+            _row('加力(前)', _n(s?.boostForward), unit: 'm/s'),
+            _row('加力(后)', _n(s?.boostBackward), unit: 'm/s'),
+            // 加力回复时间;括号为耗尽后开始回复的延迟(对应网页 26.9 s (+ 0.2 s))
+            _row(
+                '加力回复',
+                v.afterburner?.regenTime == null
+                    ? null
+                    : v.afterburner?.regenDelay == null
+                        ? _n(v.afterburner?.regenTime)
+                        : '${_n(v.afterburner?.regenTime)} (+${_n(v.afterburner?.regenDelay)})',
+                unit: 's'),
             _row('0 → SCM', _n(s?.zeroToScm), unit: 's'),
-            _row('SCM → 0', _n(s?.scmToZero), unit: 's'),
             _row('0 → Max', _n(s?.zeroToMax), unit: 's'),
-            _row('Max → 0', _n(s?.maxToZero), unit: 's'),
           ])),
       _card(
           '机动',
           _rows([
-            _row('俯仰', _agility(a?.pitch, a?.pitchBoosted)),
-            _row('偏航', _agility(a?.yaw, a?.yawBoosted)),
-            _row('翻滚', _agility(a?.roll, a?.rollBoosted)),
+            _agilityRow('俯仰', a?.pitch, a?.pitchBoosted),
+            _agilityRow('偏航', a?.yaw, a?.yawBoosted),
+            _agilityRow('翻滚', a?.roll, a?.rollBoosted),
           ])),
       _card(
           '燃料与量子',
@@ -697,7 +1004,7 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
             _row('燃料进气速率', _n(v.fuel?.intakeRate)),
             _row('量子燃料', _n(q?.quantumFuelCapacity), unit: 'SCU'),
             _row('量子速度', _n(q?.quantumSpeed), unit: 'm/s', orange: true),
-            _row('量子起旋', _n(q?.quantumSpoolTime), unit: 's'),
+            _row('量子校准', _n(q?.quantumSpoolTime), unit: 's'),
             _row('量子航程', _n(q?.quantumRange), unit: 'm'),
           ])),
     ].whereType<Card>().toList();
@@ -706,9 +1013,30 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
   // ============ 组件 ============
 
   List<Widget> _portsCards(GameVehicle v) {
+    final loadingHint = _portsLoading
+        ? Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Text('正在加载挂载详情…',
+                    style: TextStyle(
+                        fontSize: 12, color: Colors.grey[600])),
+              ],
+            ),
+          )
+        : null;
+
     final ports = v.ports;
     if (ports == null || ports.isEmpty) {
       return [
+        if (loadingHint != null) loadingHint,
         const Padding(
           padding: EdgeInsets.all(32),
           child: Text('无组件数据'),
@@ -721,11 +1049,14 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
       groups.putIfAbsent(key, () => []).add(port);
     }
     final keys = groups.keys.toList()..sort();
-    return keys.map((key) {
-      final list = groups[key]!;
-      return _card('$key(${list.length})',
-          list.map((port) => _PortItem(port: port)).toList()) as Card;
-    }).toList();
+    return [
+      if (loadingHint != null) loadingHint,
+      ...keys.map((key) {
+        final list = groups[key]!;
+        return _card('$key(${list.length})',
+            list.map((port) => _PortItem(port: port)).toList());
+      }),
+    ];
   }
 
   // ============ 通用小部件 ============
@@ -757,15 +1088,13 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
 
   List<Widget> _rows(List<Widget?> rows) => rows.whereType<Widget>().toList();
 
-  /// 统计行:左标签 14 bold、右值 16 bold(小号版 ShipSimpleInfoItem)。
+  /// 统计行:左标签 14 常规、右值 16 bold(小号版 ShipSimpleInfoItem)。
   Widget _statRow(String title, Widget trailing) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
       child: Row(
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(title, style: const TextStyle(fontSize: 14)),
           const Spacer(),
           trailing,
         ],
@@ -804,14 +1133,14 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          const Spacer(),
-          Flexible(
+          Text(title, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 16),
+          // Expanded 占满剩余空间 + 文本右对齐,保证值贴齐最右
+          Expanded(
             child: Text(value,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 13)),
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -906,75 +1235,117 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     return pct(min ?? max!);
   }
 
-  /// 机动性:基础(+推进)°/s。
-  String? _agility(num? base, num? boosted) {
+  /// 机动行:基础值 bold,boost 后数值用红色括号紧随其后,如 `50(60) °/s`。
+  Widget? _agilityRow(String title, num? base, num? boosted) {
     if (base == null) {
       return null;
     }
-    final b = boosted != null ? '(推进 ${_n(boosted)})' : '';
-    return '${_n(base)} °/s $b';
+    return _statRow(
+      title,
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(_n(base)!, style: _valueStyleBold),
+          if (boosted != null)
+            Text('(${_n(boosted)})',
+                style: _valueStyleBold.copyWith(color: Colors.red)),
+          Text(' °/s', style: _valueStyle),
+        ],
+      ),
+    );
   }
 }
 
 /// 组件条目:仿现有武器列表条目的灰底圆角样式
 /// (左侧绿框尺寸徽章、中间名称+厂商、右侧等级)。
+/// 子槽位(挂载关系,如导弹架上的导弹)以同样式独立条目递归展示,
+/// 仅通过左侧缩进(每层 +24)表达挂载层级。
 class _PortItem extends StatelessWidget {
   final GameVehiclePort port;
+  final int depth;
 
-  const _PortItem({required this.port});
+  const _PortItem({required this.port, this.depth = 0});
 
   @override
   Widget build(BuildContext context) {
     final item = port.equippedItem;
+    final children = port.ports;
+    // 名称逻辑:优先装备物品名;空槽(技术性挂点居多,如航电/扫描器/
+    // 电池口)回退显示槽位名并弱化样式
+    final isEmpty = item?.name == null;
+    final name = item?.name ?? port.name ?? '(空槽)';
     final isDarkMode = Provider.of<MainDataModel>(context).isDarkMode;
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.green),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'S${item?.size ?? port.sizes?.max ?? '?'}',
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item?.name ?? '(空)',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: EdgeInsets.only(
+              left: 8.0 + 24.0 * depth, right: 8, top: 4, bottom: 4),
+          decoration: BoxDecoration(
+            color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.green),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  if (item?.manufacturer?.name != null)
-                    Text(
-                      item!.manufacturer!.name!,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                ],
-              ),
+                  child: Text(
+                    'S${item?.size ?? port.sizes?.max ?? '?'}',
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: isEmpty ? 14 : 16,
+                          fontWeight:
+                              isEmpty ? FontWeight.normal : FontWeight.bold,
+                          color: isEmpty ? Colors.grey[600] : null,
+                          fontStyle:
+                              isEmpty ? FontStyle.italic : FontStyle.normal,
+                        ),
+                      ),
+                      if (isEmpty)
+                        Text(
+                          '空槽位',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey[500]),
+                        ),
+                      if (item?.manufacturer?.name != null)
+                        Text(
+                          item!.manufacturer!.name!,
+                          style: TextStyle(
+                              fontSize: 13, color: Colors.grey[600]),
+                        ),
+                    ],
+                  ),
+                ),
+                if (item?.grade != null)
+                  Text(
+                    '等级 ${item!.grade}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+              ],
             ),
-            if (item?.grade != null)
-              Text(
-                '等级 ${item!.grade}',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              ),
-          ],
+          ),
         ),
-      ),
+        if (children != null && children.isNotEmpty)
+          ...children
+              .map((child) => _PortItem(port: child, depth: depth + 1)),
+      ],
     );
   }
 }

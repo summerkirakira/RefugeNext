@@ -118,7 +118,7 @@ void main() {
     });
 
     // Grade from loadout data.
-    // int grade
+    // String grade
     test('to test the property `grade`', () async {
       // TODO
     });

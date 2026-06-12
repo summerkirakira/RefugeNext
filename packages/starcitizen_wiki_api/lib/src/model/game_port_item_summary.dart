@@ -127,7 +127,7 @@ class GamePortItemSummary {
   )
 
 
-  final int? grade;
+  final String? grade;
 
 
 

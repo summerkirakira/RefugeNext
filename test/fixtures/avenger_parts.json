@@ -1,0 +1,120 @@
+[
+  {
+    "name": "AEGS_Avenger",
+    "display_name": "Aegs avenger",
+    "damage_max": 0,
+    "children": [
+      {
+        "name": "Nose",
+        "display_name": "Nose",
+        "damage_max": 2500,
+        "destruction_damage": 2500,
+        "children": [
+          {
+            "name": "Canopy",
+            "display_name": "Canopy",
+            "damage_max": 1500,
+            "detach_damage": 1500,
+            "children": [],
+            "version": null
+          }
+        ],
+        "version": null
+      },
+      {
+        "name": "Body",
+        "display_name": "Body",
+        "damage_max": 2500,
+        "destruction_damage": 2500,
+        "children": [
+          {
+            "name": "Wing_Right",
+            "display_name": "Wing (right)",
+            "damage_max": 680,
+            "detach_damage": 680,
+            "children": [
+              {
+                "name": "Wing_Flap_Right",
+                "display_name": "Wing flap (right)",
+                "damage_max": 10,
+                "detach_damage": 10,
+                "children": [],
+                "version": null
+              },
+              {
+                "name": "WingTip_Right",
+                "display_name": "Wingtip (right)",
+                "damage_max": 1000,
+                "detach_damage": 1000,
+                "children": [],
+                "version": null
+              }
+            ],
+            "version": null
+          },
+          {
+            "name": "Wing_Left",
+            "display_name": "Wing (left)",
+            "damage_max": 680,
+            "detach_damage": 680,
+            "children": [
+              {
+                "name": "Wing_Flap_Left",
+                "display_name": "Wing flap (left)",
+                "damage_max": 10,
+                "detach_damage": 10,
+                "children": [],
+                "version": null
+              },
+              {
+                "name": "WingTip_Left",
+                "display_name": "Wingtip (left)",
+                "damage_max": 1000,
+                "detach_damage": 1000,
+                "children": [],
+                "version": null
+              }
+            ],
+            "version": null
+          },
+          {
+            "name": "HullTail_Right",
+            "display_name": "Hull (tail right)",
+            "damage_max": 1000,
+            "detach_damage": 1000,
+            "children": [
+              {
+                "name": "Right_Tail_Fin_Flap",
+                "display_name": "Fin flap (right tail)",
+                "damage_max": 10,
+                "detach_damage": 10,
+                "children": [],
+                "version": null
+              }
+            ],
+            "version": null
+          },
+          {
+            "name": "HullTail_Left",
+            "display_name": "Hull (tail left)",
+            "damage_max": 1000,
+            "detach_damage": 1000,
+            "children": [
+              {
+                "name": "Left_Tail_Fin_Flap",
+                "display_name": "Fin flap (left tail)",
+                "damage_max": 10,
+                "detach_damage": 10,
+                "children": [],
+                "version": null
+              }
+            ],
+            "version": null
+          }
+        ],
+        "version": null
+      }
+    ],
+    "version": null
+  }
+]

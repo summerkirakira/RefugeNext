@@ -10,7 +10,12 @@ class ShipInfoMenu extends StatefulWidget {
   final List<Widget> children;
   final List<String> titles;
 
-  ShipInfoMenu({Key? key, required this.children, required this.titles}) : super(key: key);
+  /// 页签栏宽度;默认 240(适配 4 个页签),页签更多时可加宽。
+  final double? barWidth;
+
+  ShipInfoMenu(
+      {Key? key, required this.children, required this.titles, this.barWidth})
+      : super(key: key);
 
 }
 
@@ -53,7 +58,7 @@ class _ShipInfoMenuState extends State<ShipInfoMenu> {
         children: [
           Center(
             child: Container(
-              width: 240,
+              width: widget.barWidth ?? 240,
               child: CustomTabBar(
                 tabBarController: _tabBarController,
                 height: 30,

@@ -83,7 +83,7 @@ class VehicleComponent {
   )
 
 
-  final int? componentSize;
+  final String? componentSize;
 
 
 
@@ -107,7 +107,7 @@ class VehicleComponent {
   )
 
 
-  final int? size;
+  final String? size;
 
 
 

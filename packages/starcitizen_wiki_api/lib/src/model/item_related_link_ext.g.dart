@@ -37,7 +37,7 @@ ItemRelatedLinkExt _$ItemRelatedLinkExtFromJson(
       link: $checkedConvert('link', (v) => v as String?),
       webUrl: $checkedConvert('web_url', (v) => v as String?),
       size: $checkedConvert('size', (v) => (v as num?)?.toInt()),
-      grade: $checkedConvert('grade', (v) => (v as num?)?.toInt()),
+      grade: $checkedConvert('grade', (v) => v as String?),
       gradeLabel: $checkedConvert('grade_label', (v) => v as String?),
       class_: $checkedConvert('class', (v) => v as String?),
     );

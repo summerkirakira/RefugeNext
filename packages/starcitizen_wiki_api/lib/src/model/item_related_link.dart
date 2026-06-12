@@ -274,7 +274,7 @@ class ItemRelatedLink {
   )
 
 
-  final int? grade;
+  final String? grade;
 
 
 
