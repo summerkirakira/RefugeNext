@@ -157,6 +157,33 @@ void main() {
     });
   });
 
+  group('shapeItemCardAck', () {
+    test('命中的进 shown,缺失的进 missing,保持顺序', () {
+      final r = shapeItemCardAck(['a', 'x', 'b'], {'a', 'b'});
+      expect(r['ok'], true);
+      expect(r['shown'], ['a', 'b']);
+      expect(r['missing'], ['x']);
+    });
+
+    test('空串与非字符串入参归 missing 且不崩', () {
+      final r = shapeItemCardAck(['', 123, null], {'a'});
+      expect(r['shown'], isEmpty);
+      expect(r['missing'], ['', '123', 'null']);
+    });
+
+    test('可用集合为空时全部 missing', () {
+      final r = shapeItemCardAck(['a', 'b'], <String>{});
+      expect(r['shown'], isEmpty);
+      expect(r['missing'], ['a', 'b']);
+    });
+
+    test('入参为空时 shown/missing 均空', () {
+      final r = shapeItemCardAck(const [], {'a'});
+      expect(r['shown'], isEmpty);
+      expect(r['missing'], isEmpty);
+    });
+  });
+
   group('hangarItemType / matchesHangarKeyword', () {
     test('类型判定', () {
       expect(hangarItemType(_hi(isUpgrade: true)), 'upgrade');

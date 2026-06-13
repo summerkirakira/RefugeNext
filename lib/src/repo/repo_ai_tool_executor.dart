@@ -2,6 +2,7 @@ import '../datasource/data_model.dart';
 import '../datasource/models/hangar.dart';
 import '../funcs/search.dart';
 import 'ai_chat.dart';
+import 'game_vehicle.dart';
 
 /// 端侧工具的真实实现：把工具名映射到本地 repo / MainDataModel，
 /// 让服务端能查询用户本地缓存的库存/账号数据。
@@ -18,6 +19,7 @@ class RepoAiToolExecutor implements AiToolExecutor {
     'get_buyback',
     'show_hangar_cards',
     'show_buyback_cards',
+    'show_item_card',
   ];
 
   @override
@@ -42,6 +44,8 @@ class RepoAiToolExecutor implements AiToolExecutor {
           return _showHangarCards(arguments);
         case 'show_buyback_cards':
           return _showBuybackCards(arguments);
+        case 'show_item_card':
+          return await _showItemCard(arguments);
         default:
           return {'is_error': true, 'error': 'tool not allowed: $name'};
       }
@@ -82,6 +86,20 @@ class RepoAiToolExecutor implements AiToolExecutor {
     return {'ok': true, 'shown': shown, 'missing': missing};
   }
 
+  /// 让客户端内联展示物品卡片(show_item_card):仅校验 uuids 并 ack;
+  /// 渲染由 UI 从 transcript 读取 tool_calls 完成。
+  /// 目前仅按 uuid 检索 GameVehicle,后续在此并入其它 repo 的 uuid 集合。
+  Future<Map<String, dynamic>> _showItemCard(Map<String, dynamic> args) async {
+    final raw = (args['uuids'] is List) ? args['uuids'] as List : const [];
+    final repo = GameVehicleRepo();
+    await repo.getVehicles(); // 确保本地数据已加载
+    final available = <String>{
+      for (final v in repo.getVehiclesSync())
+        if (v.uuid != null) v.uuid!,
+    };
+    return shapeItemCardAck(raw, available);
+  }
+
   Future<Map<String, dynamic>> _getUserInfo() async {
     final user = await _model.userRepo.getCurrentUser();
     if (user == null) return {'isVIP': _model.isVIP};
@@ -112,6 +130,25 @@ class RepoAiToolExecutor implements AiToolExecutor {
 // ---------------------------------------------------------------------------
 // 纯函数（顶层，便于单测，不依赖 MainDataModel）
 // ---------------------------------------------------------------------------
+
+/// show_item_card 的 ack 结果:按可用 uuid 集合把入参拆成 shown / missing。
+/// 纯函数,便于单测;非字符串入参转字符串,空串归 missing。
+Map<String, dynamic> shapeItemCardAck(
+  List<dynamic> rawUuids,
+  Set<String> availableUuids,
+) {
+  final shown = <String>[];
+  final missing = <String>[];
+  for (final e in rawUuids) {
+    final uuid = e is String ? e : '$e';
+    if (uuid.isNotEmpty && availableUuids.contains(uuid)) {
+      shown.add(uuid);
+    } else {
+      missing.add(uuid);
+    }
+  }
+  return {'ok': true, 'shown': shown, 'missing': missing};
+}
 
 int _asInt(Object? v, int fallback) {
   if (v is int) return v;

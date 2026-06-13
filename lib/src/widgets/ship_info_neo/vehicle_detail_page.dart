@@ -7,24 +7,38 @@ import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/repo/game_vehicle.dart';
 import 'package:refuge_next/src/repo/ship_info.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_menu.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_thumbnail.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
-/// 载具详情测试页(数据:本地 GameVehicleRepo 的 wiki GameVehicle)。
+/// 载具详情页(数据:本地 GameVehicleRepo 的 wiki GameVehicle)。
 ///
 /// 设计完全对齐现有舰船详情页(ShipFullPage):
 /// 标题头(仿 ShipInfoTitle)+ ShipInfoMenu 页签
-/// (总览/武装/飞行/组件),统计行为小号版 ShipSimpleInfoItem 样式,
-/// 组件条目复用武器列表的灰底圆角样式。仅作开发调试用。
-class VehicleDetailTestPage extends StatefulWidget {
-  const VehicleDetailTestPage({super.key});
+/// (总览/武装/货运/飞行/组件/购买),统计行为小号版 ShipSimpleInfoItem 样式,
+/// 组件条目复用武器列表的灰底圆角样式。
+///
+/// 可由外部入口(如机库)传入 [initialVehicle] 直接定位某载具;
+/// [allowSwitch] 控制页顶「换船」搜索按钮是否显示(外部入口通常隐藏)。
+class VehicleDetailPage extends StatefulWidget {
+  const VehicleDetailPage({
+    super.key,
+    this.initialVehicle,
+    this.allowSwitch = true,
+  });
+
+  /// 初始选中的载具;为 null 时默认选中本地列表第一艘。
+  final GameVehicle? initialVehicle;
+
+  /// 是否显示页顶换船按钮(测试中心浏览 true;机库等定向入口 false)。
+  final bool allowSwitch;
 
   @override
-  State<VehicleDetailTestPage> createState() => _VehicleDetailTestPageState();
+  State<VehicleDetailPage> createState() => _VehicleDetailPageState();
 }
 
-class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
+class _VehicleDetailPageState extends State<VehicleDetailPage> {
   List<GameVehicle> _all = [];
   GameVehicle? _selected;
   bool _loading = true;
@@ -55,7 +69,8 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
       final vehicles = results[0] as List<GameVehicle>;
       setState(() {
         _all = vehicles;
-        _selected = vehicles.isNotEmpty ? vehicles.first : null;
+        _selected = widget.initialVehicle ??
+            (vehicles.isNotEmpty ? vehicles.first : null);
         _loading = false;
       });
       if (_selected != null) {
@@ -112,30 +127,8 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     }
   }
 
-  /// 取载具缩略图 URL:优先用 wiki 数据自带的 images 字段
-  /// (starcitizen.tools 题图),其次按英文名匹配现有船库的渲染图;
-  /// 都没有返回 null。
-  String? _thumbUrlFor(GameVehicle v) {
-    final images = v.images;
-    if (images != null && images.isNotEmpty) {
-      // 全宽横幅展示,优先原图(缩略图仅 600px,高分屏下偏糊)
-      final url = images.first.originalUrl ?? images.first.thumbnailUrl;
-      if (url != null && url.isNotEmpty) {
-        return url;
-      }
-    }
-    final name = v.name?.toLowerCase();
-    if (name == null) return null;
-    for (final ship in ShipInfoRepo().getShipsSync()) {
-      if (ship.name.toLowerCase() == name) {
-        final pic = ship.shipNameBinding?.shipPicName;
-        if (pic != null) {
-          return 'https://image.biaoju.site/refuge/data/ship_render/$pic.thumb.png';
-        }
-      }
-    }
-    return null;
-  }
+  /// 取载具缩略图 URL(详情页头图用原图);见 [vehicleThumbnailUrl]。
+  String? _thumbUrlFor(GameVehicle v) => vehicleThumbnailUrl(v);
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +193,6 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     final tags = <String>[
       if (v.career != null) v.career!,
       if (v.role != null) v.role!,
-      if (v.sizeClass != null) 'S${v.sizeClass}',
     ];
 
     // SKU 美元价:取最高 SKU(同现有页取最高价逻辑),回退 msrp;
@@ -353,16 +345,17 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          iconSize: 20,
-                          icon: const Icon(Icons.swap_horiz),
-                          onPressed: () => _showVehicleSelector(context),
+                      if (widget.allowSwitch)
+                        SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            iconSize: 20,
+                            icon: const Icon(Icons.swap_horiz),
+                            onPressed: () => _showVehicleSelector(context),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ],

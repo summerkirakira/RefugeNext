@@ -15,6 +15,9 @@ import '../hangar/ship_reclaim_modal.dart';
 import '../hangar/ship_gift_modal.dart';
 import '../hangar/ship_recall_modal.dart';
 import '../buyback/buyback_item.dart';
+import '../../network/wiki/wiki_api.dart' show GameVehicle;
+import '../../repo/game_vehicle.dart';
+import '../ship_info_neo/vehicle_info_card.dart';
 
 /// 解析 assistant 消息里指定工具调用的 id 列表（show_hangar_cards / show_buyback_cards）。
 List<int> _cardIdsOf(AiMessage m, String toolName) {
@@ -40,6 +43,22 @@ List<int> hangarCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_hangar_cards');
 
 /// 回购卡片 id 列表（show_buyback_cards）。
 List<int> buybackCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_buyback_cards');
+
+/// 物品卡片 uuid 列表（show_item_card）。uuid 为字符串,与 id 类工具不同。
+List<String> itemCardUuidsOf(AiMessage m) {
+  if (m.role != 'assistant') return const [];
+  final calls = m.toolCalls;
+  if (calls == null) return const [];
+  for (final c in calls) {
+    if (c.name == 'show_item_card') {
+      final raw = c.arguments['uuids'];
+      if (raw is List) {
+        return raw.map((e) => '$e').where((s) => s.isNotEmpty).toList();
+      }
+    }
+  }
+  return const [];
+}
 
 /// 把一组内联卡片裹成单块悬浮面板（仅限 AI 聊天界面，不影响机库/回购原卡片）：
 /// 统一 cardColor 背景 + 圆角 + 单层阴影，整组一起悬浮。
@@ -186,6 +205,8 @@ class _AiChatPageState extends State<AiChatPage> {
         if (hangarIds.isNotEmpty) items.add(_HangarCards(ids: hangarIds));
         final buybackIds = buybackCardIdsOf(m);
         if (buybackIds.isNotEmpty) items.add(_BuybackCards(ids: buybackIds));
+        final itemUuids = itemCardUuidsOf(m);
+        if (itemUuids.isNotEmpty) items.add(_ItemCards(uuids: itemUuids));
       }
     }
     final showEmpty = items.isEmpty && !model.isGenerating;
@@ -612,6 +633,53 @@ class _BuybackCards extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 内联物品卡片块（show_item_card）：把 uuids 解析成本地 GameVehicle,
+/// 渲染舰船卡片(点击跳详情页)。目前仅检索 GameVehicle,后续扩展其它 repo。
+class _ItemCards extends StatelessWidget {
+  final List<String> uuids;
+
+  const _ItemCards({required this.uuids});
+
+  Future<List<GameVehicle>> _resolve() async {
+    final repo = GameVehicleRepo();
+    await repo.getVehicles(); // 确保本地数据已加载
+    return uuids
+        .map(repo.getByUuidSync)
+        .whereType<GameVehicle>()
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<GameVehicle>>(
+      future: _resolve(),
+      builder: (context, snapshot) {
+        final vehicles = snapshot.data ?? const <GameVehicle>[];
+        if (vehicles.isEmpty) return const SizedBox.shrink();
+        // 与 show_hangar_cards 一致:宽度对齐 AI 消息气泡最大宽度
+        final maxWidth = _cardPanelMaxWidth(context);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: _cardListPanel(
+                    context,
+                    [for (final v in vehicles) VehicleInfoCard(vehicle: v)],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/network/cirno/property/property.dart';
+import 'package:refuge_next/src/repo/game_vehicle.dart';
 import 'package:refuge_next/src/repo/ship_alias.dart';
 import 'package:refuge_next/src/repo/ship_info.dart';
 import 'package:refuge_next/src/repo/translation.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart';
 import 'package:refuge_next/src/widgets/hangar/hangar_log/hangar_log_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import '../../datasource/data_model.dart';
@@ -28,13 +30,30 @@ String priceString(int price) {
 }
 
 Future<void> jumpToShipInfoPage(BuildContext context, ShipAlias ship) async {
-  ShipInfoRepo shipInfoRepo = ShipInfoRepo();
+  // 优先:用 ShipAlias.uuid 在本地 GameVehicle 数据中查到对应载具,
+  // 跳转新版载具详情页。
+  final uuid = ship.uuid;
+  if (uuid != null && uuid.isNotEmpty) {
+    final vehicle = await GameVehicleRepo().getByUuid(uuid);
+    if (vehicle != null) {
+      if (!context.mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              VehicleDetailPage(initialVehicle: vehicle, allowSwitch: false),
+        ),
+      );
+      return;
+    }
+  }
 
-  final shipInfo = await shipInfoRepo.getShipByAliasId(ship.id);
-
+  // fallback:本地无该载具数据 / ShipAlias 无 uuid 时,走原有 ShipFullPage 流程。
+  final shipInfo = await ShipInfoRepo().getShipByAliasId(ship.id);
   if (shipInfo == null) {
     return;
   }
+  if (!context.mounted) return;
   Provider.of<MainDataModel>(context, listen: false).setCurrentShipInfo(shipInfo);
   Navigator.push(
     context,

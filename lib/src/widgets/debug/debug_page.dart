@@ -3,7 +3,8 @@ import 'package:refuge_next/src/network/wiki/wiki_api.dart'
     show GameVehicle, ShipMatrixVehicle;
 import 'package:refuge_next/src/repo/game_vehicle.dart';
 import 'package:refuge_next/src/repo/ship_matrix.dart';
-import 'package:refuge_next/src/widgets/debug/vehicle_detail_test_page.dart';
+import 'package:refuge_next/src/widgets/debug/vehicle_card_test_page.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart';
 import 'package:refuge_next/src/widgets/debug/versioned_repo_test_page.dart';
 
 /// 通用开发测试中心。
@@ -89,7 +90,13 @@ class DebugPage extends StatelessWidget {
       icon: Icons.info_outline,
       title: '载具详情',
       subtitle: '仿 wiki 网页的单船详情(本地数据,可搜索舰船名)',
-      builder: (context) => const VehicleDetailTestPage(),
+      builder: (context) => const VehicleDetailPage(),
+    ),
+    DebugEntry(
+      icon: Icons.style_outlined,
+      title: 'AI 舰船卡片',
+      subtitle: '敲定 show_item_card 的卡片样式',
+      builder: (context) => const VehicleCardTestPage(),
     ),
     // 在此追加新的测试入口。
   ];

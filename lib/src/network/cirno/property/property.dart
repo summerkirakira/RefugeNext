@@ -56,6 +56,7 @@ class ShipAlias {
   final List<String> alias;
   final List<Sku> skus;
   final int? upgradeId;
+  final String? uuid;
 
   ShipAlias({
     required this.id,
@@ -64,6 +65,7 @@ class ShipAlias {
     required this.alias,
     required this.skus,
     this.upgradeId,
+    this.uuid,
   });
 
   int getHighestSku() {
@@ -85,6 +87,7 @@ class ShipAlias {
     'alias': alias,
     'skus': skus.map((sku) => sku.toJson()).toList(),
     'upgrade_id': upgradeId,
+    'uuid': uuid,
   };
 
   // JSON 反序列化方法
@@ -96,6 +99,7 @@ class ShipAlias {
       alias: List<String>.from(json['alias']),
       skus: (json['skus'] as List).map((skuJson) => Sku.fromJson(skuJson)).toList(),
       upgradeId: json['upgrade_id'],
+      uuid: json['uuid'],
     );
   }
 
