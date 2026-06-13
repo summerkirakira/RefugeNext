@@ -92,6 +92,9 @@ class ShipMatrixRepo extends VersionedListRepo<ShipMatrixVehicle> {
     var page = 1;
     while (page <= _maxPages) {
       final res = await api.listShipMatrixVehicles(
+        // 显式传 null 压掉 legacy `page` 参数(生成代码默认 1 且总会发送),
+        // 服务端会优先 legacy 参数导致 page[number]/page[size] 被忽略
+        page: null,
         pageLeftSquareBracketNumberRightSquareBracket: page,
         pageLeftSquareBracketSizeRightSquareBracket: _pageSize,
       );

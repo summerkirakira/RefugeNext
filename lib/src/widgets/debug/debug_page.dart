@@ -60,6 +60,9 @@ class DebugPage extends StatelessWidget {
         title: 'Game Vehicle',
         repo: GameVehicleRepo(),
         itemBuilder: _gameVehicleTile,
+        // 「拉取全量船」:由测试页驱动分页拉取并整组保存
+        fetchPage: (page) => GameVehicleRepo().fetchPage(page),
+        saveItems: (items) => GameVehicleRepo().saveAll(items),
       ),
     ),
     DebugEntry(

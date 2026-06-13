@@ -109,6 +109,9 @@ class GameVehicleRepo extends VersionedListRepo<GameVehicle>
     var page = 1;
     while (page <= _maxPages) {
       final res = await api.listVehicles(
+        // 显式传 null 压掉 legacy `page` 参数(生成代码默认 1 且总会发送),
+        // 服务端会优先 legacy 参数导致 page[number]/page[size] 被忽略
+        page: null,
         pageLeftSquareBracketNumberRightSquareBracket: page,
         pageLeftSquareBracketSizeRightSquareBracket: _pageSize,
         version: version,
@@ -132,6 +135,91 @@ class GameVehicleRepo extends VersionedListRepo<GameVehicle>
     await saveAndSelect(targetVersion, all);
   }
 
+  /// 模型字段为 final,经 JSON 重建一个替换了 ports 的新实例。
+  static GameVehicle _withPorts(
+      GameVehicle vehicle, List<GameVehiclePort> ports) {
+    final json = vehicle.toJson();
+    json['ports'] = ports.map((p) => p.toJson()).toList();
+    return GameVehicle.fromJson(json);
+  }
+
+  /// 拉取一页全集载具列表(供测试页分页拉取驱动)。
+  /// 返回该页数据;[version] 为 null 时取服务端默认版本。
+  Future<List<GameVehicle>> fetchPage(int page,
+      {int pageSize = _pageSize, String? version}) async {
+    final res = await WikiApiClient().api.getVehiclesApi().listVehicles(
+          // 见 refresh 中说明:必须压掉 legacy `page` 参数
+          page: null,
+          pageLeftSquareBracketNumberRightSquareBracket: page,
+          pageLeftSquareBracketSizeRightSquareBracket: pageSize,
+          version: version,
+        );
+    return res.data?.data?.toList() ?? <GameVehicle>[];
+  }
+
+  /// 将整组数据写入指定版本并切换(供测试页分页拉取完成后保存);
+  /// [version] 为 null 时取最新游戏版本码。
+  Future<void> saveAll(List<GameVehicle> items, {String? version}) async {
+    if (items.isEmpty) {
+      return;
+    }
+    final target = version ?? await fetchLatestVersion() ?? 'unknown';
+    await saveAndSelect(target, items);
+  }
+
+  /// 单船详情并发数(过高易触发 API 限流)。
+  static const int _detailConcurrency = 4;
+
+  /// 为当前选中版本的**所有**载具补全嵌套装载(逐船调用单船端点)。
+  ///
+  /// 已补全的船自动跳过,中断后重跑可断点续传;单船失败静默保留
+  /// 扁平 ports。全部处理完后一次性落盘。约 290 个请求,
+  /// 耗时一至数分钟,[onProgress] 回调 (已处理数, 总数) 供 UI 显示进度。
+  Future<void> enrichAllPorts(
+      {void Function(int done, int total)? onProgress}) async {
+    final version = await getSelectedVersion();
+    if (version == null) {
+      return;
+    }
+    final items = List<GameVehicle>.of(await getItems());
+    if (items.isEmpty) {
+      return;
+    }
+    final api = WikiApiClient().api.getVehiclesApi();
+    final total = items.length;
+    var done = 0;
+
+    Future<void> enrichOne(int index) async {
+      final v = items[index];
+      final uuid = v.uuid;
+      final hasNested =
+          v.ports?.any((p) => p.ports?.isNotEmpty ?? false) ?? false;
+      if (uuid != null && !hasNested) {
+        try {
+          final res =
+              await api.getVehicle(identifier: uuid, version: version);
+          final ports = res.data?.data?.ports;
+          if (ports != null && ports.isNotEmpty) {
+            items[index] = _withPorts(v, ports);
+          }
+        } catch (e) {
+          // 单船失败:保留扁平 ports,下次重跑再补
+        }
+      }
+      done++;
+      onProgress?.call(done, total);
+    }
+
+    for (var i = 0; i < items.length; i += _detailConcurrency) {
+      await Future.wait([
+        for (var j = i; j < i + _detailConcurrency && j < items.length; j++)
+          enrichOne(j),
+      ]);
+    }
+
+    await saveAndSelect(version, items);
+  }
+
   /// 用单船端点返回的完整 ports(含嵌套装载,如导弹架上的导弹)替换
   /// 当前选中版本中对应载具的 ports 字段,并持久化到本地版本文件。
   ///
@@ -152,11 +240,7 @@ class GameVehicleRepo extends VersionedListRepo<GameVehicle>
     if (index < 0) {
       return null;
     }
-    // 模型字段为 final,经 JSON 重建一个替换了 ports 的新实例
-    final json = items[index].toJson();
-    json['ports'] = ports.map((p) => p.toJson()).toList();
-    final updated = GameVehicle.fromJson(json);
-
+    final updated = _withPorts(items[index], ports);
     await saveAndSelect(version, [...items]..[index] = updated);
     return updated;
   }

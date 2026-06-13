@@ -14,6 +14,8 @@ class VersionedRepoTestPage<E> extends StatefulWidget {
     required this.title,
     required this.repo,
     required this.itemBuilder,
+    this.fetchPage,
+    this.saveItems,
   });
 
   /// 页面标题,如 `Ship Matrix`。
@@ -23,6 +25,14 @@ class VersionedRepoTestPage<E> extends StatefulWidget {
 
   /// 单条数据的展示组件(通常返回 ListTile)。
   final Widget Function(BuildContext context, E item) itemBuilder;
+
+  /// 可选:分页拉取一页数据(页码从 1 开始)。
+  /// 与 [saveItems] 同时提供时,页面显示「分页拉取」按钮,
+  /// 由测试页逐页驱动并在日志区显示每页进度。
+  final Future<List<E>> Function(int page)? fetchPage;
+
+  /// 可选:分页拉取完成后,把累计数据整组保存到仓库。
+  final Future<void> Function(List<E> items)? saveItems;
 
   @override
   State<VersionedRepoTestPage<E>> createState() =>
@@ -99,6 +109,50 @@ class _VersionedRepoTestPageState<E> extends State<VersionedRepoTestPage<E>> {
     }
   }
 
+  /// 拉取全量船:由页面驱动逐页拉取,日志区显示每页进度,
+  /// 全部拉完后整组保存到仓库。
+  Future<void> _pullAll() async {
+    final fetchPage = widget.fetchPage;
+    final saveItems = widget.saveItems;
+    if (fetchPage == null || saveItems == null) {
+      return;
+    }
+    setState(() => _loading = true);
+    _appendLog('开始分页拉取全量${widget.title}...');
+    final stopwatch = Stopwatch()..start();
+    try {
+      final all = <E>[];
+      int? firstPageCount;
+      for (var page = 1; page <= 50; page++) {
+        final items = await fetchPage(page);
+        if (items.isEmpty) {
+          break;
+        }
+        all.addAll(items);
+        firstPageCount ??= items.length;
+        _appendLog('第 $page 页: ${items.length} 条(累计 ${all.length})');
+        if (items.length < firstPageCount) {
+          break; // 末页
+        }
+      }
+      if (all.isEmpty) {
+        _appendLog('拉取结果为空,未保存');
+        return;
+      }
+      await saveItems(all);
+      stopwatch.stop();
+      await _loadLocal();
+      _appendLog('全量拉取完成,共 ${all.length} 条,'
+          '耗时 ${stopwatch.elapsedMilliseconds}ms');
+      showToast(message: '全量拉取完成,共 ${all.length} 条');
+    } catch (e) {
+      _appendLog('全量拉取失败: $e');
+      showToast(message: '全量拉取失败: $e');
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
   Future<void> _switchVersion(String version) async {
     setState(() => _loading = true);
     try {
@@ -167,20 +221,26 @@ class _VersionedRepoTestPageState<E> extends State<VersionedRepoTestPage<E>> {
                     .toList(),
               ),
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 FilledButton.icon(
                   onPressed: _loading ? null : _checkForUpdate,
                   icon: const Icon(Icons.update, size: 18),
                   label: const Text('检测更新'),
                 ),
-                const SizedBox(width: 8),
                 FilledButton.icon(
                   onPressed: _loading ? null : _refresh,
                   icon: const Icon(Icons.cloud_download, size: 18),
                   label: const Text('拉取并保存'),
                 ),
-                const SizedBox(width: 8),
+                if (widget.fetchPage != null && widget.saveItems != null)
+                  FilledButton.icon(
+                    onPressed: _loading ? null : _pullAll,
+                    icon: const Icon(Icons.download, size: 18),
+                    label: const Text('拉取全量船'),
+                  ),
                 OutlinedButton.icon(
                   onPressed: _loading ? null : _loadLocal,
                   icon: const Icon(Icons.storage, size: 18),

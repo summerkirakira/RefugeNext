@@ -163,14 +163,15 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
           body: Column(
             children: [
               ShipInfoMenu(
-                barWidth: 300,
-                titles: const ['总览', '武装', '货运', '飞行', '组件'],
+                barWidth: 360,
+                titles: const ['总览', '武装', '货运', '飞行', '组件', '购买'],
                 children: [
                   _tabPage(_overviewCards(selected)),
                   _tabPage(_combatCards(selected)),
                   _tabPage(_cargoCards(selected)),
                   _tabPage(_flightCards(selected)),
                   _tabPage(_portsCards(selected)),
+                  _tabPage(_purchaseCards(selected)),
                 ],
               ),
             ],
@@ -618,13 +619,6 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
                 unit: 'SCU'),
             _row('最大箱规', _n(v.maxScuBox), unit: 'SCU'),
           ])),
-      _card(
-          '保险',
-          _rows([
-            _row('索赔时间', _n(v.insurance?.claimTime), unit: 'min'),
-            _row('加急时间', _n(v.insurance?.expediteTime), unit: 'min'),
-            _row('加急费用', _n(v.insurance?.expediteCost), unit: 'aUEC'),
-          ])),
       _partsCard(v),
       _card(
           '技术信息',
@@ -725,9 +719,11 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
           final part = node.data;
           final name = part?.displayName ?? part?.name ?? '未知';
           final hp = _n(part?.damageMax);
-          // destruction_damage 非空:打爆即摧毁整船(关键部件);
-          // detach_damage 非空:可被打脱落。与 wiki 网页 Critical/Detachable 一致。
-          final isCritical = part?.destructionDamage != null;
+          // 顶层部件(Nose/Body 等,level 1)固定视为关键部件;
+          // 更深层级按 destruction_damage 判断(打爆即摧毁整船)。
+          // detach_damage 非空:可被打脱落。
+          final isCritical =
+              node.level == 1 || part?.destructionDamage != null;
           final isDetachable = part?.detachDamage != null;
           final isLeaf = node.children.isEmpty;
           return Padding(
@@ -779,8 +775,8 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
           '武器',
           _rows([
             _row('飞行员 DPS', _n(w?.pilotDps), orange: true),
-            _row('持续 DPS', _n(w?.pilotSustainedDps)),
-            _row('Alpha', _n(w?.pilotAlpha)),
+            _row('可持续 DPS', _n(w?.pilotSustainedDps)),
+            // _row('Alpha', _n(w?.pilotAlpha)),
             _row('炮塔 DPS', _n(w?.turretDps)),
             _row('导弹数量', _n(w?.missiles?.count)),
             _row('导弹总伤害', _n(w?.totalMissileDamage)),
@@ -828,17 +824,108 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
             _row('最大横截面', _n(v.crossSectionMax)),
           ])),
       _card('系统分解', [
-        ..._rows([
-          _row('冷却总段数', _n(v.cooling?.generationSegments)),
-          _row('功率总段数', _n(v.power?.generationSegments)),
-        ]),
-        ..._mapGroup('电磁分组(护盾)', sig?.emGroupsShields),
-        ..._mapGroup('电磁分组(量子)', sig?.emGroupsQuantum),
-        ..._mapGroup('冷却段(护盾)', v.cooling?.usedSegmentsShieldsGrouped),
-        ..._mapGroup('冷却段(量子)', v.cooling?.usedSegmentsQuantumGrouped),
-        ..._mapGroup('功率段', v.power?.usedSegmentsGrouped),
+        ..._twoColGroup('EM 组', 'System / EM', sig?.emGroupsShields,
+            sig?.emGroupsQuantum),
+        ..._twoColGroup('冷却组', 'System / Segment',
+            v.cooling?.usedSegmentsShieldsGrouped,
+            v.cooling?.usedSegmentsQuantumGrouped),
+        ..._oneColGroup('功率组', v.power?.usedSegmentsGrouped),
       ]),
     ].whereType<Card>().toList();
+  }
+
+  /// 系统 key 美化:驼峰转空格(WeaponGun → Weapon Gun)。
+  String _systemName(String key) =>
+      key.replaceAllMapped(RegExp(r'(?<=[a-z])(?=[A-Z])'), (m) => ' ');
+
+  /// 分组小节标题(大写风格 + 下划线,仿 wiki 网页 System Breakdown)。
+  List<Widget> _groupHeader(String title) => [
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 16),
+          child: Text(title.toUpperCase(),
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.2,
+                  color: Colors.grey[700])),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(left: 20, right: 20, top: 4),
+          child: Divider(height: 1),
+        ),
+      ];
+
+  /// 双列分组表(护盾 / 量子两态合并,缺失显示 "-"):
+  /// System / EM | Shields | Quantum 布局,仿 wiki 网页。
+  List<Widget> _twoColGroup(String title, String header,
+      Map<String, num>? shields, Map<String, num>? quantum) {
+    if ((shields == null || shields.isEmpty) &&
+        (quantum == null || quantum.isEmpty)) {
+      return const [];
+    }
+    // 合并 key,保持数据原始顺序(护盾在前,量子独有的追加在后)
+    final keys = <String>[
+      ...?shields?.keys,
+      ...?quantum?.keys.where((k) => !(shields?.containsKey(k) ?? false)),
+    ];
+    final headerStyle = TextStyle(fontSize: 12, color: Colors.grey[600]);
+    const nameStyle = TextStyle(fontSize: 13);
+    const valueStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.bold);
+
+    Widget tableRow(Widget name, Widget col1, Widget col2,
+        {double top = 6}) {
+      return Padding(
+        padding: EdgeInsets.only(left: 20, right: 20, top: top),
+        child: Row(
+          children: [
+            Expanded(flex: 4, child: name),
+            Expanded(flex: 2, child: col1),
+            Expanded(flex: 2, child: col2),
+          ],
+        ),
+      );
+    }
+
+    return [
+      ..._groupHeader(title),
+      tableRow(
+        Text(header, style: headerStyle),
+        Text('护盾', style: headerStyle, textAlign: TextAlign.right),
+        Text('量子', style: headerStyle, textAlign: TextAlign.right),
+        top: 10,
+      ),
+      ...keys.map((k) => tableRow(
+            Text(_systemName(k), style: nameStyle),
+            Text(_n(shields?[k]) ?? '-',
+                style: valueStyle, textAlign: TextAlign.right),
+            Text(_n(quantum?[k]) ?? '-',
+                style: valueStyle, textAlign: TextAlign.right),
+          )),
+    ];
+  }
+
+  /// 单列分组表(功率分组):系统名 | 值。
+  List<Widget> _oneColGroup(String title, Map<String, num>? map) {
+    if (map == null || map.isEmpty) {
+      return const [];
+    }
+    return [
+      ..._groupHeader(title),
+      ...map.entries.map((e) => Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(_systemName(e.key),
+                      style: const TextStyle(fontSize: 13)),
+                ),
+                Text(_n(e.value) ?? '-',
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          )),
+    ];
   }
 
   // ============ 货运 ============
@@ -1007,7 +1094,58 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
             _row('量子校准', _n(q?.quantumSpoolTime), unit: 's'),
             _row('量子航程', _n(q?.quantumRange), unit: 'm'),
           ])),
+      _thrusterCard(v),
     ].whereType<Card>().toList();
+  }
+
+  /// 推进器组:种类 / 数量 / 推力(MN)/ 加速度(G)四列表格
+  /// (对应 wiki 网页 Thruster Groups 表)。
+  Widget _thrusterCard(GameVehicle v) {
+    final thrusters = v.propulsion?.thrusters;
+    if (thrusters == null || thrusters.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    const typeNames = {
+      'Main': '主推进',
+      'Maneuver': '机动',
+      'Retro': '反推',
+      'Vtol': '垂直起降',
+    };
+    final headerStyle = TextStyle(fontSize: 12, color: Colors.grey[600]);
+    const cellStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.bold);
+
+    Widget tableRow(List<Widget> cells) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+        child: Row(
+          children: [
+            Expanded(flex: 3, child: cells[0]),
+            Expanded(flex: 2, child: cells[1]),
+            Expanded(flex: 3, child: cells[2]),
+            Expanded(flex: 3, child: cells[3]),
+          ],
+        ),
+      );
+    }
+
+    return _card('推进器组', [
+      tableRow([
+        Text('种类', style: headerStyle),
+        Text('数量', style: headerStyle, textAlign: TextAlign.right),
+        Text('推力', style: headerStyle, textAlign: TextAlign.right),
+        Text('加速度', style: headerStyle, textAlign: TextAlign.right),
+      ]),
+      ...thrusters.map((t) => tableRow([
+            Text(typeNames[t.type] ?? t.type ?? '未知',
+                style: const TextStyle(fontSize: 13)),
+            Text('${t.count ?? '-'}',
+                style: cellStyle, textAlign: TextAlign.right),
+            Text(t.capacity == null ? '-' : '${_n(t.capacity)} MN',
+                style: cellStyle, textAlign: TextAlign.right),
+            Text(t.g == null ? '-' : '${_n(t.g)} G',
+                style: cellStyle, textAlign: TextAlign.right),
+          ])),
+    ]);
   }
 
   // ============ 组件 ============
@@ -1057,6 +1195,140 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
             list.map((port) => _PortItem(port: port)).toList());
       }),
     ];
+  }
+
+  // ============ 购买 ============
+
+  List<Widget> _purchaseCards(GameVehicle v) {
+    final skus = v.skus ?? const <VehicleSku>[];
+    final loaners = v.loaner ?? const <VehicleLoaner>[];
+    final purchases = v.uexPrices?.purchase ?? const <UexPrice>[];
+
+    final cards = <Widget>[
+      _card('价格', [
+        ..._rows([
+          _row('MSRP', v.msrp == null ? null : '\$${_n(v.msrp)}',
+              orange: true),
+        ]),
+        ...skus.map((sku) => _statRow(
+              sku.title ?? 'SKU',
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (sku.available == false)
+                    _partBadge('不可购买', Colors.grey),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Text(
+                        sku.price == null ? '-' : '\$${_n(sku.price)}',
+                        style: _valueStyleBold),
+                  ),
+                ],
+              ),
+            )),
+      ]),
+      _card(
+          '保险',
+          _rows([
+            _row('索赔时间', _n(v.insurance?.claimTime), unit: 'min'),
+            _row('加急时间', _n(v.insurance?.expediteTime), unit: 'min'),
+            _row('加急费用', _n(v.insurance?.expediteCost), unit: 'aUEC'),
+          ])),
+      if (loaners.isNotEmpty)
+        _card(
+            '借船(${loaners.length})',
+            loaners
+                .map((l) => Padding(
+                      padding:
+                          const EdgeInsets.only(left: 20, right: 20, top: 10),
+                      child: Row(
+                        children: [
+                          Icon(Icons.swap_horizontal_circle_outlined,
+                              size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(l.name ?? '未知',
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ))
+                .toList()),
+      if (purchases.isNotEmpty) _uexPurchaseCard(purchases),
+    ].whereType<Card>().toList();
+
+    if (cards.isEmpty) {
+      return [
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: Text('无购买信息'),
+        ),
+      ];
+    }
+    return cards;
+  }
+
+  /// 游戏内购买:按星系分组的嵌套列表,
+  /// 列:地点 | 终端 | 价格(对应 wiki 网页 Purchase Prices 表,
+  /// 省略 Version/Updated/UEX 列)。
+  Widget _uexPurchaseCard(List<UexPrice> purchases) {
+    // 按星系分组(无星系信息归入「其它」)
+    final groups = <String, List<UexPrice>>{};
+    for (final p in purchases) {
+      final system = p.starmapLocation?.starSystemName ?? '其它';
+      groups.putIfAbsent(system, () => []).add(p);
+    }
+    final headerStyle = TextStyle(fontSize: 12, color: Colors.grey[600]);
+    const cellStyle = TextStyle(fontSize: 13);
+    const priceStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.bold);
+
+    Widget tableRow(Widget loc, Widget terminal, Widget price) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 2, child: loc),
+            Expanded(flex: 3, child: terminal),
+            Expanded(flex: 3, child: price),
+          ],
+        ),
+      );
+    }
+
+    final keys = groups.keys.toList()..sort();
+    return _card('游戏内购买(${purchases.length})', [
+      for (final system in keys) ...[
+        // 星系组头(样式同系统分解的橙色小标题)
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 14),
+          child: Text(system,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade700)),
+        ),
+        tableRow(
+          Text('地点', style: headerStyle),
+          Text('终端', style: headerStyle),
+          Text('价格', style: headerStyle, textAlign: TextAlign.right),
+        ),
+        ...groups[system]!.map((p) => tableRow(
+              Text(
+                  p.starmapLocation?.parentName ??
+                      p.starmapLocation?.name ??
+                      '-',
+                  style: cellStyle),
+              Text(p.terminalName ?? '-', style: cellStyle),
+              Text(
+                  p.priceBuy == null
+                      ? '-'
+                      : '${_n(p.priceBuy)} aUEC',
+                  style: priceStyle,
+                  textAlign: TextAlign.right),
+            )),
+      ],
+    ]) as Card;
   }
 
   // ============ 通用小部件 ============
@@ -1164,25 +1436,6 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     );
   }
 
-  /// Map 分组小节:小标题 + 紧凑行。
-  List<Widget> _mapGroup(String title, Map<String, num>? map) {
-    if (map == null || map.isEmpty) {
-      return const [];
-    }
-    final keys = map.keys.toList()..sort();
-    return [
-      Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 14),
-        child: Text(title,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange.shade700)),
-      ),
-      ...keys.map((k) => _smallRow(k, _n(map[k]))!),
-    ];
-  }
-
   // ============ 格式化 ============
 
   String? _crewText(GameVehicleCrew? crew) {
@@ -1230,7 +1483,8 @@ class _VehicleDetailTestPageState extends State<VehicleDetailTestPage> {
     }
     String pct(num v) => '${(v * 100).toStringAsFixed(1)}%';
     if (min != null && max != null && min != max) {
-      return '${pct(min)} – ${pct(max)}';
+      // return '${pct(min)} – ${pct(max)}';
+      return pct(max);
     }
     return pct(min ?? max!);
   }
