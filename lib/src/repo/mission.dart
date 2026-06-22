@@ -79,6 +79,22 @@ class MissionRepo extends VersionedListRepo<MissionIndex> {
     return null;
   }
 
+  /// 按内部 debug_name 精确匹配(解锁任务等只带 debug_name 的场景)。
+  MissionIndex? findByDebugNameSync(String debugName) {
+    for (final m in itemsSync) {
+      if (m.debugName == debugName) return m;
+    }
+    return null;
+  }
+
+  /// 按显示名匹配(debug_name 未命中时兜底)。
+  MissionIndex? findByTitleSync(String title) {
+    for (final m in itemsSync) {
+      if (m.title == title) return m;
+    }
+    return null;
+  }
+
   /// 拉取单个任务的**完整详情**(`/api/missions/{identifier}` → 完整 [Mission])。
   ///
   /// 列表端点返回的是较轻的 [MissionIndex],奖励物品/地点明细/冷却时限/战斗 spawns

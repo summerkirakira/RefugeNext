@@ -8,10 +8,12 @@ import 'package:refuge_next/src/repo/power_plant.dart';
 import 'package:refuge_next/src/repo/quantum_drive.dart';
 import 'package:refuge_next/src/repo/shield.dart';
 import 'package:refuge_next/src/repo/translation.dart';
+import 'package:refuge_next/src/repo/vehicle_weapon.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/cooler_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/power_plant_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/quantum_drive_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/shield_detail_page.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_weapon_detail_page.dart';
 // 复用通用卡片/格式化 helper(顶层纯函数,非继承页)
 import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart'
     show
@@ -331,6 +333,12 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
         final item = QuantumDriveRepo().getByUuidSync(outUuid);
         if (item != null) {
           page = QuantumDriveDetailPage(initialItem: item, allowSwitch: false);
+        }
+      case 'WeaponGun':
+        await VehicleWeaponRepo().getVehicleWeapons();
+        final item = VehicleWeaponRepo().getByUuidSync(outUuid);
+        if (item != null) {
+          page = VehicleWeaponDetailPage(initialItem: item, allowSwitch: false);
         }
       default:
         showToast(message: '暂不支持「$type」类型的物品详情页');

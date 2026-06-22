@@ -33,6 +33,21 @@ class WikiApiClient {
   static const Set<String> _phpEmptyArrayObjectKeys = {
     'acceleration',
     'armor',
+    // —— 模型中声明为 Map<...> 的字段:空时 PHP 序列化成 [] 而非 {},
+    //    统一空数组 → null。下列为全量 Map 字段键(经核对均不与任何 List 字段同名,无歧义)。
+    'signature',
+    'nutrition',
+    'buffs',
+    'combat_buffs',
+    'debuffs',
+    'damage_map',
+    'modifier_map',
+    'impact_resistances',
+    'mission_tokens',
+    'power_pools',
+    'flashlight',
+    'errors',
+    'summary',
     'em_groups_quantum',
     'em_groups_shields',
     'em_segment_groups_quantum',
@@ -43,8 +58,8 @@ class WikiApiClient {
   };
 
   /// 递归归一化 PHP 后端的类型怪癖,在反序列化前把「错类型」的值修正到模型期望类型:
-  /// 1. [_phpEmptyArrayObjectKeys] 中字段的值若为空数组 → null
-  ///    (空关联数组被序列化成 [] 而非 {});
+  /// 1. [_phpEmptyArrayObjectKeys] 中字段(模型期望 Map/对象)的值若**不是 Map**
+  ///    (空关联数组 [] / 异常的 int、字符串 等)→ null;
   /// 2. `penetration_multiplier.components`(数值字段)若为空数组 → null
   ///    (`components` 在别处是合法数组,故按父字段限定作用域);
   /// 3. 按 [phpBoolKeys]/[phpStringKeys]/[phpNumKeys](`php_type_quirks.dart`,
@@ -57,12 +72,26 @@ class WikiApiClient {
     if (node is Map) {
       for (final key in node.keys.toList()) {
         final value = node[key];
-        if (value is List && value.isEmpty) {
-          if (_phpEmptyArrayObjectKeys.contains(key) ||
-              (key == 'components' && parentKey == 'penetration_multiplier')) {
+        // `modifier_map` 的内层值应为对象(MiningModifierValue,模型无字段);
+        // PHP 可能给标量/null → 用空对象 {} 占位,避免 `int as Map` 崩溃(保留键名)。
+        if (parentKey == 'modifier_map' && value is! Map) {
+          node[key] = <String, dynamic>{};
+          continue;
+        }
+        // 期望 Map/对象的字段:收到任何非 Map 值(PHP 空关联数组→[]、或异常 int/字符串)→ null
+        if (_phpEmptyArrayObjectKeys.contains(key)) {
+          if (value != null && value is! Map) {
             node[key] = null;
             continue;
           }
+        }
+        // 数值字段 penetration_multiplier.components:仅空数组 → null
+        if (value is List &&
+            value.isEmpty &&
+            key == 'components' &&
+            parentKey == 'penetration_multiplier') {
+          node[key] = null;
+          continue;
         }
         if (phpBoolKeys.contains(key)) {
           if (value is num) {

@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/repo/blueprint.dart';
+import 'package:refuge_next/src/repo/mission.dart';
 import 'package:refuge_next/src/repo/translation.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/mission_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_menu.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
@@ -185,7 +188,28 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
     // 优先用补拉的详情(含解锁任务),否则用列表数据。
     final id = base.uuid;
     final bp = (id != null ? _bpDetailCache[id] : null) ?? base;
-    return blueprintCards(bp);
+    return blueprintCards(bp, onTapMission: _openUnlockingMission);
+  }
+
+  /// 点击蓝图解锁任务 → 打开任务详情页。按 debug_name 匹配,title 兜底。
+  /// 需本地已拉取任务数据(Mission 测试页),缺失则 toast。
+  Future<void> _openUnlockingMission(BlueprintUnlockingMission um) async {
+    await MissionRepo().getMissions(); // 确保 itemsSync 已载入
+    MissionIndex? mi;
+    final dn = um.debugName;
+    final tt = um.title;
+    if (dn != null && dn.isNotEmpty) mi = MissionRepo().findByDebugNameSync(dn);
+    if (mi == null && tt != null && tt.isNotEmpty) {
+      mi = MissionRepo().findByTitleSync(tt);
+    }
+    if (!mounted) return;
+    if (mi == null) {
+      showToast(message: '未找到该任务(需先在 Mission 测试页拉取任务数据)');
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => MissionDetailPage(initialMission: mi, allowSwitch: false),
+    ));
   }
 
   @override
@@ -614,6 +638,32 @@ const Map<String, String> kItemTypeValueCn = {
   'Tractor Beam': '牵引光束',
   'Utility': '多功能',
   'Multi-Tool Attachment': '多功能工具配件',
+  // —— 载具武器(Item Type)——
+  'Laser Cannon': '激光加农炮',
+  'Laser Repeater': '激光速射炮',
+  'Laser Scattergun': '激光霰弹炮',
+  'Laser Turret': '激光炮塔',
+  'Laser Gatling': '激光加特林',
+  'Laser Beam': '激光光束',
+  'Ballistic Cannon': '实弹加农炮',
+  'Ballistic Gatling': '实弹加特林',
+  'Ballistic Scattergun': '实弹霰弹炮',
+  'Ballistic Repeater': '实弹速射炮',
+  'Ballistic Gatling Turret': '实弹加特林炮塔',
+  'Ballistic Gatling Gun': '实弹加特林机炮',
+  'Ballistic Gatling (x2)': '实弹加特林(双联)',
+  'Ballistic Cannon Turret': '实弹加农炮塔',
+  'Tachyon Cannon': '快子加农炮',
+  'Mass Driver Cannon': '电磁加农炮',
+  'Neutron Cannon': '中子加农炮',
+  'Neutron Repeater': '中子速射炮',
+  'Distortion Cannon': '畸变加农炮',
+  'Distortion Repeater': '畸变速射炮',
+  'Distortion Scattergun': '畸变霰弹炮',
+  'Plasma Scattergun': '等离子霰弹炮',
+  'Plasma Canon': '等离子加农炮',
+  'Plasma Cannon': '等离子加农炮',
+  'Rocket Pod': '火箭吊舱',
   // —— 配件(Type)——
   'Ballistic Compensator': '弹道补偿器',
   'Compensator': '补偿器',
@@ -649,6 +699,12 @@ const Map<String, String> kItemClassValueCn = {
   'Mining': '采矿',
   'Salvage and Repair': '回收维修',
   'Tractor Beam': '牵引光束',
+  // —— 组件类别(护盾/发电机/冷却器/量子…)——
+  'Civilian': '民用',
+  'Competition': '竞赛',
+  'Industrial': '工业',
+  'Military': '军用',
+  'Stealth': '隐身',
 };
 
 /// 武器射击模式(`personalWeapon.fireMode`)→ 中文。未命中保持原英文。
@@ -737,7 +793,7 @@ List<Widget> buildOverviewCards(GameItem item,
       itemCard('信息', itemRows([
         for (final e
             in const {'Class': '类别', 'Grade': '等级', 'Size': '尺寸'}.entries)
-          itemRow(e.value, descValue(item, e.key)),
+          itemRow(e.value, descDataValueCn(e.key, descValue(item, e.key))),
       ])),
     // Physical
     itemCard('物理属性', itemRows([
@@ -793,7 +849,10 @@ List<Widget> buildPurchaseCards(GameItem item) {
 }
 
 /// 蓝图卡片:制造时间 / 材料表 / 解锁任务(传入的 [bp] 最好是含解锁任务的详情)。
-List<Widget> blueprintCards(Blueprint bp) {
+///
+/// [onTapMission] 非空时,解锁任务每行可点击(跳转到对应任务详情页)。
+List<Widget> blueprintCards(Blueprint bp,
+    {void Function(BlueprintUnlockingMission)? onTapMission}) {
   return [
     itemCard('制造', itemRows([
       itemRow(
@@ -803,7 +862,7 @@ List<Widget> blueprintCards(Blueprint bp) {
     if ((bp.ingredients ?? const <BlueprintIngredient>[]).isNotEmpty)
       _blueprintIngredientsCard(bp.ingredients!),
     if ((bp.unlockingMissions ?? const <BlueprintUnlockingMission>[]).isNotEmpty)
-      _blueprintMissionsCard(bp.unlockingMissions!),
+      _blueprintMissionsCard(bp.unlockingMissions!, onTapMission: onTapMission),
   ];
 }
 
@@ -845,10 +904,11 @@ Widget _blueprintIngredientsCard(List<BlueprintIngredient> ings) {
 }
 
 /// 解锁任务卡:每行 任务名(可换行)+ 右侧获取概率(若有,按 0-1 显示百分比)。
-Widget _blueprintMissionsCard(List<BlueprintUnlockingMission> missions) {
-  return itemCard('解锁任务(${missions.length})', [
-    for (final m in missions)
-      Padding(
+///
+/// [onTapMission] 非空时,整行可点击并在末尾加箭头,跳转到对应任务详情页。
+Widget _blueprintMissionsCard(List<BlueprintUnlockingMission> missions,
+    {void Function(BlueprintUnlockingMission)? onTapMission}) {
+  Widget rowBody(BlueprintUnlockingMission m) => Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -863,9 +923,20 @@ Widget _blueprintMissionsCard(List<BlueprintUnlockingMission> missions) {
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.bold)),
             ],
+            if (onTapMission != null) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+            ],
           ],
         ),
-      ),
+      );
+
+  return itemCard('解锁任务(${missions.length})', [
+    for (final m in missions)
+      if (onTapMission != null)
+        InkWell(onTap: () => onTapMission(m), child: rowBody(m))
+      else
+        rowBody(m),
   ]);
 }
 

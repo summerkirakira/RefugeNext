@@ -15,6 +15,8 @@ import 'package:refuge_next/src/repo/power_plant.dart';
 import 'package:refuge_next/src/repo/cooler.dart';
 import 'package:refuge_next/src/repo/personal_weapon.dart';
 import 'package:refuge_next/src/repo/weapon_attachment.dart';
+import 'package:refuge_next/src/repo/vehicle_weapon.dart';
+import 'package:refuge_next/src/repo/armor.dart';
 import 'package:refuge_next/src/repo/blueprint.dart';
 import 'package:refuge_next/src/repo/mission.dart';
 import 'package:refuge_next/src/repo/location.dart';
@@ -26,6 +28,7 @@ import 'package:refuge_next/src/widgets/ship_info_neo/power_plant_detail_page.da
 import 'package:refuge_next/src/widgets/ship_info_neo/cooler_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/personal_weapon_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/weapon_attachment_detail_page.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_weapon_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/mission_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/location_detail_page.dart';
 import 'package:refuge_next/src/widgets/debug/versioned_repo_test_page.dart';
@@ -198,6 +201,12 @@ class DebugPage extends StatelessWidget {
       builder: (context) => const AttachmentDetailPage(),
     ),
     DebugEntry(
+      icon: Icons.rocket_launch_outlined,
+      title: '载具武器详情',
+      subtitle: '载具武器详情页(总览/参数/弹药/系统)',
+      builder: (context) => const VehicleWeaponDetailPage(),
+    ),
+    DebugEntry(
       icon: Icons.assignment_outlined,
       title: '任务详情',
       subtitle: '仿 wiki 的单任务详情(本地+自动拉详情,可切换)',
@@ -273,6 +282,42 @@ class DebugPage extends StatelessWidget {
           subtitle: Text(
             '${item.manufacturer?.name ?? ''} · S${item.size ?? '-'}'
             '${item.subType != null ? ' · ${item.subTypeLabel ?? item.subType}' : ''}',
+          ),
+        ),
+      ),
+    ),
+    DebugEntry(
+      icon: Icons.rocket_launch_outlined,
+      title: 'Vehicle Weapon',
+      subtitle: '载具武器(舰船):拉取/按游戏版本存储/切换/读取',
+      builder: (context) => VersionedRepoTestPage<GameItem>(
+        title: 'Vehicle Weapon',
+        repo: VehicleWeaponRepo(),
+        itemBuilder: (context, item) => ListTile(
+          dense: true,
+          title: Text(item.name ?? item.className ?? '未知'),
+          subtitle: Text(
+            '${item.manufacturer?.name ?? ''} · S${item.size ?? '-'}'
+            '${item.vehicleWeapon?.type != null ? ' · ${item.vehicleWeapon!.type}' : ''}'
+            '${item.vehicleWeapon?.rpm != null ? ' · ${item.vehicleWeapon!.rpm!.toStringAsFixed(0)} rpm' : ''}',
+          ),
+        ),
+      ),
+    ),
+    DebugEntry(
+      icon: Icons.shield_moon_outlined,
+      title: 'Armor',
+      subtitle: '护甲(FPS):拉取/按游戏版本存储/切换/读取',
+      builder: (context) => VersionedRepoTestPage<GameItem>(
+        title: 'Armor',
+        repo: ArmorRepo(),
+        itemBuilder: (context, item) => ListTile(
+          dense: true,
+          title: Text(item.name ?? item.className ?? '未知'),
+          subtitle: Text(
+            '${item.manufacturer?.name ?? ''}'
+            '${item.subType != null ? ' · ${item.subTypeLabel ?? item.subType}' : ''}'
+            '${item.grade != null ? ' · Grade ${item.grade}' : ''}',
           ),
         ),
       ),
