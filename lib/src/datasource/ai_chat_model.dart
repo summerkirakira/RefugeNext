@@ -226,7 +226,12 @@ class AiChatModel extends ChangeNotifier {
             _toolStatusLabel = null;
           case AiToolRunningEvent(:final label):
             _toolStatusLabel = label;
-          case AiToolRequestEvent(:final assistant):
+            // 调工具前已流式的文本属于服务端 assistant 轮，其权威副本会随 inlineMessages 回来——
+            // 清空在途文本，避免与内联 assistant.content 重复（并让状态条展示工具进度）。
+            _streamingText = '';
+          case AiToolRequestEvent(:final assistant, :final inlineMessages):
+            // 服务端本段内联工具往返（assistant+tool）须先按序纳入历史，排在最终 assistant 之前。
+            _messages.addAll(inlineMessages);
             // 把「调用工具」的助手轮（含 content+tool_calls+provider_state）纳入完整历史。
             // assistant.content 即工具调用前的文本；若为空则回退到已流式累积的文本。
             final c = assistant.content;
@@ -243,7 +248,9 @@ class AiChatModel extends ChangeNotifier {
             _messages.add(message);
           case AiCardEvent(:final data):
             _cards.add(data);
-          case AiDoneEvent():
+          case AiDoneEvent(:final inlineMessages):
+            // 纯 RAG 段：服务端内联工具往返排在 _commitAssistant 追加的最终答案文本之前。
+            _messages.addAll(inlineMessages);
             break; // 仅退出 switch；循环随后自然结束
           case AiErrorEvent(:final message, :final retryable):
             _errorMessage = message;
@@ -254,7 +261,7 @@ class AiChatModel extends ChangeNotifier {
       await _commitAssistant();
     } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
-        await _commitAssistant(); // 用户停止：提交已生成的部分
+        await _commitAssistant(); //用户停止：提交已生成的部分
       } else {
         _errorMessage = '网络错误: ${e.message}';
         _lastErrorRetryable = true; // 网络错误可重试

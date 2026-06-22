@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 
 import '../../datasource/models/ai/ai_message.dart';
 import '../../datasource/models/ai/ai_stream_event.dart';
+import '../../datasource/models/ai/server_tools.dart';
 import 'cirno_api.dart';
 
 /// debug 模式下 AI 请求默认指向的本地测试服务器；release 用生产地址（null → CirnoApiClient 默认）。
@@ -22,15 +23,38 @@ AiStreamEvent? parseSseFrame(String? type, String data) {
     case 'token':
       return AiStreamEvent.token(j['text'] as String? ?? '');
     case 'tool_running':
-      return AiStreamEvent.toolRunning(j['label'] as String? ?? '');
+      // 服务端实际发 {tool, query}（无 label）；优先 label，否则按工具名生成展示文案。
+      final label = j['label'] as String?;
+      if (label != null && label.isNotEmpty) {
+        return AiStreamEvent.toolRunning(label);
+      }
+      final derived = serverToolLabel(
+        j['tool'] as String? ?? '',
+        query: j['query'] as String?,
+      );
+      return AiStreamEvent.toolRunning(derived ?? '');
     case 'tool_request':
+      // inline_messages：服务端本段内联工具往返的完整消息（assistant+tool），按序纳入历史（contract §7）。
+      final inline = (j['inline_messages'] as List?)
+              ?.map((e) => AiMessage.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <AiMessage>[];
       return AiStreamEvent.toolRequest(
         AiMessage.fromJson(j['assistant'] as Map<String, dynamic>),
+        inlineMessages: inline,
       );
     case 'card':
       return AiStreamEvent.card(j);
     case 'done':
-      return AiStreamEvent.done((j['usage'] as Map<String, dynamic>?) ?? const {});
+      // 纯 RAG 段的内联工具往返（assistant+tool）随 done 下发，按序纳入历史（contract §3.3）。
+      final inline = (j['inline_messages'] as List?)
+              ?.map((e) => AiMessage.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <AiMessage>[];
+      return AiStreamEvent.done(
+        (j['usage'] as Map<String, dynamic>?) ?? const {},
+        inlineMessages: inline,
+      );
     case 'error':
       return AiStreamEvent.error(
         j['message'] as String? ?? 'unknown',

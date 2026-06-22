@@ -120,6 +120,84 @@ void main() {
       expect(repo.lastSaved!.length, 4);
     });
 
+    test('inline_messages：服务端内联往返按序排在最终 assistant 之前并持久化', () async {
+      final retrieveAsst = const AiMessage(
+        role: 'assistant',
+        content: '我先查资料',
+        toolCalls: [ToolCall(id: 's1', name: 'retrieve_docs', arguments: {})],
+        providerState: 'rc-1',
+      );
+      final retrieveResult = const AiMessage(
+        role: 'tool',
+        toolCallId: 's1',
+        content: {'hits': 1},
+      );
+      final hangarAsst = const AiMessage(
+        role: 'assistant',
+        content: '再看机库',
+        toolCalls: [ToolCall(id: 'c1', name: 'get_hangar', arguments: {})],
+      );
+      final hangarResult = const AiMessage(
+        role: 'tool',
+        toolCallId: 'c1',
+        content: {'total': 1},
+      );
+      final repo = FakeAiRepo(events: [
+        AiStreamEvent.toolRequest(hangarAsst,
+            inlineMessages: [retrieveAsst, retrieveResult]),
+        AiStreamEvent.toolResult(hangarResult),
+        const AiStreamEvent.token('你有 1 条船'),
+        const AiStreamEvent.done({}),
+      ]);
+      final model = AiChatModel(sessionId: 's1', repo: repo);
+
+      await model.send('推荐货船');
+
+      // user + asst(retrieve) + tool(retrieve) + asst(get_hangar) + tool(get_hangar) + 终文本
+      expect(model.messages.map((m) => m.role).toList(),
+          ['user', 'assistant', 'tool', 'assistant', 'tool', 'assistant']);
+      expect(model.messages[1].toolCalls!.single.name, 'retrieve_docs');
+      expect(model.messages[1].providerState, 'rc-1');
+      expect(model.messages[2].toolCallId, 's1');
+      expect(model.messages[3].toolCalls!.single.name, 'get_hangar');
+      expect(model.messages[4].toolCallId, 'c1');
+      expect(model.messages[5].content, '你有 1 条船');
+      expect(repo.lastSaved!.length, 6); // 完整 transcript 持久化
+    });
+
+    test('纯 RAG：done 的 inline_messages 纳入历史，且调工具前文本不重复', () async {
+      final retrieveAsst = const AiMessage(
+        role: 'assistant',
+        content: '我先查一下资料',
+        toolCalls: [ToolCall(id: 's1', name: 'retrieve_docs', arguments: {})],
+        providerState: 'rc-1',
+      );
+      final retrieveResult = const AiMessage(
+        role: 'tool',
+        toolCallId: 's1',
+        content: {'hits': 1},
+      );
+      final repo = FakeAiRepo(events: [
+        const AiStreamEvent.token('我先查一下资料'),
+        const AiStreamEvent.toolRunning('检索资料'),
+        const AiStreamEvent.token('Avenger Titan 适合新手'),
+        AiStreamEvent.done(const {}, inlineMessages: [retrieveAsst, retrieveResult]),
+      ]);
+      final model = AiChatModel(sessionId: 's1', repo: repo);
+
+      await model.send('Avenger Titan 怎么样');
+
+      // user + asst(retrieve_docs) + tool + asst(最终答案)
+      expect(model.messages.map((m) => m.role).toList(),
+          ['user', 'assistant', 'tool', 'assistant']);
+      expect(model.messages[1].toolCalls!.single.name, 'retrieve_docs');
+      expect(model.messages[1].content, '我先查一下资料');
+      expect(model.messages[2].toolCallId, 's1');
+      // 最终答案只含调工具后的文本——"我先查一下资料"不重复
+      expect(model.messages[3].content, 'Avenger Titan 适合新手');
+      expect(repo.lastSaved!.length, 4);
+    });
+
     test('error 事件：不提交助手消息，设置 errorMessage', () async {
       final repo = FakeAiRepo(events: const [
         AiStreamEvent.token('半截'),

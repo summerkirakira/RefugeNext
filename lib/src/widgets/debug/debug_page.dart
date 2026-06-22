@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart'
-    show GameVehicle, ShipMatrixVehicle;
+    show GameVehicle, ShipMatrixVehicle, GameItem;
 import 'package:refuge_next/src/repo/game_vehicle.dart';
 import 'package:refuge_next/src/repo/ship_matrix.dart';
+import 'package:refuge_next/src/repo/shield.dart';
 import 'package:refuge_next/src/widgets/debug/vehicle_card_test_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/shield_detail_page.dart';
 import 'package:refuge_next/src/widgets/debug/versioned_repo_test_page.dart';
 
 /// 通用开发测试中心。
@@ -97,6 +99,32 @@ class DebugPage extends StatelessWidget {
       title: 'AI 舰船卡片',
       subtitle: '敲定 show_item_card 的卡片样式',
       builder: (context) => const VehicleCardTestPage(),
+    ),
+    DebugEntry(
+      icon: Icons.verified_user_outlined,
+      title: '护盾详情',
+      subtitle: '仿 wiki 的单护盾详情(本地数据,可切换护盾)',
+      builder: (context) => const ShieldDetailPage(),
+    ),
+    DebugEntry(
+      icon: Icons.shield_outlined,
+      title: 'Shield',
+      subtitle: '舰船护盾组件:拉取/按游戏版本存储/切换/读取',
+      builder: (context) => VersionedRepoTestPage<GameItem>(
+        title: 'Shield',
+        repo: ShieldRepo(),
+        itemBuilder: (context, item) => ListTile(
+          dense: true,
+          title: Text(item.name ?? item.className ?? '未知'),
+          subtitle: Text(
+            '${item.manufacturer?.name ?? ''} · S${item.size ?? '-'} · '
+            'HP ${item.shield?.maxHealth?.toStringAsFixed(0) ?? '-'}',
+          ),
+          trailing: item.shield?.regenRate != null
+              ? Text('${item.shield!.regenRate!.toStringAsFixed(0)}/s')
+              : null,
+        ),
+      ),
     ),
     // 在此追加新的测试入口。
   ];

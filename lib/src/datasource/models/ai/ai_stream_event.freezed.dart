@@ -181,10 +181,13 @@ extension AiStreamEventPatterns on AiStreamEvent {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String text)? token,
     TResult Function(String label)? toolRunning,
-    TResult Function(AiMessage assistant)? toolRequest,
+    TResult Function(AiMessage assistant, List<AiMessage> inlineMessages)?
+        toolRequest,
     TResult Function(AiMessage message)? toolResult,
     TResult Function(Map<String, dynamic> data)? card,
-    TResult Function(Map<String, dynamic> usage)? done,
+    TResult Function(
+            Map<String, dynamic> usage, List<AiMessage> inlineMessages)?
+        done,
     TResult Function(String message, bool retryable)? error,
     required TResult orElse(),
   }) {
@@ -195,13 +198,13 @@ extension AiStreamEventPatterns on AiStreamEvent {
       case AiToolRunningEvent() when toolRunning != null:
         return toolRunning(_that.label);
       case AiToolRequestEvent() when toolRequest != null:
-        return toolRequest(_that.assistant);
+        return toolRequest(_that.assistant, _that.inlineMessages);
       case AiToolResultEvent() when toolResult != null:
         return toolResult(_that.message);
       case AiCardEvent() when card != null:
         return card(_that.data);
       case AiDoneEvent() when done != null:
-        return done(_that.usage);
+        return done(_that.usage, _that.inlineMessages);
       case AiErrorEvent() when error != null:
         return error(_that.message, _that.retryable);
       case _:
@@ -226,10 +229,14 @@ extension AiStreamEventPatterns on AiStreamEvent {
   TResult when<TResult extends Object?>({
     required TResult Function(String text) token,
     required TResult Function(String label) toolRunning,
-    required TResult Function(AiMessage assistant) toolRequest,
+    required TResult Function(
+            AiMessage assistant, List<AiMessage> inlineMessages)
+        toolRequest,
     required TResult Function(AiMessage message) toolResult,
     required TResult Function(Map<String, dynamic> data) card,
-    required TResult Function(Map<String, dynamic> usage) done,
+    required TResult Function(
+            Map<String, dynamic> usage, List<AiMessage> inlineMessages)
+        done,
     required TResult Function(String message, bool retryable) error,
   }) {
     final _that = this;
@@ -239,13 +246,13 @@ extension AiStreamEventPatterns on AiStreamEvent {
       case AiToolRunningEvent():
         return toolRunning(_that.label);
       case AiToolRequestEvent():
-        return toolRequest(_that.assistant);
+        return toolRequest(_that.assistant, _that.inlineMessages);
       case AiToolResultEvent():
         return toolResult(_that.message);
       case AiCardEvent():
         return card(_that.data);
       case AiDoneEvent():
-        return done(_that.usage);
+        return done(_that.usage, _that.inlineMessages);
       case AiErrorEvent():
         return error(_that.message, _that.retryable);
     }
@@ -267,10 +274,13 @@ extension AiStreamEventPatterns on AiStreamEvent {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String text)? token,
     TResult? Function(String label)? toolRunning,
-    TResult? Function(AiMessage assistant)? toolRequest,
+    TResult? Function(AiMessage assistant, List<AiMessage> inlineMessages)?
+        toolRequest,
     TResult? Function(AiMessage message)? toolResult,
     TResult? Function(Map<String, dynamic> data)? card,
-    TResult? Function(Map<String, dynamic> usage)? done,
+    TResult? Function(
+            Map<String, dynamic> usage, List<AiMessage> inlineMessages)?
+        done,
     TResult? Function(String message, bool retryable)? error,
   }) {
     final _that = this;
@@ -280,13 +290,13 @@ extension AiStreamEventPatterns on AiStreamEvent {
       case AiToolRunningEvent() when toolRunning != null:
         return toolRunning(_that.label);
       case AiToolRequestEvent() when toolRequest != null:
-        return toolRequest(_that.assistant);
+        return toolRequest(_that.assistant, _that.inlineMessages);
       case AiToolResultEvent() when toolResult != null:
         return toolResult(_that.message);
       case AiCardEvent() when card != null:
         return card(_that.data);
       case AiDoneEvent() when done != null:
-        return done(_that.usage);
+        return done(_that.usage, _that.inlineMessages);
       case AiErrorEvent() when error != null:
         return error(_that.message, _that.retryable);
       case _:
@@ -425,9 +435,18 @@ class _$AiToolRunningEventCopyWithImpl<$Res>
 /// @nodoc
 
 class AiToolRequestEvent implements AiStreamEvent {
-  const AiToolRequestEvent(this.assistant);
+  const AiToolRequestEvent(this.assistant,
+      {final List<AiMessage> inlineMessages = const <AiMessage>[]})
+      : _inlineMessages = inlineMessages;
 
   final AiMessage assistant;
+  final List<AiMessage> _inlineMessages;
+  @JsonKey()
+  List<AiMessage> get inlineMessages {
+    if (_inlineMessages is EqualUnmodifiableListView) return _inlineMessages;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_inlineMessages);
+  }
 
   /// Create a copy of AiStreamEvent
   /// with the given fields replaced by the non-null parameter values.
@@ -442,15 +461,18 @@ class AiToolRequestEvent implements AiStreamEvent {
         (other.runtimeType == runtimeType &&
             other is AiToolRequestEvent &&
             (identical(other.assistant, assistant) ||
-                other.assistant == assistant));
+                other.assistant == assistant) &&
+            const DeepCollectionEquality()
+                .equals(other._inlineMessages, _inlineMessages));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, assistant);
+  int get hashCode => Object.hash(runtimeType, assistant,
+      const DeepCollectionEquality().hash(_inlineMessages));
 
   @override
   String toString() {
-    return 'AiStreamEvent.toolRequest(assistant: $assistant)';
+    return 'AiStreamEvent.toolRequest(assistant: $assistant, inlineMessages: $inlineMessages)';
   }
 }
 
@@ -461,7 +483,7 @@ abstract mixin class $AiToolRequestEventCopyWith<$Res>
           AiToolRequestEvent value, $Res Function(AiToolRequestEvent) _then) =
       _$AiToolRequestEventCopyWithImpl;
   @useResult
-  $Res call({AiMessage assistant});
+  $Res call({AiMessage assistant, List<AiMessage> inlineMessages});
 
   $AiMessageCopyWith<$Res> get assistant;
 }
@@ -479,12 +501,17 @@ class _$AiToolRequestEventCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   $Res call({
     Object? assistant = null,
+    Object? inlineMessages = null,
   }) {
     return _then(AiToolRequestEvent(
       null == assistant
           ? _self.assistant
           : assistant // ignore: cast_nullable_to_non_nullable
               as AiMessage,
+      inlineMessages: null == inlineMessages
+          ? _self._inlineMessages
+          : inlineMessages // ignore: cast_nullable_to_non_nullable
+              as List<AiMessage>,
     ));
   }
 
@@ -647,13 +674,24 @@ class _$AiCardEventCopyWithImpl<$Res> implements $AiCardEventCopyWith<$Res> {
 /// @nodoc
 
 class AiDoneEvent implements AiStreamEvent {
-  const AiDoneEvent(final Map<String, dynamic> usage) : _usage = usage;
+  const AiDoneEvent(final Map<String, dynamic> usage,
+      {final List<AiMessage> inlineMessages = const <AiMessage>[]})
+      : _usage = usage,
+        _inlineMessages = inlineMessages;
 
   final Map<String, dynamic> _usage;
   Map<String, dynamic> get usage {
     if (_usage is EqualUnmodifiableMapView) return _usage;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_usage);
+  }
+
+  final List<AiMessage> _inlineMessages;
+  @JsonKey()
+  List<AiMessage> get inlineMessages {
+    if (_inlineMessages is EqualUnmodifiableListView) return _inlineMessages;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_inlineMessages);
   }
 
   /// Create a copy of AiStreamEvent
@@ -668,16 +706,20 @@ class AiDoneEvent implements AiStreamEvent {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is AiDoneEvent &&
-            const DeepCollectionEquality().equals(other._usage, _usage));
+            const DeepCollectionEquality().equals(other._usage, _usage) &&
+            const DeepCollectionEquality()
+                .equals(other._inlineMessages, _inlineMessages));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_usage));
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(_usage),
+      const DeepCollectionEquality().hash(_inlineMessages));
 
   @override
   String toString() {
-    return 'AiStreamEvent.done(usage: $usage)';
+    return 'AiStreamEvent.done(usage: $usage, inlineMessages: $inlineMessages)';
   }
 }
 
@@ -688,7 +730,7 @@ abstract mixin class $AiDoneEventCopyWith<$Res>
           AiDoneEvent value, $Res Function(AiDoneEvent) _then) =
       _$AiDoneEventCopyWithImpl;
   @useResult
-  $Res call({Map<String, dynamic> usage});
+  $Res call({Map<String, dynamic> usage, List<AiMessage> inlineMessages});
 }
 
 /// @nodoc
@@ -703,12 +745,17 @@ class _$AiDoneEventCopyWithImpl<$Res> implements $AiDoneEventCopyWith<$Res> {
   @pragma('vm:prefer-inline')
   $Res call({
     Object? usage = null,
+    Object? inlineMessages = null,
   }) {
     return _then(AiDoneEvent(
       null == usage
           ? _self._usage
           : usage // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>,
+      inlineMessages: null == inlineMessages
+          ? _self._inlineMessages
+          : inlineMessages // ignore: cast_nullable_to_non_nullable
+              as List<AiMessage>,
     ));
   }
 }

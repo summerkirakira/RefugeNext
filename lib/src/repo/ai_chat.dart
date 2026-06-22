@@ -149,7 +149,7 @@ class AiRepo {
     final messages = [...history];
 
     while (true) {
-      AiMessage? pending;
+      AiToolRequestEvent? pending;
 
       await for (final ev in _service.openStream(
         scene: scene,
@@ -159,7 +159,7 @@ class AiRepo {
       )) {
         yield ev;
         if (ev is AiToolRequestEvent) {
-          pending = ev.assistant;
+          pending = ev;
           break;
         }
         if (ev is AiDoneEvent || ev is AiErrorEvent) return;
@@ -168,10 +168,19 @@ class AiRepo {
       // 流自然结束但无终结事件（异常断流等）：停止循环。
       if (pending == null) return;
 
-      // 执行本轮全部端侧工具，追加 assistant 轮与各工具结果，再发续请求。
+      // 先按序纳入服务端本段内联工具往返（contract §7）：assistant 轮 + tool 结果，
+      // 须排在最终 assistant **之前**（保持真实时序，满足消息有效性）。
+      // 不在此另行 yield —— 上层从 toolRequest 事件直接读取 inlineMessages 纳入历史，避免重复。
+      for (final AiMessage inline in pending.inlineMessages) {
+        messages.add(inline);
+      }
+
+      final assistant = pending.assistant;
+      messages.add(assistant);
+
+      // 执行本轮端侧工具，追加各工具结果，再发续请求。
       // 同时把工具结果作为事件透出，供上层把完整工具往返纳入会话历史（KEEP）。
-      messages.add(pending);
-      for (final ToolCall call in pending.toolCalls ?? const <ToolCall>[]) {
+      for (final ToolCall call in assistant.toolCalls ?? const <ToolCall>[]) {
         final result = await _tools.runTool(call.name, call.arguments);
         final resultMsg = toolResultMessage(toolCallId: call.id, content: result);
         messages.add(resultMsg);

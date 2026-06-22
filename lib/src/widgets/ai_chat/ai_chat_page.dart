@@ -7,6 +7,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../datasource/ai_chat_model.dart';
 import '../../datasource/data_model.dart';
 import '../../datasource/models/ai/ai_message.dart';
+import '../../datasource/models/ai/server_tools.dart';
 import '../../datasource/models/hangar.dart';
 import '../../datasource/models/buyback.dart';
 import '../hangar/hangar_item_widget.dart';
@@ -43,6 +44,21 @@ List<int> hangarCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_hangar_cards');
 
 /// 回购卡片 id 列表（show_buyback_cards）。
 List<int> buybackCardIdsOf(AiMessage m) => _cardIdsOf(m, 'show_buyback_cards');
+
+/// assistant 消息里命中的服务端工具调用（retrieve_docs 等），返回展示文案列表。
+/// 服务端工具在服务端内联执行、结果随 inline_messages 回传，这里只把"调用动作"展示给用户。
+List<String> serverToolLabelsOf(AiMessage m) {
+  if (m.role != 'assistant') return const [];
+  final calls = m.toolCalls;
+  if (calls == null) return const [];
+  final out = <String>[];
+  for (final c in calls) {
+    final q = c.arguments['query'];
+    final label = serverToolLabel(c.name, query: q is String ? q : null);
+    if (label != null) out.add(label);
+  }
+  return out;
+}
 
 /// 物品卡片 uuid 列表（show_item_card）。uuid 为字符串,与 id 类工具不同。
 List<String> itemCardUuidsOf(AiMessage m) {
@@ -201,6 +217,8 @@ class _AiChatPageState extends State<AiChatPage> {
         if (hasText) items.add(_AiBubble(isUser: true, text: c));
       } else if (m.role == 'assistant') {
         if (hasText) items.add(_AiBubble(isUser: false, text: c));
+        final serverTools = serverToolLabelsOf(m);
+        if (serverTools.isNotEmpty) items.add(_ServerToolChips(labels: serverTools));
         final hangarIds = hangarCardIdsOf(m);
         if (hangarIds.isNotEmpty) items.add(_HangarCards(ids: hangarIds));
         final buybackIds = buybackCardIdsOf(m);
@@ -305,6 +323,58 @@ class _AiBubble extends StatelessWidget {
                     ? SelectableText(text, style: TextStyle(color: fg, fontSize: 15))
                     : GptMarkdown(text, style: TextStyle(color: fg, fontSize: 15)),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 服务端工具调用 chip 块：展示"小九调用了服务端工具"（如「检索资料：货运船」）。
+/// 服务端工具在服务端内联执行、结果不在客户端渲染，这里只把调用动作可视化。非交互。
+class _ServerToolChips extends StatelessWidget {
+  final List<String> labels;
+
+  const _ServerToolChips({required this.labels});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final label in labels)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search, size: 14, color: cs.onSurfaceVariant),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            label,
+                            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
