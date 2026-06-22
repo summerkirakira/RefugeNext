@@ -63,4 +63,7 @@ echo "==> dart pub get"
 echo "==> build_runner(生成 .g.dart)"
 ( cd "$OUT" && "$DART" run build_runner build )
 
+echo "==> 刷新 PHP 类型怪癖归一化集合(php_type_quirks.dart)"
+"$(dirname "$0")/gen_php_type_quirks.sh"
+
 echo "==> 完成。"

@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:starcitizen_wiki_api/starcitizen_wiki_api.dart';
 
+import 'php_type_quirks.dart';
+
 export 'package:starcitizen_wiki_api/starcitizen_wiki_api.dart';
 
 /// Star Citizen Wiki API 客户端封装。
@@ -40,15 +42,17 @@ class WikiApiClient {
     'used_segments_grouped',
   };
 
-  /// 递归归一化 PHP 后端的类型怪癖:
+  /// 递归归一化 PHP 后端的类型怪癖,在反序列化前把「错类型」的值修正到模型期望类型:
   /// 1. [_phpEmptyArrayObjectKeys] 中字段的值若为空数组 → null
   ///    (空关联数组被序列化成 [] 而非 {});
   /// 2. `penetration_multiplier.components`(数值字段)若为空数组 → null
   ///    (`components` 在别处是合法数组,故按父字段限定作用域);
-  /// 3. `grade`:列表端点给数字、单船端点给字符串("1"/"A"/"C"),
-  ///    spec 已统一为 string,这里把数字侧转为字符串;
-  /// 4. `register_range`:实际为 0/1 整数(spec 已改 number),
-  ///    若后端某天返回 true/false 则转回 0/1。
+  /// 3. 按 [phpBoolKeys]/[phpStringKeys]/[phpNumKeys](`php_type_quirks.dart`,
+  ///    由 `tool/gen_php_type_quirks.sh` 从模型字段声明生成)把值统一到期望类型:
+  ///    - 期望 bool:0/1 整数、"0"/"1"/"true" 字符串 → bool;
+  ///    - 期望 String:数值/布尔 → toString(覆盖原 `grade` 数字→字符串);
+  ///    - 期望数值:字符串 → num、布尔 → 1/0(覆盖原 `register_range`)。
+  ///    这三个集合各自类型唯一、互不重叠且已剔除歧义键,故按键名归一化是安全的。
   static void normalizePhpEmptyArrays(Object? node, {String? parentKey}) {
     if (node is Map) {
       for (final key in node.keys.toList()) {
@@ -60,13 +64,30 @@ class WikiApiClient {
             continue;
           }
         }
-        if (key == 'grade' && value is num) {
-          node[key] = value.toString();
-          continue;
-        }
-        if (key == 'register_range' && value is bool) {
-          node[key] = value ? 1 : 0;
-          continue;
+        if (phpBoolKeys.contains(key)) {
+          if (value is num) {
+            node[key] = value != 0;
+            continue;
+          }
+          if (value is String) {
+            final v = value.trim().toLowerCase();
+            node[key] = v == '1' || v == 'true' || v == 'yes';
+            continue;
+          }
+        } else if (phpStringKeys.contains(key)) {
+          if (value is num || value is bool) {
+            node[key] = value.toString();
+            continue;
+          }
+        } else if (phpNumKeys.contains(key)) {
+          if (value is String) {
+            node[key] = num.tryParse(value.trim());
+            continue;
+          }
+          if (value is bool) {
+            node[key] = value ? 1 : 0;
+            continue;
+          }
         }
         normalizePhpEmptyArrays(value, parentKey: key is String ? key : null);
       }
