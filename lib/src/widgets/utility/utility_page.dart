@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_full_page.dart';
 import 'package:refuge_next/src/widgets/utility/player_search_bottomsheet.dart';
+import 'package:refuge_next/src/widgets/utility/crowdfunding_stats_page.dart';
 import 'package:refuge_next/src/widgets/utility/promote_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/debug/debug_page.dart';
 import 'package:refuge_next/src/widgets/utility/utility_topbar.dart';
@@ -12,6 +13,12 @@ import 'package:refuge_next/src/widgets/user_info/referral_list_modal.dart';
 
 class FeatureSelectionPage extends StatelessWidget {
   final List<FeatureItem> features = [
+    FeatureItem(icon: Icons.trending_up_outlined, title: '众筹查询', onTap: (context) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CrowdfundingStatsPage()),
+      );
+    }),
     FeatureItem(icon: Icons.search_rounded, title: '玩家搜索', onTap: (context) {
       showPlayerSearchSheet(context);
     }),

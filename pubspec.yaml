@@ -97,6 +97,7 @@ dependencies:
   starcitizen_wiki_api:
     path: packages/starcitizen_wiki_api
   flutter_vector_icons: ^2.0.0
+  fl_chart: ^1.2.0
 
 
 dev_dependencies:
