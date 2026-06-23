@@ -38,4 +38,17 @@ class GameItemTranslationRepo {
     if (n.endsWith('_scitem')) n = n.substring(0, n.length - 7);
     return _index['item_name$n'] ?? _index['item_name_$n'] ?? itemName;
   }
+
+  /// 商品/材料名翻译(资产键 `items_commodities_<lower_snake>`)。
+  /// 规则:小写 → 去括号 → 空格转下划线 → 前缀;部分键带 `,P` 后缀,加 `,p` 回退;
+  /// 未命中回退英文原名 [name]。
+  String getCommodities(String name) {
+    final n = name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[()]'), '')
+        .trim()
+        .replaceAll(RegExp(r'\s+'), '_');
+    final base = 'items_commodities_$n';
+    return _index[base] ?? _index['$base,p'] ?? name;
+  }
 }

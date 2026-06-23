@@ -16,9 +16,22 @@ import '../hangar/ship_reclaim_modal.dart';
 import '../hangar/ship_gift_modal.dart';
 import '../hangar/ship_recall_modal.dart';
 import '../buyback/buyback_item.dart';
-import '../../network/wiki/wiki_api.dart' show GameVehicle;
 import '../../repo/game_vehicle.dart';
+import '../../repo/vehicle_weapon.dart';
+import '../../repo/personal_weapon.dart';
+import '../../repo/shield.dart';
+import '../../repo/cooler.dart';
+import '../../repo/power_plant.dart';
+import '../../repo/quantum_drive.dart';
+import '../../repo/weapon_attachment.dart';
 import '../ship_info_neo/vehicle_info_card.dart';
+import '../ship_info_neo/vehicle_weapon_info_card.dart';
+import '../ship_info_neo/personal_weapon_info_card.dart';
+import '../ship_info_neo/shield_info_card.dart';
+import '../ship_info_neo/cooler_info_card.dart';
+import '../ship_info_neo/power_plant_info_card.dart';
+import '../ship_info_neo/quantum_drive_info_card.dart';
+import '../ship_info_neo/weapon_attachment_info_card.dart';
 
 /// 解析 assistant 消息里指定工具调用的 id 列表（show_hangar_cards / show_buyback_cards）。
 List<int> _cardIdsOf(AiMessage m, String toolName) {
@@ -707,29 +720,58 @@ class _BuybackCards extends StatelessWidget {
   }
 }
 
-/// 内联物品卡片块（show_item_card）：把 uuids 解析成本地 GameVehicle,
-/// 渲染舰船卡片(点击跳详情页)。目前仅检索 GameVehicle,后续扩展其它 repo。
+/// 内联物品卡片块（show_item_card）：把 uuids 跨全部仓库解析,渲染对应类别卡片
+/// (舰船 / 载具武器 / 个人武器 / 护盾 / 冷却器 / 发电机 / 量子引擎 / 武器配件;点击跳详情页)。
+/// 模型只传 uuid,本地按命中的仓库决定卡片类型;未命中的 uuid 静默跳过(已在工具结果里报给模型)。
 class _ItemCards extends StatelessWidget {
   final List<String> uuids;
 
   const _ItemCards({required this.uuids});
 
-  Future<List<GameVehicle>> _resolve() async {
-    final repo = GameVehicleRepo();
-    await repo.getVehicles(); // 确保本地数据已加载
-    return uuids
-        .map(repo.getByUuidSync)
-        .whereType<GameVehicle>()
-        .toList();
+  /// uuid → 对应类别卡片;跨所有仓库检索,未命中返回 null。
+  Widget? _cardForUuid(String uuid) {
+    final v = GameVehicleRepo().getByUuidSync(uuid);
+    if (v != null) return VehicleInfoCard(vehicle: v);
+
+    final vw = VehicleWeaponRepo().getByUuidSync(uuid);
+    if (vw != null) return VehicleWeaponInfoCard(item: vw);
+    final pw = PersonalWeaponRepo().getByUuidSync(uuid);
+    if (pw != null) return PersonalWeaponInfoCard(item: pw);
+    final sh = ShieldRepo().getByUuidSync(uuid);
+    if (sh != null) return ShieldInfoCard(item: sh);
+    final co = CoolerRepo().getByUuidSync(uuid);
+    if (co != null) return CoolerInfoCard(item: co);
+    final pp = PowerPlantRepo().getByUuidSync(uuid);
+    if (pp != null) return PowerPlantInfoCard(item: pp);
+    final qd = QuantumDriveRepo().getByUuidSync(uuid);
+    if (qd != null) return QuantumDriveInfoCard(item: qd);
+    final wa = WeaponAttachmentRepo().getByUuidSync(uuid);
+    if (wa != null) return WeaponAttachmentInfoCard(item: wa);
+
+    return null;
+  }
+
+  Future<List<Widget>> _resolve() async {
+    await Future.wait([
+      GameVehicleRepo().getVehicles(),
+      VehicleWeaponRepo().getVehicleWeapons(),
+      PersonalWeaponRepo().getPersonalWeapons(),
+      ShieldRepo().getShields(),
+      CoolerRepo().getCoolers(),
+      PowerPlantRepo().getPowerPlants(),
+      QuantumDriveRepo().getQuantumDrives(),
+      WeaponAttachmentRepo().getWeaponAttachments(),
+    ]);
+    return uuids.map(_cardForUuid).whereType<Widget>().toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<GameVehicle>>(
+    return FutureBuilder<List<Widget>>(
       future: _resolve(),
       builder: (context, snapshot) {
-        final vehicles = snapshot.data ?? const <GameVehicle>[];
-        if (vehicles.isEmpty) return const SizedBox.shrink();
+        final cards = snapshot.data ?? const <Widget>[];
+        if (cards.isEmpty) return const SizedBox.shrink();
         // 与 show_hangar_cards 一致:宽度对齐 AI 消息气泡最大宽度
         final maxWidth = _cardPanelMaxWidth(context);
         return Padding(
@@ -740,10 +782,7 @@ class _ItemCards extends StatelessWidget {
               Flexible(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: _cardListPanel(
-                    context,
-                    [for (final v in vehicles) VehicleInfoCard(vehicle: v)],
-                  ),
+                  child: _cardListPanel(context, cards),
                 ),
               ),
             ],

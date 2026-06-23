@@ -32,6 +32,16 @@ import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_weapon_detail_page
 import 'package:refuge_next/src/widgets/ship_info_neo/mission_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/location_detail_page.dart';
 import 'package:refuge_next/src/widgets/debug/versioned_repo_test_page.dart';
+import 'package:refuge_next/src/widgets/debug/vehicle_rag_export_page.dart';
+import 'package:refuge_next/src/widgets/debug/vehicle_weapon_rag_export_page.dart';
+import 'package:refuge_next/src/widgets/debug/personal_weapon_rag_export_page.dart';
+import 'package:refuge_next/src/widgets/debug/rag_export_page.dart';
+import 'package:refuge_next/src/funcs/shield_rag_export.dart';
+import 'package:refuge_next/src/funcs/cooler_rag_export.dart';
+import 'package:refuge_next/src/funcs/power_plant_rag_export.dart';
+import 'package:refuge_next/src/funcs/quantum_drive_rag_export.dart';
+import 'package:refuge_next/src/funcs/weapon_attachment_rag_export.dart';
+import 'package:refuge_next/src/funcs/all_rag_export.dart';
 
 /// 通用开发测试中心。
 ///
@@ -58,6 +68,67 @@ class DebugPage extends StatelessWidget {
   }
 
   static final List<DebugEntry> _entries = [
+    DebugEntry(
+      icon: Icons.all_inbox_outlined,
+      title: '导出全部 RAG JSON（合并）',
+      subtitle: '舰船+载具武器+个人武器+护盾+冷却器+发电机+量子引擎+配件 合并为单个 JSON',
+      builder: (context) => RagExportPage(
+          title: '导出全部 RAG JSON', exporter: exportAllRagJson),
+    ),
+    DebugEntry(
+      icon: Icons.download_outlined,
+      title: '导出舰船 RAG JSON',
+      subtitle: '把有中文别名的舰船导出为单个 JSON 数组',
+      builder: (context) => const VehicleRagExportPage(),
+    ),
+    DebugEntry(
+      icon: Icons.gps_fixed,
+      title: '导出载具武器 RAG JSON',
+      subtitle: '把载具武器导出为单个 JSON 数组',
+      builder: (context) => const VehicleWeaponRagExportPage(),
+    ),
+    DebugEntry(
+      icon: Icons.gps_not_fixed,
+      title: '导出个人武器 RAG JSON',
+      subtitle: '把个人武器(FPS)导出为单个 JSON 数组',
+      builder: (context) => const PersonalWeaponRagExportPage(),
+    ),
+    DebugEntry(
+      icon: Icons.shield_outlined,
+      title: '导出护盾 RAG JSON',
+      subtitle: '把护盾导出为单个 JSON 数组',
+      builder: (context) => RagExportPage(
+          title: '导出护盾 RAG JSON', exporter: exportShieldsRagJson),
+    ),
+    DebugEntry(
+      icon: Icons.ac_unit_outlined,
+      title: '导出冷却器 RAG JSON',
+      subtitle: '把冷却器导出为单个 JSON 数组',
+      builder: (context) => RagExportPage(
+          title: '导出冷却器 RAG JSON', exporter: exportCoolersRagJson),
+    ),
+    DebugEntry(
+      icon: Icons.bolt_outlined,
+      title: '导出发电机 RAG JSON',
+      subtitle: '把发电机导出为单个 JSON 数组',
+      builder: (context) => RagExportPage(
+          title: '导出发电机 RAG JSON', exporter: exportPowerPlantsRagJson),
+    ),
+    DebugEntry(
+      icon: Icons.rocket_launch_outlined,
+      title: '导出量子引擎 RAG JSON',
+      subtitle: '把量子引擎导出为单个 JSON 数组',
+      builder: (context) => RagExportPage(
+          title: '导出量子引擎 RAG JSON', exporter: exportQuantumDrivesRagJson),
+    ),
+    DebugEntry(
+      icon: Icons.build_outlined,
+      title: '导出武器配件 RAG JSON',
+      subtitle: '把武器配件导出为单个 JSON 数组',
+      builder: (context) => RagExportPage(
+          title: '导出武器配件 RAG JSON',
+          exporter: exportWeaponAttachmentsRagJson),
+    ),
     DebugEntry(
       icon: Icons.rocket_launch_outlined,
       title: 'Ship Matrix',

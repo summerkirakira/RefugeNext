@@ -3,6 +3,13 @@ import '../datasource/models/hangar.dart';
 import '../funcs/search.dart';
 import 'ai_chat.dart';
 import 'game_vehicle.dart';
+import 'vehicle_weapon.dart';
+import 'personal_weapon.dart';
+import 'shield.dart';
+import 'cooler.dart';
+import 'power_plant.dart';
+import 'quantum_drive.dart';
+import 'weapon_attachment.dart';
 
 /// 端侧工具的真实实现：把工具名映射到本地 repo / MainDataModel，
 /// 让服务端能查询用户本地缓存的库存/账号数据。
@@ -88,15 +95,34 @@ class RepoAiToolExecutor implements AiToolExecutor {
 
   /// 让客户端内联展示物品卡片(show_item_card):仅校验 uuids 并 ack;
   /// 渲染由 UI 从 transcript 读取 tool_calls 完成。
-  /// 目前仅按 uuid 检索 GameVehicle,后续在此并入其它 repo 的 uuid 集合。
+  /// 跨全部类别(舰船 + 7 类 GameItem)检索 uuid;未命中的归入 missing 返回给模型。
   Future<Map<String, dynamic>> _showItemCard(Map<String, dynamic> args) async {
     final raw = (args['uuids'] is List) ? args['uuids'] as List : const [];
-    final repo = GameVehicleRepo();
-    await repo.getVehicles(); // 确保本地数据已加载
-    final available = <String>{
-      for (final v in repo.getVehiclesSync())
-        if (v.uuid != null) v.uuid!,
-    };
+    await Future.wait([
+      GameVehicleRepo().getVehicles(),
+      VehicleWeaponRepo().getVehicleWeapons(),
+      PersonalWeaponRepo().getPersonalWeapons(),
+      ShieldRepo().getShields(),
+      CoolerRepo().getCoolers(),
+      PowerPlantRepo().getPowerPlants(),
+      QuantumDriveRepo().getQuantumDrives(),
+      WeaponAttachmentRepo().getWeaponAttachments(),
+    ]);
+    final available = <String>{};
+    for (final v in GameVehicleRepo().getVehiclesSync()) {
+      if (v.uuid != null) available.add(v.uuid!);
+    }
+    for (final i in [
+      ...VehicleWeaponRepo().itemsSync,
+      ...PersonalWeaponRepo().itemsSync,
+      ...ShieldRepo().itemsSync,
+      ...CoolerRepo().itemsSync,
+      ...PowerPlantRepo().itemsSync,
+      ...QuantumDriveRepo().itemsSync,
+      ...WeaponAttachmentRepo().itemsSync,
+    ]) {
+      if (i.uuid != null) available.add(i.uuid!);
+    }
     return shapeItemCardAck(raw, available);
   }
 

@@ -1,10 +1,9 @@
-import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
+import 'package:refuge_next/src/repo/shop_catalog_cache.dart';
 import 'catalog_detail_bottomsheet.dart' show getCatalogItemDetailSheet;
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -16,168 +15,195 @@ String priceString(int price) {
   }
 }
 
-class ShopItemImageWidget extends StatelessWidget {
-  final CatalogProperty catalogProperty;
-
-  const ShopItemImageWidget({
-    super.key,
-    required this.catalogProperty,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 140,
-      height: 80,
-      child: Stack(
-        children: [
-          CachedNetworkImage(
-              imageUrl: catalogProperty.media.thumbnail.storeSmall
-                      .startsWith('/')
-                  ? 'https://robertsspaceindustries.com${catalogProperty.media.thumbnail.storeSmall}'
-                  : catalogProperty.media.thumbnail.storeSmall,
-              placeholder: (context, url) => Container(
-                padding: EdgeInsets.only(
-                  left: 60,
-                  right: 60,
-                  top: 30,
-                  bottom: 30
-                ),
-                child: LoadingAnimationWidget.threeArchedCircle(
-                  color: Theme.of(context).indicatorColor, 
-                  size: 40
-                )
-              ),
-              errorWidget: (context, url, error) => Icon(Icons.error),
-              imageBuilder: (context, imageProvider) => Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: imageProvider,
-                          fit: BoxFit.cover,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(5),
-                          bottomLeft: Radius.circular(5),
-                        )),
-                  )),
-          if (catalogProperty.isWarbond)
-            Positioned(
-                child: Container(
-              width: 140,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(5),
-                  bottomLeft: Radius.circular(5),
-                ),
-              ),
-            )),
-        ],
-      ),
-    );
-  }
-}
-
+/// 商店商品卡片,样式对齐数据库卡(如 `ShieldInfoCard`):
+/// 左侧 132 宽圆角题图,右侧 标题 + 副标题 + 标签 chips + 底部价格行。
+/// 点击弹出原详情 `WoltModalSheet`。
 class ShopItemWidget extends StatelessWidget {
   final CatalogProperty catalogProperty;
   final CatalogTypes catalogTypes;
 
   const ShopItemWidget({
-    Key? key,
+    super.key,
     required this.catalogProperty,
     required this.catalogTypes,
-  }) : super(key: key);
+  });
 
-  Widget priceWidget(BuildContext context, int price) {
-    return Row(
-      children: [
-        Text('\$',
-            style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
-        Text(
-          priceString(price),
-          style: TextStyle(fontSize: 20),
-        ),
-      ],
-    );
-  }
-
-  Widget? currentPriceWidget(
-      BuildContext context, int price, int currentPrice) {
-    if (price > 0 || currentPrice > 0) {
-      return Row(
-        children: [
-          Text(
-            '\$${priceString(currentPrice)}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).hintColor,
-              decoration: TextDecoration.lineThrough,
-            ),
-          ),
-          Text(
-            ' (${((price - currentPrice) / currentPrice * 100).toStringAsFixed(2)}%)',
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).hintColor,
-            ),
-          ),
-        ],
-      );
-    }
-    return null;
-  }
-
-  Widget getTitleWidget(BuildContext context, CatalogProperty catalogProperty) {
-    if (!catalogProperty.isWarbond) {
-      return Text(catalogProperty.title,
-          style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold));
-    } else {
-      return Text(catalogProperty.title,
-          style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange));
-    }
+  String get _thumbUrl {
+    final url = catalogProperty.media.thumbnail.storeSmall;
+    return url.startsWith('/')
+        ? 'https://robertsspaceindustries.com$url'
+        : url;
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final subtitle = catalogProperty.subtitle;
+    final current = catalogProperty.nativePrice.amount;
+    final cache = ShopCatalogCache();
+    // discounted 视为促销时的更高原价;仅当其 > 现价才展示划线原价(联调可对调)。
+    final disc = cache.discountedFor(catalogProperty.id);
+    final hasDiscount = disc != null && disc > current;
+
+    // 状态标签 + RSI 原生标签;总数限制在 3 个以内,避免卡片高度溢出。
+    final statusCount =
+        (catalogProperty.isWarbond ? 1 : 0) + (catalogProperty.isPackage ? 1 : 0);
+    final rsiTags =
+        cache.tagsFor(catalogProperty.id).take(3 - statusCount).toList();
+    final chips = <Widget>[
+      if (catalogProperty.isWarbond) _tagChip(Colors.orange, '战争债券'),
+      if (catalogProperty.isPackage) _tagChip(cs.primary, '组合包'),
+      for (final t in rsiTags) _tagChip(Colors.grey, t),
+    ];
+
     return GestureDetector(
-        onTap: () {
-          WoltModalSheet.show<void>(
-              context: context,
-              pageListBuilder: (modalSheetContext) {
-                return [
-                  getCatalogItemDetailSheet(modalSheetContext, catalogProperty, context),
-                ];
-              });
-        },
-        child: Stack(
-          children: [
-            Card(
-              elevation: 0,
-              child: Container(
-                padding: const EdgeInsets.all(0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ShopItemImageWidget(
-                      catalogProperty: catalogProperty,
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                        child: getTitleWidget(context, catalogProperty)
-                    ),
-                  ],
+      onTap: () {
+        WoltModalSheet.show<void>(
+            context: context,
+            pageListBuilder: (modalSheetContext) {
+              return [
+                getCatalogItemDetailSheet(
+                    modalSheetContext, catalogProperty, context),
+              ];
+            });
+      },
+      child: SizedBox(
+        height: 118,
+        child: Card(
+          elevation: 0,
+          color: Theme.of(context).cardColor,
+          shadowColor: Colors.transparent,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 132,
+                height: 118,
+                child: _thumb(context, _thumbUrl),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      left: 10, right: 10, top: 8, bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        catalogProperty.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      if (subtitle.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey[600]),
+                          ),
+                        ),
+                      if (chips.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: chips,
+                          ),
+                        ),
+                      const Spacer(),
+                      // 左下 原价划线 + 折扣% / 右下 现价(主题色)
+                      Row(
+                        children: [
+                          if (hasDiscount) ...[
+                            Text(
+                              '\$${priceString(disc)}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '-${((disc - current) / disc * 100).round()}%',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          Text(
+                            '\$${priceString(current)}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: cs.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              left: 150,
-              bottom: 5,
-              child: priceWidget(context, catalogProperty.nativePrice.amount),
-            )
-          ],
-        ));
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _thumb(BuildContext context, String url) {
+    const radius = BorderRadius.only(
+      topLeft: Radius.circular(8),
+      bottomLeft: Radius.circular(8),
+    );
+    return CachedNetworkImage(
+      imageUrl: url,
+      placeholder: (context, _) => Center(
+        child: LoadingAnimationWidget.threeArchedCircle(
+          color: Theme.of(context).primaryColor,
+          size: 26,
+        ),
+      ),
+      errorWidget: (context, _, __) => Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.12),
+          borderRadius: radius,
+        ),
+        child: Icon(Icons.image_outlined, color: Colors.grey[400]),
+      ),
+      imageBuilder: (context, imageProvider) => Container(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+        ),
+      ),
+    );
+  }
+
+  /// 标签 chip:用传入色的浅色调底 + 同色文字(仿数据库卡)。
+  Widget _tagChip(Color color, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
   }
 }

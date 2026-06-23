@@ -920,7 +920,12 @@ Widget _blueprintIngredientsCard(List<BlueprintIngredient> ings) {
     ),
     for (final i in ings)
       tr(
-        Text(i.name ?? '-', style: nameStyle),
+        Text(
+          i.name == null
+              ? '-'
+              : GameItemTranslationRepo().getCommodities(i.name!),
+          style: nameStyle,
+        ),
         Text(qty(i), style: qtyStyle, textAlign: TextAlign.right),
       ),
   ]);

@@ -1,5 +1,6 @@
 import '../api_service.dart' show RsiApiClient;
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart' show CatalogResponse, CatalogProperty;
+import 'package:refuge_next/src/repo/shop_catalog_cache.dart';
 
 class CatalogReq {
   final int page;
@@ -224,7 +225,36 @@ fragment TyBundleProductFragment on TyProduct {
       return null;
     }
     final catalogData = CatalogResponse.fromJson(response.data);
+    _cacheExtras(response.data);
     return catalogData.data.store.listing.resources;
+  }
+
+  /// 旁路:从原始 JSON 取各商品的 `nativePrice.discounted` 与 `tags[].name`,
+  /// 写入缓存(freezed 模型未捕获这些字段)。空安全,失败不影响主流程。
+  void _cacheExtras(dynamic data) {
+    try {
+      final resources =
+          data?['data']?['store']?['listing']?['resources'] as List?;
+      if (resources == null) return;
+      final cache = ShopCatalogCache();
+      for (final r in resources) {
+        if (r is! Map) continue;
+        final id = r['id']?.toString();
+        if (id == null) continue;
+
+        final discounted = (r['nativePrice'] as Map?)?['discounted'] as num?;
+        cache.putDiscounted(id, discounted?.toInt());
+
+        final tags = <String>[];
+        for (final t in (r['tags'] as List?) ?? const []) {
+          final name = (t is Map) ? t['name']?.toString() : null;
+          if (name != null && name.isNotEmpty) tags.add(name);
+        }
+        cache.putTags(id, tags);
+      }
+    } catch (_) {
+      // 附加信息,解析失败时忽略
+    }
   }
 
 }
