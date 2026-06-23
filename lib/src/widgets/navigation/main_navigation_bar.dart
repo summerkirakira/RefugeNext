@@ -19,7 +19,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
   @override
   void initState() {
     super.initState();
-    _controllers = List<AnimationController>.generate(6, (int index) {
+    _controllers = List<AnimationController>.generate(7, (int index) {
       return AnimationController(
         duration: const Duration(milliseconds: 300),
         vsync: this,
@@ -59,30 +59,37 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
           label: '好友',
         ),
         BottomNavigationBarItem(
+          icon: Icon(
+              Provider.of<MainDataModel>(context).selectedPage == 1
+                  ? Icons.storage_rounded
+                  : Icons.storage_outlined),
+          label: '数据库',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.business_rounded),
           label: '商店',
         ),
         BottomNavigationBarItem(
           icon: Icon(
-              Provider.of<MainDataModel>(context).selectedPage == 2 ?
+              Provider.of<MainDataModel>(context).selectedPage == 3 ?
               FontAwesome.home : FontAwesome.home),
           label: '机库',
         ),
         BottomNavigationBarItem(
           icon: Icon(
-              Provider.of<MainDataModel>(context).selectedPage == 3 ?
+              Provider.of<MainDataModel>(context).selectedPage == 4 ?
               Icons.build_circle_rounded : Icons.build_circle_outlined),
           label: '工具',
         ),
         BottomNavigationBarItem(
           icon: Icon(
-              Provider.of<MainDataModel>(context).selectedPage == 4 ?
+              Provider.of<MainDataModel>(context).selectedPage == 5 ?
               Icons.account_circle_rounded : Icons.account_circle_outlined),
           label: '我的',
         ),
         BottomNavigationBarItem(
           icon: Icon(
-              Provider.of<MainDataModel>(context).selectedPage == 5 ?
+              Provider.of<MainDataModel>(context).selectedPage == 6 ?
               Icons.auto_awesome : Icons.auto_awesome_outlined),
           label: 'AI',
         ),

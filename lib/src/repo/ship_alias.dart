@@ -14,6 +14,17 @@ class ShipAliasRepo {
 
   List<ShipAlias> _shipAliases = [];
 
+  /// uuid → ShipAlias 索引,随 [_shipAliases] 赋值时重建,供 O(1) 查找。
+  final Map<String, ShipAlias> _byUuid = {};
+
+  void _rebuildUuidIndex() {
+    _byUuid.clear();
+    for (final a in _shipAliases) {
+      final u = a.uuid;
+      if (u != null && u.isNotEmpty) _byUuid[u] = a;
+    }
+  }
+
   Future<String> get _localPath async {
     return await StoragePath.getAppDataPath();
   }
@@ -40,6 +51,7 @@ class ShipAliasRepo {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('vip.kirakira.ship_aliases.version', version);
     _shipAliases = items;
+    _rebuildUuidIndex();
 
     return file.writeAsString(jsonEncode(items));
   }
@@ -54,6 +66,7 @@ class ShipAliasRepo {
       return _shipAliases;
     }
     _shipAliases = await readShipAliases();
+    _rebuildUuidIndex();
     return _shipAliases;
   }
 
@@ -98,6 +111,8 @@ class ShipAliasRepo {
 
     return null;
   }
+
+  ShipAlias? getShipAliasByUuidSync(String uuid) => _byUuid[uuid];
 
   ShipAlias? getShipAliasSync(String key) {
     if (_shipAliases.isEmpty) {

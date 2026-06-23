@@ -5,12 +5,114 @@ import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/repo/game_vehicle.dart';
+import 'package:refuge_next/src/repo/ship_alias.dart';
+import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/repo/ship_info.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_menu.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_thumbnail.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+
+/// 护盾朝向类型(face_type)中文映射;未命中保留原文。
+const kShieldFaceTypeCn = {'Bubble': '气泡', 'Quadrant': '象限'};
+
+/// 载具大类(career)中文映射(据 wiki 真实数据);未命中保留原文。
+const kVehicleCareerCn = {
+  'Combat': '战斗',
+  'Transporter': '运输',
+  'Transport': '运输',
+  'Exploration': '探索',
+  'Competition': '竞速',
+  'Support': '支援',
+  'Industrial': '工业',
+  'Multi-Role': '多用途',
+  'Ground': '地面',
+  'Starter': '入门',
+  'Snub Fighter': '微型战斗机',
+  'Gunship': '炮艇',
+  'Destroyer': '驱逐舰',
+};
+
+/// 载具定位(role)片段中文映射(role 按 " / " 拆分后逐片段查);未命中保留原文。
+const _kVehicleRoleCn = {
+  'Light Fighter': '轻型战斗机',
+  'Medium Fighter': '中型战斗机',
+  'Heavy Fighter': '重型战斗机',
+  'Stealth Fighter': '隐形战斗机',
+  'Snub Fighter': '微型战斗机',
+  'Interceptor': '拦截机',
+  'Bomber': '轰炸机',
+  'Heavy Bomber': '重型轰炸机',
+  'Stealth Bomber': '隐形轰炸机',
+  'Gunship': '炮艇',
+  'Heavy Gunship': '重型炮艇',
+  'Gun Ship': '炮艇',
+  'Frigate': '护卫舰',
+  'Corvette': '巡防舰',
+  'Destroyer': '驱逐舰',
+  'Light Freight': '轻型货运',
+  'Medium Freight': '中型货运',
+  'Heavy Freight': '重型货运',
+  'Cargo': '货运',
+  'Transport': '运输',
+  'Light Mining': '轻型采矿',
+  'Medium Mining': '中型采矿',
+  'Mining': '采矿',
+  'Light Salvage': '轻型回收',
+  'Medium Salvage': '中型回收',
+  'Heavy Salvage': '重型回收',
+  'Light Refueling': '轻型加油',
+  'Heavy Refueling': '重型加油',
+  'Light Tank': '轻型坦克',
+  'Heavy Tank': '重型坦克',
+  'Dropship': '运兵船',
+  'Heavy Dropship': '重型运兵船',
+  'Anti-Air': '防空',
+  'Anti-Vehicle': '反载具',
+  'Racing': '竞速',
+  'Expedition': '远征',
+  'Pathfinder': '探路者',
+  'Passenger': '载客',
+  'Medical': '医疗',
+  'Interdiction': '拦阻',
+  'Luxury Touring': '豪华旅行',
+  'Touring': '旅行',
+  'Reporting': '媒体报道',
+  'Recovery': '救援',
+  'Modular': '模块化',
+  'Medium Data': '中型数据',
+  'Light Science': '轻型科研',
+  'Generalist': '通用',
+  'Combat': '战斗',
+};
+
+/// 舰船显示名:v.uuid → 对应 ShipAlias → 翻译(alias.name);无则回退 v.name。
+String vehicleDisplayName(GameVehicle v) {
+  final uuid = v.uuid;
+  if (uuid != null) {
+    final alias = ShipAliasRepo().getShipAliasByUuidSync(uuid);
+    if (alias != null) return TranslationRepo().getTranslationSync(alias.name);
+  }
+  return v.name ?? '未知';
+}
+
+/// career 中文化;空/null 返回 null,未命中保留原文。
+String? vehicleCareerCn(String? c) =>
+    (c == null || c.isEmpty) ? null : (kVehicleCareerCn[c] ?? c);
+
+/// role 中文化:按 " / " 拆分逐片段映射(丢弃 PLACEHOLDER 脏值),重新 join;
+/// 全空返回 null,未命中片段保留原文。
+String? vehicleRoleCn(String? role) {
+  if (role == null) return null;
+  final parts = <String>[];
+  for (final raw in role.split(' / ')) {
+    final p = raw.trim();
+    if (p.isEmpty || p == '<= PLACEHOLDER =>') continue;
+    parts.add(_kVehicleRoleCn[p] ?? p);
+  }
+  return parts.isEmpty ? null : parts.join(' / ');
+}
 
 /// 载具详情页(数据:本地 GameVehicleRepo 的 wiki GameVehicle)。
 ///
@@ -191,8 +293,8 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
   Widget _buildTitle(GameVehicle v) {
     final thumbUrl = _thumbUrlFor(v);
     final tags = <String>[
-      if (v.career != null) v.career!,
-      if (v.role != null) v.role!,
+      if (vehicleCareerCn(v.career) case final c?) c,
+      if (vehicleRoleCn(v.role) case final r?) r,
     ];
 
     // SKU 美元价:取最高 SKU(同现有页取最高价逻辑),回退 msrp;
@@ -331,7 +433,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    v.name ?? '未知',
+                    vehicleDisplayName(v),
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold),
                   ),
@@ -526,7 +628,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              vehicle.name ?? '未知',
+                                              vehicleDisplayName(vehicle),
                                               style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -582,16 +684,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
       _card(
           '基础信息',
           _rows([
-            if (v.role != null || v.career != null)
-              _statRow(
-                '职能',
-                Text(
-                  [v.role, v.career].whereType<String>().join(' / '),
-                  style: _valueStyleBold,
-                ),
-              ),
-            _row('定位', (foci != null && foci.isNotEmpty) ? foci : null,
-                orange: true),
+            _row('定位', (foci != null && foci.isNotEmpty) ? foci : null),
             _row('船员', _crewText(v.crew)),
             if (dim != null &&
                 (dim.length != null || dim.width != null || dim.height != null))
@@ -602,7 +695,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
             _row('总质量', _n(v.massTotal), unit: 'kg'),
             _row('船体质量', _n(v.massHull), unit: 'kg'),
             _row('装配质量', _n(v.massLoadout), unit: 'kg'),
-            _row('货舱', _n(v.cargoCapacity), unit: 'SCU', orange: true),
+            _row('货舱', _n(v.cargoCapacity), unit: 'SCU'),
             _row('矿舱', _n(v.oreCapacity), unit: 'SCU'),
             // vehicle_inventory 原始单位为 µSCU,换算为 SCU 展示
             _row('个人存储',
@@ -777,7 +870,10 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
       _card(
           '护盾',
           _rows([
-            _row('类型', s?.faceType),
+            _row('类型',
+                s?.faceType == null
+                    ? null
+                    : (kShieldFaceTypeCn[s!.faceType] ?? s.faceType)),
             _row('血量', _n(s?.hp), unit: 'HP', orange: true),
             _row('回复速率', _n(s?.regeneration), unit: 'HP/s'),
             _row('回复延迟', _n(s?.regenerationTime), unit: 's'),

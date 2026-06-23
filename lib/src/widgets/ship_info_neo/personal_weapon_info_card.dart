@@ -2,23 +2,23 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
-import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart';
-import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_thumbnail.dart';
+import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart'
+    show kItemTypeValueCn, gameItemDisplayName;
+import 'package:refuge_next/src/widgets/ship_info_neo/personal_weapon_detail_page.dart';
 
-/// 舰船信息小卡片(AI `show_item_card` 的渲染单元)。
-///
-/// 样式参照机库卡片:左侧 wiki 题图缩略图,右侧 舰船名 + 厂商 +
-/// 定位/尺寸标签 + 价格。点击默认跳转到 [VehicleDetailPage]。
-class VehicleInfoCard extends StatelessWidget {
-  const VehicleInfoCard({
+/// FPS 武器信息小卡片,样式仿 [VehicleWeaponInfoCard]:
+/// 左侧 wiki 题图,右侧 名称 + 厂商 + 类型标签 + 尺寸/aUEC 价格。
+/// 点击默认跳转到 [PersonalWeaponDetailPage]。
+class PersonalWeaponInfoCard extends StatelessWidget {
+  const PersonalWeaponInfoCard({
     super.key,
-    required this.vehicle,
+    required this.item,
     this.onTap,
   });
 
-  final GameVehicle vehicle;
+  final GameItem item;
 
-  /// 点击回调;为 null 时默认跳转载具详情页。
+  /// 点击回调;为 null 时默认跳转 FPS 武器详情页。
   final VoidCallback? onTap;
 
   void _defaultTap(BuildContext context) {
@@ -26,31 +26,22 @@ class VehicleInfoCard extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) =>
-            VehicleDetailPage(initialVehicle: vehicle, allowSwitch: false),
+            PersonalWeaponDetailPage(initialItem: item, allowSwitch: false),
       ),
     );
   }
 
-  /// 美元价:取最高 SKU 价,回退 msrp;ShipPriceDisplay 以「分」计价故 ×100。
-  int? _usdCents() {
-    num? usd;
-    final skus = vehicle.skus;
-    if (skus != null) {
-      for (final sku in skus) {
-        final price = sku.price;
-        if (price != null && (usd == null || price > usd)) {
-          usd = price;
-        }
-      }
-    }
-    usd ??= vehicle.msrp;
-    return usd == null ? null : (usd * 100).toInt();
+  String? _thumbUrl() {
+    final images = item.images;
+    if (images == null || images.isEmpty) return null;
+    final first = images.first;
+    return first.thumbnailUrl ?? first.originalUrl;
   }
 
   /// aUEC:取 UEX 各终端最高购买价。
   num? _auec() {
     num? a;
-    for (final p in vehicle.uexPrices?.purchase ?? const <UexPrice>[]) {
+    for (final p in item.uexPrices?.purchase ?? const <UexPrice>[]) {
       final b = p.priceBuy;
       if (b != null && (a == null || b > a)) a = b;
     }
@@ -66,16 +57,15 @@ class VehicleInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final v = vehicle;
-    final thumbUrl = vehicleThumbnailUrl(v, small: true);
-    // 舰船名:v.uuid → 对应 ShipAlias → 翻译(alias.name);无 alias 回退 v.name。
-    final title = vehicleDisplayName(v);
-    final tags = <String>[
-      if (vehicleCareerCn(v.career) case final c?) c,
-      if (vehicleRoleCn(v.role) case final r?) r,
-    ];
-    final usdCents = _usdCents();
+    final thumbUrl = _thumbUrl();
+    final title = gameItemDisplayName(item);
+    final type = item.personalWeapon?.type;
     final auec = _auec();
+    final tags = <String>[
+      if (type != null && type.isNotEmpty) kItemTypeValueCn[type] ?? type,
+      if (item.blueprint?.isNotEmpty ?? false) '有蓝图',
+      if (auec != null) '可购买',
+    ];
     final cs = Theme.of(context).colorScheme;
 
     return GestureDetector(
@@ -95,8 +85,8 @@ class VehicleInfoCard extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.only(left: 10, right: 10, top: 8, bottom: 8),
+                  padding: const EdgeInsets.only(
+                      left: 10, right: 10, top: 8, bottom: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -107,18 +97,17 @@ class VehicleInfoCard extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 15, fontWeight: FontWeight.bold),
                       ),
-                      if (v.manufacturer?.name != null)
+                      if (item.manufacturer?.name != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            v.manufacturer!.name!,
+                            item.manufacturer!.name!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style:
-                                TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey[600]),
                           ),
                         ),
-                      // 定位标签:厂商下一行
                       if (tags.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
@@ -129,22 +118,22 @@ class VehicleInfoCard extends StatelessWidget {
                           ),
                         ),
                       const Spacer(),
-                      // 价格:左下 aUEC(绿)/ 右下 USD(主题色)
+                      // 左下 尺寸 / 右下 aUEC(主题色)
                       Row(
                         children: [
-                          if (auec != null)
+                          if (item.size != null)
                             Text(
-                              '${_fmtAuec(auec)} aUEC',
+                              '尺寸 ${item.size}',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade600,
+                                color: Colors.grey[600],
                               ),
                             ),
                           const Spacer(),
-                          if (usdCents != null)
+                          if (auec != null)
                             Text(
-                              '\$${(usdCents / 100).round()}',
+                              '${_fmtAuec(auec)} aUEC',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -175,7 +164,7 @@ class VehicleInfoCard extends StatelessWidget {
           color: Colors.grey.withValues(alpha: 0.12),
           borderRadius: radius,
         ),
-        child: Icon(Icons.rocket_launch_outlined, color: Colors.grey[400]),
+        child: Icon(Icons.gps_fixed, color: Colors.grey[400]),
       );
     }
     return CachedNetworkImage(

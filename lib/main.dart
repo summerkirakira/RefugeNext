@@ -10,6 +10,7 @@ import 'src/funcs/initial.dart';
 import 'src/widgets/hangar/hangar_page.dart';
 import 'src/widgets/user_info/user_page.dart';
 import 'src/widgets/shop/shop_page.dart';
+import 'src/widgets/database/database_page.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:refuge_next/src/widgets/empty_page/empty_page.dart' show EmptyPage;
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
@@ -219,14 +220,16 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       case 0:
         return const FriendsStatusPage();
       case 1:
-        return ShopPage();
+        return const DatabasePage();
       case 2:
-        return HangarPage();
+        return ShopPage();
       case 3:
-        return FeatureSelectionPage();
+        return HangarPage();
       case 4:
-        return UserInfoPage();
+        return FeatureSelectionPage();
       case 5:
+        return UserInfoPage();
+      case 6:
         return const AiChatPage();
       default:
         return Text('Home Page');

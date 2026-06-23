@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/repo/blueprint.dart';
+import 'package:refuge_next/src/repo/game_item_translation.dart';
 import 'package:refuge_next/src/repo/mission.dart';
 import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/mission_detail_page.dart';
@@ -431,7 +432,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.name ?? item.className ?? '未知',
+                    gameItemDisplayName(item),
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold),
                   ),
@@ -560,7 +561,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
                           final s = filtered[index];
                           return ListTile(
                             dense: true,
-                            title: Text(s.name ?? s.className ?? '未知'),
+                            title: Text(gameItemDisplayName(s)),
                             subtitle: Text(
                               '${s.manufacturer?.name ?? ''} · '
                               'S${s.size ?? '-'} · '
@@ -720,6 +721,17 @@ const Map<String, String> kFireModeCn = {
   'Detach': '投掷',
 };
 
+/// 配件子类型(`subType`)→ 中文。未命中保持原值。
+const Map<String, String> kAttachSubTypeCn = {
+  'Magazine': '弹匣',
+  'IronSight': '瞄具',
+  'Barrel': '枪管',
+  'BottomAttachment': '下挂',
+  'Missile': '导弹',
+  'Personal': '个人',
+  'Utility': '多功能',
+};
+
 /// 挂点/槽位名 → 中文(用于「Attachment Point」单值与「Attachments」串解析)。未命中保持原英文。
 const Map<String, String> kPortSlotCn = {
   'Optic': '瞄具',
@@ -751,6 +763,17 @@ String _attachmentsCn(String value) {
     }
   }
   return out.join(', ');
+}
+
+/// 物品显示名:className 经 [GameItemTranslationRepo] 查表(中文);
+/// 未命中(返回原 className)则回退到 item.name 英文显示名。
+String gameItemDisplayName(GameItem item) {
+  final cn = item.className;
+  if (cn != null) {
+    final t = GameItemTranslationRepo().getSync(cn);
+    if (t != cn) return t;
+  }
+  return item.name ?? cn ?? '未知';
 }
 
 /// descriptionData 某条目的值按其键名做中文化(类型 / 挂载点 / 配件);其余原样返回。

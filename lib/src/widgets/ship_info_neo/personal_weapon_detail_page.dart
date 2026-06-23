@@ -245,17 +245,6 @@ final personalWeaponAttachmentSpec = GameItemParamSpec(
   },
 );
 
-/// 配件挂点子类型 → 中文。
-const _attachSubTypeCn = {
-  'Magazine': '弹匣',
-  'IronSight': '瞄具',
-  'Barrel': '枪管',
-  'BottomAttachment': '下挂',
-  'Missile': '导弹',
-  'Personal': '个人',
-  'Utility': '多功能',
-};
-
 /// 挂点行(照搬 vehicle_detail_page 的 `_PortItem` 外观,改用 [ItemPort]):
 /// 绿框尺寸徽章 + 名称 + 副行 +(装备时)等级 + 子挂点递归缩进。
 ///
@@ -292,7 +281,7 @@ class _ItemPortTile extends StatelessWidget {
     if (hasItem) {
       subline = item!.manufacturer?.name;
     } else if (port.subType != null) {
-      subline = '武器配件 · ${_attachSubTypeCn[port.subType] ?? port.subType}';
+      subline = '武器配件 · ${kAttachSubTypeCn[port.subType] ?? port.subType}';
     }
 
     // 已装配件且有 uuid → 整行可点,跳转配件详情页。
