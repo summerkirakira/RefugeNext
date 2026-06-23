@@ -11,6 +11,7 @@ import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../repo/translation.dart';
 import '../repo/game_item_translation.dart';
+import '../repo/game_version_manager.dart';
 import '../network/cirno/cirno_api.dart';
 
 import '../repo/ship_alias.dart';
@@ -30,6 +31,7 @@ Future<void> mustStartup() async {
   await FastCachedImageConfig.init(subDir: storageLocation, clearCacheAfter: const Duration(days: 15));
 
   await GameItemTranslationRepo().load();
+  await GameVersionManager().load();
 
   await authStartup();
   await userInit();

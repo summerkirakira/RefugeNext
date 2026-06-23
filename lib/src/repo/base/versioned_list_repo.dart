@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../game_version_manager.dart';
 import 'versioned_json_store.dart';
 
 /// 版本化列表仓库的公共接口。
@@ -84,6 +85,16 @@ abstract class VersionedListRepo<E> implements VersionedItemsRepo<E> {
   /// 未选过则回退到本地已有的最新版本(并写入 prefs),本地无数据返回 null。
   @override
   Future<String?> getSelectedVersion() async {
+    // 全局版本优先:一处设置,所有 repo 默认用它(变更时失效内存缓存以重读)。
+    final global = GameVersionManager().version;
+    if (global != null && global.isNotEmpty) {
+      final s = VersionedJsonStore.sanitizeVersion(global);
+      if (_selectedVersion != s) {
+        _selectedVersion = s;
+        _items = [];
+      }
+      return _selectedVersion;
+    }
     if (_selectedVersion != null) {
       return _selectedVersion;
     }
@@ -143,12 +154,13 @@ abstract class VersionedListRepo<E> implements VersionedItemsRepo<E> {
 
   @override
   Future<List<E>> getItems() async {
-    if (_items.isNotEmpty) {
-      return _items;
-    }
+    // 先解析选中版本(全局版本变更时会在此失效缓存),再判断内存缓存。
     final version = await getSelectedVersion();
     if (version == null) {
       return [];
+    }
+    if (_items.isNotEmpty) {
+      return _items;
     }
     _items = await _store.read(version) ?? [];
     return _items;

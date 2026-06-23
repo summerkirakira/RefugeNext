@@ -157,6 +157,11 @@ class WikiApiClient {
         ),
       ],
     );
+    // 生成包把 receiveTimeout 硬编码为 3s,对版本切换的全量下载(尤其旧版本/多页)
+    // 太短会超时;这里放宽到更合理的值。
+    _api.dio.options
+      ..connectTimeout = const Duration(seconds: 15)
+      ..receiveTimeout = const Duration(seconds: 30);
   }
 
   /// 设置 Sanctum Bearer token(登录/获取后调用);传 null 清除。

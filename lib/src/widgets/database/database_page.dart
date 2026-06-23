@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_custom_tab_bar/library.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/repo/game_vehicle.dart';
+import 'package:refuge_next/src/repo/game_version_manager.dart';
 import 'package:refuge_next/src/repo/ship_alias.dart';
 import 'package:refuge_next/src/repo/cooler.dart';
 import 'package:refuge_next/src/repo/personal_weapon.dart';
@@ -30,6 +31,17 @@ import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart'
     show kVehicleCareerCn, kShieldFaceTypeCn;
 import 'database_top_bar.dart';
 
+/// 版本号简写:去掉尾部的构建号(最后一个 `.` 之后的纯数字),
+/// 如 `4.8.2-LIVE.12030094` → `4.8.2-LIVE`;null/空 → `最新`。
+String _shortVersion(String? v) {
+  if (v == null || v.isEmpty) return '最新';
+  final i = v.lastIndexOf('.');
+  if (i > 0 && int.tryParse(v.substring(i + 1)) != null) {
+    return v.substring(0, i);
+  }
+  return v;
+}
+
 /// 数据库:游戏内所有数据的查询入口。
 /// 顶部横向类别菜单(仿商店),下方为带题图的卡片列表(仿 AI 舰船卡)。
 /// 本期「载具」接真实数据,其余类别占位。
@@ -55,10 +67,79 @@ class _DatabasePageState extends State<DatabasePage> {
     '量子引擎',
   ];
 
+  /// 当前全局版本码(null = 最新/默认);用作各列表 key,变化即重载。
+  String? _version = GameVersionManager().version;
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// 版本选择弹窗:列出所有游戏版本码(只列服务端返回的,避免无效码 404)。
+  Future<void> _showVersionSheet() async {
+    List<GameVersion> versions = const [];
+    try {
+      final res = await WikiApiClient().api.getGameVersionsApi().listGameVersions(
+            page: null,
+            pageLeftSquareBracketSizeRightSquareBracket: 200,
+          );
+      versions = res.data?.data ?? const [];
+    } catch (_) {
+      // 拉取失败仍可显示「最新」一项
+    }
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        Widget tile(String? code, String label, {String? sub}) => ListTile(
+              dense: true,
+              title: Text(label),
+              subtitle: sub == null ? null : Text(sub),
+              trailing: _version == code
+                  ? Icon(Icons.check, color: Theme.of(context).primaryColor)
+                  : null,
+              onTap: () async {
+                Navigator.of(context).pop();
+                await GameVersionManager().setVersion(code);
+                if (mounted) setState(() => _version = GameVersionManager().version);
+              },
+            );
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          maxChildSize: 0.92,
+          builder: (context, controller) {
+            return Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(14),
+                  child: Text('游戏版本',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: controller,
+                    children: [
+                      tile(null, '最新(默认)'),
+                      for (final v in versions)
+                        if (v.code != null)
+                          tile(v.code, v.code!,
+                              sub: [
+                                if (v.channel != null) v.channel,
+                                if (v.isDefault == true) '默认',
+                              ].whereType<String>().join(' · ')),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildTab(BuildContext context, int index) {
@@ -108,23 +189,32 @@ class _DatabasePageState extends State<DatabasePage> {
             controller: _pageController,
             itemCount: _titles.length,
             itemBuilder: (context, index) {
+              final k = ValueKey('${index}_$_version');
               switch (index) {
                 case 0:
-                  return const _VehicleDbList();
+                  return _VehicleDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 1:
-                  return const _VehicleWeaponDbList();
+                  return _VehicleWeaponDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 2:
-                  return const _PersonalWeaponDbList();
+                  return _PersonalWeaponDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 3:
-                  return const _AttachmentDbList();
+                  return _AttachmentDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 4:
-                  return const _ShieldDbList();
+                  return _ShieldDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 5:
-                  return const _CoolerDbList();
+                  return _CoolerDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 6:
-                  return const _PowerPlantDbList();
+                  return _PowerPlantDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 case 7:
-                  return const _QuantumDriveDbList();
+                  return _QuantumDriveDbList(
+                      key: k, onShowVersionSheet: _showVersionSheet);
                 default:
                   return _ComingSoon(_titles[index]);
               }
@@ -138,7 +228,9 @@ class _DatabasePageState extends State<DatabasePage> {
 
 /// 载具列表:带题图的舰船卡(`VehicleInfoCard`),点击进详情。
 class _VehicleDbList extends StatefulWidget {
-  const _VehicleDbList();
+  const _VehicleDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_VehicleDbList> createState() => _VehicleDbListState();
@@ -155,6 +247,7 @@ class _VehicleDbListState extends State<_VehicleDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameVehicle> _vehicles = const [];
   bool _loading = true;
+  Object? _error;
 
   // 排序 / 筛选状态
   late final List<_SortField<GameVehicle>> _sortFields = [
@@ -201,7 +294,7 @@ class _VehicleDbListState extends State<_VehicleDbList>
     try {
       var list = await GameVehicleRepo().getVehicles();
       if (list.isEmpty) {
-        await GameVehicleRepo().refresh();
+        await GameVehicleRepo().refresh(version: GameVersionManager().version);
         list = await GameVehicleRepo().getVehicles();
       }
       list = await _onlyAliasShips(list);
@@ -209,17 +302,21 @@ class _VehicleDbListState extends State<_VehicleDbList>
       setState(() {
         _vehicles = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   /// 下拉刷新:重新联网拉取最新载具,再按 ship_alias 过滤。
   Future<void> _refresh() async {
     try {
-      await GameVehicleRepo().refresh();
+      await GameVehicleRepo().refresh(version: GameVersionManager().version);
       var list = await GameVehicleRepo().getVehicles();
       list = await _onlyAliasShips(list);
       if (!mounted) return;
@@ -307,6 +404,25 @@ class _VehicleDbListState extends State<_VehicleDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_vehicles.isEmpty) {
       return Center(
         child: Column(
@@ -357,31 +473,52 @@ class _VehicleDbListState extends State<_VehicleDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -584,7 +721,9 @@ class _VehicleDbListState extends State<_VehicleDbList>
 
 /// 载具武器(机炮)列表:带题图的 [VehicleWeaponInfoCard],点击进详情。
 class _VehicleWeaponDbList extends StatefulWidget {
-  const _VehicleWeaponDbList();
+  const _VehicleWeaponDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_VehicleWeaponDbList> createState() => _VehicleWeaponDbListState();
@@ -594,6 +733,7 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -609,23 +749,27 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
     try {
       var list = await VehicleWeaponRepo().getVehicleWeapons();
       if (list.isEmpty) {
-        await VehicleWeaponRepo().refresh();
+        await VehicleWeaponRepo().refresh(version: GameVersionManager().version);
         list = await VehicleWeaponRepo().getVehicleWeapons();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await VehicleWeaponRepo().refresh();
+      await VehicleWeaponRepo().refresh(version: GameVersionManager().version);
       final list = await VehicleWeaponRepo().getVehicleWeapons();
       if (!mounted) return;
       setState(() => _items = list);
@@ -696,6 +840,25 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -745,31 +908,52 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -961,7 +1145,9 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
 
 /// FPS 武器列表:带题图的 [PersonalWeaponInfoCard],点击进详情;带排序/筛选。
 class _PersonalWeaponDbList extends StatefulWidget {
-  const _PersonalWeaponDbList();
+  const _PersonalWeaponDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_PersonalWeaponDbList> createState() => _PersonalWeaponDbListState();
@@ -971,6 +1157,7 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -986,23 +1173,27 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
     try {
       var list = await PersonalWeaponRepo().getPersonalWeapons();
       if (list.isEmpty) {
-        await PersonalWeaponRepo().refresh();
+        await PersonalWeaponRepo().refresh(version: GameVersionManager().version);
         list = await PersonalWeaponRepo().getPersonalWeapons();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await PersonalWeaponRepo().refresh();
+      await PersonalWeaponRepo().refresh(version: GameVersionManager().version);
       final list = await PersonalWeaponRepo().getPersonalWeapons();
       if (!mounted) return;
       setState(() => _items = list);
@@ -1074,6 +1265,25 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -1123,31 +1333,52 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -1344,7 +1575,9 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
 
 /// 武器配件列表:带题图的 [WeaponAttachmentInfoCard],点击进详情;带排序/筛选。
 class _AttachmentDbList extends StatefulWidget {
-  const _AttachmentDbList();
+  const _AttachmentDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_AttachmentDbList> createState() => _AttachmentDbListState();
@@ -1354,6 +1587,7 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -1369,23 +1603,27 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
     try {
       var list = await WeaponAttachmentRepo().getWeaponAttachments();
       if (list.isEmpty) {
-        await WeaponAttachmentRepo().refresh();
+        await WeaponAttachmentRepo().refresh(version: GameVersionManager().version);
         list = await WeaponAttachmentRepo().getWeaponAttachments();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await WeaponAttachmentRepo().refresh();
+      await WeaponAttachmentRepo().refresh(version: GameVersionManager().version);
       final list = await WeaponAttachmentRepo().getWeaponAttachments();
       if (!mounted) return;
       setState(() => _items = list);
@@ -1448,6 +1686,25 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -1497,31 +1754,52 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -1705,7 +1983,9 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
 
 /// 护盾列表:带题图的 [ShieldInfoCard],点击进详情;带排序/筛选。
 class _ShieldDbList extends StatefulWidget {
-  const _ShieldDbList();
+  const _ShieldDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_ShieldDbList> createState() => _ShieldDbListState();
@@ -1715,6 +1995,7 @@ class _ShieldDbListState extends State<_ShieldDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -1730,23 +2011,27 @@ class _ShieldDbListState extends State<_ShieldDbList>
     try {
       var list = await ShieldRepo().getShields();
       if (list.isEmpty) {
-        await ShieldRepo().refresh();
+        await ShieldRepo().refresh(version: GameVersionManager().version);
         list = await ShieldRepo().getShields();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await ShieldRepo().refresh();
+      await ShieldRepo().refresh(version: GameVersionManager().version);
       final list = await ShieldRepo().getShields();
       if (!mounted) return;
       setState(() => _items = list);
@@ -1816,6 +2101,25 @@ class _ShieldDbListState extends State<_ShieldDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -1865,31 +2169,52 @@ class _ShieldDbListState extends State<_ShieldDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -2081,7 +2406,9 @@ class _ShieldDbListState extends State<_ShieldDbList>
 
 /// 冷却器列表:带题图的 [CoolerInfoCard],点击进详情;带排序/筛选。
 class _CoolerDbList extends StatefulWidget {
-  const _CoolerDbList();
+  const _CoolerDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_CoolerDbList> createState() => _CoolerDbListState();
@@ -2091,6 +2418,7 @@ class _CoolerDbListState extends State<_CoolerDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -2106,23 +2434,27 @@ class _CoolerDbListState extends State<_CoolerDbList>
     try {
       var list = await CoolerRepo().getCoolers();
       if (list.isEmpty) {
-        await CoolerRepo().refresh();
+        await CoolerRepo().refresh(version: GameVersionManager().version);
         list = await CoolerRepo().getCoolers();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await CoolerRepo().refresh();
+      await CoolerRepo().refresh(version: GameVersionManager().version);
       final list = await CoolerRepo().getCoolers();
       if (!mounted) return;
       setState(() => _items = list);
@@ -2191,6 +2523,25 @@ class _CoolerDbListState extends State<_CoolerDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -2240,31 +2591,52 @@ class _CoolerDbListState extends State<_CoolerDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -2456,7 +2828,9 @@ class _CoolerDbListState extends State<_CoolerDbList>
 
 /// 发电机列表:带题图的 [PowerPlantInfoCard],点击进详情;带排序/筛选。
 class _PowerPlantDbList extends StatefulWidget {
-  const _PowerPlantDbList();
+  const _PowerPlantDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_PowerPlantDbList> createState() => _PowerPlantDbListState();
@@ -2466,6 +2840,7 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -2481,23 +2856,27 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
     try {
       var list = await PowerPlantRepo().getPowerPlants();
       if (list.isEmpty) {
-        await PowerPlantRepo().refresh();
+        await PowerPlantRepo().refresh(version: GameVersionManager().version);
         list = await PowerPlantRepo().getPowerPlants();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await PowerPlantRepo().refresh();
+      await PowerPlantRepo().refresh(version: GameVersionManager().version);
       final list = await PowerPlantRepo().getPowerPlants();
       if (!mounted) return;
       setState(() => _items = list);
@@ -2566,6 +2945,25 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -2615,31 +3013,52 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
@@ -2831,7 +3250,9 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
 
 /// 量子引擎列表:带题图的 [QuantumDriveInfoCard],点击进详情;带排序/筛选。
 class _QuantumDriveDbList extends StatefulWidget {
-  const _QuantumDriveDbList();
+  const _QuantumDriveDbList({super.key, required this.onShowVersionSheet});
+
+  final VoidCallback onShowVersionSheet;
 
   @override
   State<_QuantumDriveDbList> createState() => _QuantumDriveDbListState();
@@ -2841,6 +3262,7 @@ class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
     with AutomaticKeepAliveClientMixin {
   List<GameItem> _items = const [];
   bool _loading = true;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -2856,23 +3278,27 @@ class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
     try {
       var list = await QuantumDriveRepo().getQuantumDrives();
       if (list.isEmpty) {
-        await QuantumDriveRepo().refresh();
+        await QuantumDriveRepo().refresh(version: GameVersionManager().version);
         list = await QuantumDriveRepo().getQuantumDrives();
       }
       if (!mounted) return;
       setState(() {
         _items = list;
         _loading = false;
+        _error = null;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _refresh() async {
     try {
-      await QuantumDriveRepo().refresh();
+      await QuantumDriveRepo().refresh(version: GameVersionManager().version);
       final list = await QuantumDriveRepo().getQuantumDrives();
       if (!mounted) return;
       setState(() => _items = list);
@@ -2943,6 +3369,25 @@ class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off, size: 40, color: Colors.grey),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('加载失败:$_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: _load, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_items.isEmpty) {
       return Center(
         child: Column(
@@ -2992,31 +3437,52 @@ class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: _showSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
-            label: Text('排序：$_sortLabel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-          ),
-          const SizedBox(width: 8),
-          badges.Badge(
-            showBadge: _filterCount > 0,
-            badgeContent: Text('$_filterCount',
-                style: const TextStyle(color: Colors.white, fontSize: 10)),
-            child: OutlinedButton.icon(
-              onPressed: _showFilterSheet,
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('筛选'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showSortSheet,
+                    icon: const Icon(Icons.swap_vert, size: 18),
+                    label: Text('排序：$_sortLabel'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badges.Badge(
+                    showBadge: _filterCount > 0,
+                    badgeContent: Text('$_filterCount',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
+                    child: OutlinedButton.icon(
+                      onPressed: _showFilterSheet,
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('筛选'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: widget.onShowVersionSheet,
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text(
+                        '版本：${_shortVersion(GameVersionManager().version)}'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text('$count 项',
               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
