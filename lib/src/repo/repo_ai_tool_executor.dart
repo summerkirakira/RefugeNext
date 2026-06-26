@@ -1,7 +1,10 @@
 import '../datasource/data_model.dart';
 import '../datasource/models/hangar.dart';
+import '../datasource/models/buyback.dart';
+import '../datasource/models/searchProperty.dart';
 import '../funcs/search.dart';
 import 'ai_chat.dart';
+import 'ccu_planner.dart';
 import 'game_vehicle.dart';
 import 'vehicle_weapon.dart';
 import 'personal_weapon.dart';
@@ -27,6 +30,7 @@ class RepoAiToolExecutor implements AiToolExecutor {
     'show_hangar_cards',
     'show_buyback_cards',
     'show_item_card',
+    'plan_ccu_upgrade',
   ];
 
   @override
@@ -53,6 +57,8 @@ class RepoAiToolExecutor implements AiToolExecutor {
           return _showBuybackCards(arguments);
         case 'show_item_card':
           return await _showItemCard(arguments);
+        case 'plan_ccu_upgrade':
+          return await CcuPlanner(_model).planUpgrade(arguments);
         default:
           return {'is_error': true, 'error': 'tool not allowed: $name'};
       }
@@ -139,17 +145,8 @@ class RepoAiToolExecutor implements AiToolExecutor {
   }
 
   Future<Map<String, dynamic>> _getBuyback(Map<String, dynamic> args) async {
-    final limit = _asInt(args['limit'], 100);
-    final items = await _model.buybackRepo.readBuybackItems();
-    final shaped = items.take(limit < 0 ? 0 : limit).map((b) {
-      final cn = b.chinesName;
-      return {
-        'id': b.id,
-        'name': (cn != null && cn.isNotEmpty) ? cn : b.title,
-        'qty': b.number,
-      };
-    }).toList();
-    return {'total': items.length, 'items': shaped};
+    // 读已堆叠的 _buybackItems（与前端回购页同源），而非未堆叠的仓库数据。
+    return shapeBuybackItems(_model.rawBuybackItems, args);
   }
 }
 
@@ -226,6 +223,26 @@ bool matchesHangarKeyword(HangarItem item, String key) {
   return false;
 }
 
+/// 把 AI 工具参数映射成前端 SearchProperty。空 List 字段会让对应谓词短路为 true，
+/// 因此只有 filter（searchText）与 type（searchType）生效——复刻前端「关键词+类型」搜索。
+SearchProperty _searchPropertyFromArgs(Map<String, dynamic> args) {
+  final type = args['type'] as String?;
+  final hasType = type != null && type.isNotEmpty && type != 'all';
+  return SearchProperty(
+    searchType: hasType ? [type] : const [],
+    searchStatus: const [],
+    searchInsurance: const [],
+    priceRange: const [],
+    reclaimStatus: const [],
+    fromShip: const [],
+    toShip: const [],
+    searchText: args['filter'] as String?,
+    selectedCCUSlots: const [],
+    orderSelected: false,
+    priceOrder: false,
+  );
+}
+
 /// get_hangar 的精简结果。type 过滤复用 search.dart 的 isSearchedType（null 安全）。
 Map<String, dynamic> shapeHangarItems(
   List<HangarItem> items,
@@ -266,6 +283,36 @@ Map<String, dynamic> shapeHangarItems(
               .map((s) => {'name': _subName(s), 'kind': s.kind})
               .toList(),
           if (extras.isNotEmpty) 'alsoContains': extras,
+        };
+      })
+      .toList();
+
+  return {'total': total, 'items': page};
+}
+
+/// get_buyback 的精简结果。复刻前端回购搜索：过滤直接走前端 processBuybackSearch
+/// （filter 匹配 title/中文名/alsoContains，type 为标题启发式），再 limit/offset 分页。
+/// total 为过滤后的总数；name 优先中文回退英文 title。
+/// 注意：输入应为「已堆叠」的回购列表（_buybackItems），否则同一物品会列成多条。
+Map<String, dynamic> shapeBuybackItems(
+  List<BuybackItem> items,
+  Map<String, dynamic> args,
+) {
+  final limit = _asInt(args['limit'], 100);
+  final offset = _asInt(args['offset'], 0);
+
+  final filtered = processBuybackSearch(items, _searchPropertyFromArgs(args));
+
+  final total = filtered.length;
+  final page = filtered
+      .skip(offset < 0 ? 0 : offset)
+      .take(limit < 0 ? 0 : limit)
+      .map((b) {
+        final cn = b.chinesName;
+        return {
+          'id': b.id,
+          'name': (cn != null && cn.isNotEmpty) ? cn : b.title,
+          'qty': b.number,
         };
       })
       .toList();

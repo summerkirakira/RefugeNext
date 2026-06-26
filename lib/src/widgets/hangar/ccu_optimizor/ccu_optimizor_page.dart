@@ -66,8 +66,10 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with Automa
     }
 
 
-    final hangarItems = Provider.of<MainDataModel>(context, listen: false).rawHangarItems;
-    final result = await updateUpgradeSteps(_upgradeSettings, fromShip.id, toShip.id, hangarItems, bannedShips, mustHaveShips);
+    final model = Provider.of<MainDataModel>(context, listen: false);
+    final hangarItems = model.rawHangarItems;
+    final buybackItems = model.rawBuybackItems;
+    final result = await updateUpgradeSteps(_upgradeSettings, fromShip.id, toShip.id, hangarItems, buybackItems, bannedShips, mustHaveShips);
 
     setState(() {
       _upgradePath = result;

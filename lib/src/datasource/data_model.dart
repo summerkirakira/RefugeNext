@@ -364,6 +364,9 @@ class MainDataModel extends ChangeNotifier {
 
   List<BuybackItem> get buybackItems => processBuybackSearch(_buybackItems, searchProperty);
 
+  /// 已堆叠的回购列表（未经搜索过滤），供 AI 工具 get_buyback 使用。镜像 rawHangarItems。
+  List<BuybackItem> get rawBuybackItems => _buybackItems;
+
   List<UpgradeShipInfo> upgradeFromShip = [];
 
   List<UpgradeShipInfo> upgradeToShip = [];

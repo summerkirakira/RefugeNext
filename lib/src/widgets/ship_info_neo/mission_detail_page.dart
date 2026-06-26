@@ -298,7 +298,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
     final bp = BlueprintRepo().getByUuidSync(id) ??
         BlueprintRepo().findByOutputItemUuidSync(id);
     if (bp == null) {
-      showToast(message: '未找到蓝图(需先在 Blueprint 测试页拉取)');
+      showToast(message: '未找到蓝图');
       return;
     }
     final outUuid = bp.outputItemUuid ?? bp.output?.uuid;
@@ -347,7 +347,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
 
     if (!mounted) return;
     if (page == null) {
-      showToast(message: '未找到该物品(需先在对应组件测试页拉取数据)');
+      showToast(message: '未找到该物品');
       return;
     }
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page!));

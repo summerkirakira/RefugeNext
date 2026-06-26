@@ -205,7 +205,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
     }
     if (!mounted) return;
     if (mi == null) {
-      showToast(message: '未找到该任务(需先在 Mission 测试页拉取任务数据)');
+      showToast(message: '未找到该任务');
       return;
     }
     Navigator.of(context).push(MaterialPageRoute(

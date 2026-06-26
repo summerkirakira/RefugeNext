@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../datasource/models/cirno/upgrade_path.dart';
 import '../../../datasource/models/hangar.dart';
+import '../../../datasource/models/buyback.dart';
 import '../../../network/cirno/cirno_api.dart';
 import '../../../network/cirno/property/property.dart';
 import '../../../repo/ship_alias.dart';
@@ -125,8 +126,34 @@ Future<List<CCUItem>> getValidateHangarCCUItems(
   return items;
 }
 
+/// 从回购列表提取可用的 CCU（镜像 getValidateHangarCCUItems）。
+/// 回购无 fromShip/toShip ShipAlias，改用 formShipUpgradeId/toShipUpgradeId 解析；无法解析的跳过。
+Future<List<CCUItem>> getValidateBuybackCCUItems(
+    List<BuybackItem> buybackItems) async {
+  final shipAliasRepo = ShipAliasRepo();
+  List<CCUItem> items = [];
+
+  for (var item in buybackItems) {
+    if (!item.isUpgrade) {
+      continue;
+    }
+    final fromShip =
+        shipAliasRepo.getShipAliasByUpgradeIdSync(item.formShipUpgradeId ?? -1);
+    final toShip =
+        shipAliasRepo.getShipAliasByUpgradeIdSync(item.toShipUpgradeId ?? -1);
+    if (fromShip != null && toShip != null) {
+      items.add(CCUItem(
+        fromShip: Ship(id: fromShip.id, value: fromShip.getHighestSku()),
+        toShip: Ship(id: toShip.id, value: toShip.getHighestSku()),
+        value: item.price,
+      ));
+    }
+  }
+  return items;
+}
+
 Future<ShipUpgradeConfig> getUpgradeConfig(UpgradeSettings settings,
-    int fromShipId, int toShipId, List<HangarItem> hangarItems, List<int> bannedShips, List<int> mustHaveShips) async {
+    int fromShipId, int toShipId, List<HangarItem> hangarItems, List<BuybackItem> buybackItems, List<int> bannedShips, List<int> mustHaveShips) async {
   final ccuItems = await getValidateHangarCCUItems(hangarItems);
 
   return ShipUpgradeConfig(
@@ -137,19 +164,23 @@ Future<ShipUpgradeConfig> getUpgradeConfig(UpgradeSettings settings,
     mustHaveShipList: mustHaveShips,
     useHistoryCcu: settings.useHistory,
     hangarCcuList: ccuItems,
-    buybackCcuList: [],
+    // 暂时恒为空：回购 CCU 边会让服务端寻路报负权（Contradictory paths）。
+    // 管线（buybackItems 参数 / getValidateBuybackCCUItems）保留，待服务端修好再启用。
+    buybackCcuList: const [],
   );
 }
 
 Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings,
-    int fromShipId, int toShipId, List<HangarItem> hangarItems, List<int> bannedShips, List<int> mustHaveShips) async {
+    int fromShipId, int toShipId, List<HangarItem> hangarItems, List<BuybackItem> buybackItems, List<int> bannedShips, List<int> mustHaveShips) async {
   final allShips = getValidateUpdateShips();
 
   final config =
-      await getUpgradeConfig(settings, fromShipId, toShipId, hangarItems, bannedShips, mustHaveShips);
+      await getUpgradeConfig(settings, fromShipId, toShipId, hangarItems, buybackItems, bannedShips, mustHaveShips);
   final upgradeResult =
       await CirnoApiClient().getShipUpgradePath(config: config);
   final ccuItems = await getValidateHangarCCUItems(hangarItems);
+  // 回购 CCU 暂时停用（见 getUpgradeConfig 注释），故步骤循环也不匹配回购。
+  final buybackCcuItems = <CCUItem>[];
 
   final steps = <UpgradeStep>[];
 
@@ -164,11 +195,19 @@ Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings,
         allShips.firstWhere((e) => e.id == upgradeResult.shipPath[i + 1]);
 
     CCUItem? ccuItem;
+    CCUItem? buybackCcuItem;
     HistoryWbCcu? wbCcuItem;
 
     for (var item in ccuItems) {
       if (item.fromShip.id == fromShip.id && item.toShip.id == toShip.id) {
         ccuItem = item;
+        break;
+      }
+    }
+
+    for (var item in buybackCcuItems) {
+      if (item.fromShip.id == fromShip.id && item.toShip.id == toShip.id) {
+        buybackCcuItem = item;
         break;
       }
     }
@@ -186,6 +225,9 @@ Future<List<UpgradeStep>> updateUpgradeSteps(UpgradeSettings settings,
     if (ccuItem != null) {
       cost = ccuItem.value;
       tags.add('机库中');
+    } else if (buybackCcuItem != null) {
+      cost = buybackCcuItem.value;
+      tags.add('回购');
     } else if (wbCcuItem != null) {
       cost = wbCcuItem.value;
       tags.add('历史WB');

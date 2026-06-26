@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:refuge_next/src/datasource/models/hangar.dart';
+import 'package:refuge_next/src/datasource/models/buyback.dart';
 import 'package:refuge_next/src/repo/repo_ai_tool_executor.dart';
 
 HangarSubItem _sub({String title = '', String kind = '', String? chineseTitle}) =>
@@ -53,6 +54,34 @@ HangarItem _hi({
       canReclaim: false,
       canUpgrade: false,
       page: 0,
+    );
+
+BuybackItem _bb({
+  int id = 0,
+  String title = '',
+  String? chinesName,
+  int number = 1,
+  bool isUpgrade = false,
+  String contains = '',
+  String? chineseContains,
+  String alsoContains = '',
+  String? chineseAlsoContains,
+}) =>
+    BuybackItem(
+      id: id,
+      title: title,
+      image: '',
+      date: 0,
+      contains: contains,
+      alsoContains: alsoContains,
+      insertTime: 0,
+      isUpgrade: isUpgrade,
+      chinesName: chinesName,
+      chineseContains: chineseContains,
+      chineseAlsoContains: chineseAlsoContains,
+      url: null,
+      number: number,
+      idList: const [],
     );
 
 void main() {
@@ -197,6 +226,65 @@ void main() {
       expect(matchesHangarKeyword(i, 'aur'), true);
       expect(matchesHangarKeyword(i, '不存在'), false);
       expect(matchesHangarKeyword(i, ''), true); // 空串视为命中
+    });
+  });
+
+  // 复刻前端 processBuybackSearch：filter 匹配 title/chinesName/alsoContains，type 为标题启发式。
+  // 生产数据 _buybackItems 均已带中文名，故 filter 用例的 item 设 chinesName；
+  // 前端 isContainSearchKeyBuyback 强解包 chinesName!，null + filter 会 NPE（与前端行为一致）。
+  group('shapeBuybackItems', () {
+    final items = [
+      _bb(id: 1, title: 'Aurora MR Standalone Ship', chinesName: '曙光 MR', number: 2),
+      _bb(id: 2, title: 'Cutlass Black Standalone Ship', chinesName: '海盗黑', alsoContains: 'Black Package'),
+      _bb(id: 3, title: 'Hornet Subscriber Flair', chinesName: '大黄蜂订阅'),
+      _bb(id: 4, title: 'Upgrade - Aurora to Hornet', chinesName: '升级包', isUpgrade: true),
+    ];
+
+    test('filter 命中中文名', () {
+      final r = shapeBuybackItems(items, {'filter': '曙光'});
+      expect(r['total'], 1);
+      expect((r['items'] as List).first['id'], 1);
+    });
+
+    test('filter 命中英文 title 与 alsoContains', () {
+      expect(shapeBuybackItems(items, {'filter': 'cutlass'})['total'], 1); // title
+      expect(shapeBuybackItems(items, {'filter': 'black package'})['total'], 1); // alsoContains
+    });
+
+    test('type=upgrade 命中 isUpgrade', () {
+      final r = shapeBuybackItems(items, {'type': 'upgrade'});
+      expect(r['total'], 1);
+      expect((r['items'] as List).first['id'], 4);
+    });
+
+    test('type=ship 命中标题含 standalone ship', () {
+      expect(shapeBuybackItems(items, {'type': 'ship'})['total'], 2); // id 1,2
+    });
+
+    test('type=subscription 命中标题含 subscriber', () {
+      final r = shapeBuybackItems(items, {'type': 'subscription'});
+      expect(r['total'], 1);
+      expect((r['items'] as List).first['id'], 3);
+    });
+
+    test('filter 无命中 total=0', () {
+      expect(shapeBuybackItems(items, {'filter': 'zzz'})['total'], 0);
+    });
+
+    test('limit + offset 分页，total 为过滤后总数', () {
+      final r = shapeBuybackItems(items, {'limit': 1, 'offset': 1});
+      expect(r['total'], 4); // total 不受分页影响
+      final page = r['items'] as List;
+      expect(page.length, 1);
+      expect(page.first['id'], 2);
+    });
+
+    test('name 优先中文回退 title，qty 为 number（堆叠累加后）', () {
+      // 无 filter/type：searchText 为 null，isContainSearchKeyBuyback 提前返回 true，不触发强解包。
+      final r = shapeBuybackItems([_bb(id: 9, title: 'Hornet', number: 5)], {});
+      final first = (r['items'] as List).first;
+      expect(first['name'], 'Hornet'); // 无中文名回退 title
+      expect(first['qty'], 5);
     });
   });
 }

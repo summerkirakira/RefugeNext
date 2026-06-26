@@ -81,9 +81,10 @@ int _turretCount(GameVehicleTurrets? t) =>
     (t?.pdc?.length ?? 0);
 
 /// 把单艘 [GameVehicle] 翻译成一段用于 RAG 的中文描述。
-String buildVehicleRagContent(GameVehicle v) {
+String buildVehicleRagContent(GameVehicle v, int aliasId) {
   final buf = StringBuffer();
   buf.write('uuid: ${v.uuid ?? ''}');
+  buf.write('\nship_alias_id: $aliasId');
 
   // —— 简介句 ——
   final cn = vehicleDisplayName(v);
@@ -226,7 +227,7 @@ Map<String, dynamic> buildVehicleRagRecord(GameVehicle v, ShipAlias alias) {
     'class_name': v.className,
     'ship_alias_id': alias.id,
     'type': 'ship',
-    'content': buildVehicleRagContent(v),
+    'content': buildVehicleRagContent(v, alias.id),
     'source': v.slug == null
         ? null
         : 'https://api.star-citizen.wiki/vehicles/${v.slug}',
