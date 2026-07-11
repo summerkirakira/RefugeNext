@@ -67,10 +67,24 @@ class _FullScreenWebViewState extends State<FullScreenWebView> {
           onNavigationRequest: (NavigationRequest request) {
             print('WebView Navigation request: ${request.url}');
 
-            // 只对特定的支付跳转进行拦截
+            // 非 http/https 的自定义协议(如 alipays://)WebView 无法加载,
+            // 交给系统去唤起对应 App(支付宝等),否则报 ERR_UNKNOWN_URL_SCHEME。
+            if (!request.url.startsWith('http')) {
+              launchUrl(Uri.parse(request.url),
+                  mode: LaunchMode.externalApplication);
+              return NavigationDecision.prevent;
+            }
+
+            // 支付宝收银台 https 页面用外部浏览器打开,便于它后续跳 alipays://。
             if (request.url.startsWith("https://g.alipayplus.com/page/checkout")) {
               final alipayUrl = Uri.parse(request.url);
-              launchUrl(alipayUrl, mode: LaunchMode.inAppBrowserView);
+              launchUrl(alipayUrl, mode: LaunchMode.externalApplication);
+              return NavigationDecision.prevent;
+            }
+            
+            if (request.url.startsWith("https://checkoutshopper-live.adyen")) {
+              final wechatPayUrl = Uri.parse(request.url);
+              launchUrl(wechatPayUrl, mode: LaunchMode.inAppBrowserView);
               return NavigationDecision.prevent;
             }
 

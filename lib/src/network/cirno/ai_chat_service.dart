@@ -8,8 +8,9 @@ import '../../datasource/models/ai/ai_stream_event.dart';
 import '../../datasource/models/ai/server_tools.dart';
 import 'cirno_api.dart';
 
-/// debug 模式下 AI 请求默认指向的本地测试服务器；release 用生产地址（null → CirnoApiClient 默认）。
-const String? kDebugAiBaseUrl = 'http://localhost:8080/';
+/// AI 请求的 base URL 覆盖；null → 用 CirnoApiClient 默认（生产）。
+/// debug 也走生产；如需临时指向本地测试服务器，改回 'http://localhost:8080/'。
+const String? kDebugAiBaseUrl = null;
 
 /// 把单个 SSE 帧（事件类型 + data 文本）解析成 AiStreamEvent。
 /// 未知类型、空类型返回 null。提为顶层函数便于单测（test/ai_sse_parser_test.dart）。
@@ -79,7 +80,7 @@ AiStreamEvent mapPreStreamHttpError(int status, String? detail, int? retryAfterS
     case 429:
       if (d.contains('daily token budget')) {
         // 当日额度满，立即重试无意义（次日恢复；会员不受此限）。
-        return const AiStreamEvent.error('今日 AI 额度已用完，明天再来吧（会员不受此限）', retryable: false);
+        return const AiStreamEvent.error('今日 AI 额度已用完，明天再来吧', retryable: false);
       }
       if (d.contains('rate limit')) {
         final suffix = (retryAfterSeconds != null && retryAfterSeconds > 0)
