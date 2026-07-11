@@ -270,7 +270,8 @@ class _AiChatPageState extends State<AiChatPage> {
           ),
           Expanded(
             child: showEmpty
-                ? const _EmptyState()
+                ? _EmptyState(
+                    onPrompt: (t) => context.read<AiChatModel>().send(t))
                 : ListView(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -572,29 +573,102 @@ class _InputBar extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  /// 点击示例提问时把该问题直接发给小九。
+  final ValueChanged<String> onPrompt;
+
+  const _EmptyState({required this.onPrompt});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: const Image(
-              image: AssetImage('assets/images/cirno_avatar.jpeg'),
-              width: 88,
-              height: 88,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 头像 + 柔光环
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    cs.primary.withOpacity(0.20),
+                    cs.primary.withOpacity(0.0),
+                  ],
+                ),
+              ),
+              child: ClipOval(
+                child: const Image(
+                  image: AssetImage('assets/images/cirno_avatar.jpeg'),
+                  width: 96,
+                  height: 96,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
+            const SizedBox(height: 16),
+            const Text(
+              '你好，我是小九',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '星际公民 AI 助手 · Beta',
+              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                _SuggestionChip(
+                    emoji: '🚀', prompt: '帮我规划极光到克拉克的 CCU 升级路径', onPrompt: onPrompt),
+                _SuggestionChip(
+                    emoji: '🛠', prompt: '看看我的机库', onPrompt: onPrompt),
+                _SuggestionChip(
+                    emoji: '💰', prompt: '极光 MR 多少钱？', onPrompt: onPrompt),
+                _SuggestionChip(
+                    emoji: '♻️', prompt: '我的回购里有什么？', onPrompt: onPrompt),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 空状态里的示例提问药丸：浅底圆角 + 点击涟漪，点了把 [prompt] 发给小九。
+class _SuggestionChip extends StatelessWidget {
+  final String emoji;
+  final String prompt;
+  final ValueChanged<String> onPrompt;
+
+  const _SuggestionChip({
+    required this.emoji,
+    required this.prompt,
+    required this.onPrompt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      color: cs.surfaceContainerHighest.withOpacity(0.5),
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => onPrompt(prompt),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          child: Text(
+            '$emoji  $prompt',
+            style: TextStyle(fontSize: 13, color: cs.onSurface),
           ),
-          const SizedBox(height: 20),
-          Text(
-            '问我点什么吧～',
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
-          ),
-        ],
+        ),
       ),
     );
   }
