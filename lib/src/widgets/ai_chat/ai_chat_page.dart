@@ -625,13 +625,16 @@ class _EmptyState extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 _SuggestionChip(
-                    emoji: '🚀', prompt: '帮我规划极光到克拉克的 CCU 升级路径', onPrompt: onPrompt),
+                    emoji: '🚀', prompt: '帮我规划极光到英仙座的 CCU 升级路径', onPrompt: onPrompt),
                 _SuggestionChip(
                     emoji: '🛠', prompt: '看看我的机库', onPrompt: onPrompt),
                 _SuggestionChip(
-                    emoji: '💰', prompt: '极光 MR 多少钱？', onPrompt: onPrompt),
-                _SuggestionChip(
                     emoji: '♻️', prompt: '我的回购里有什么？', onPrompt: onPrompt),
+                _SuggestionChip(
+                    emoji: '💰', prompt: '极光MR多少钱？', onPrompt: onPrompt),
+                _SuggestionChip(
+                    emoji: '❓', prompt: '锤头鲨有多大？', onPrompt: onPrompt),
+
               ],
             ),
           ],
