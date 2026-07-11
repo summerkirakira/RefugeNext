@@ -76,7 +76,7 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
         const NavigationRailDestination(
           icon: Icon(Icons.auto_awesome_outlined),
           selectedIcon: Icon(Icons.auto_awesome),
-          label: Text('AI'),
+          label: Text('小九'),
         ),
         const NavigationRailDestination(
           icon: Icon(Icons.account_circle_outlined),

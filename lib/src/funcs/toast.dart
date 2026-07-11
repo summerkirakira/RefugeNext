@@ -24,9 +24,14 @@ void showToast({required String message}) {
 
   debugPrint("Toast: $message");
 
+  // 含「错误」/「失败」/「异常」任一关键词 → 错误样式；否则成功样式。
+  final isError = message.contains('错误') ||
+      message.contains('失败') ||
+      message.contains('异常');
+
   if (message.length < 20) {
     toastification.show(
-      type: ToastificationType.success,
+      type: isError ? ToastificationType.error : ToastificationType.success,
       style: ToastificationStyle.simple,
       title: Text(message),
       description: Text(message),
@@ -36,35 +41,18 @@ void showToast({required String message}) {
       dragToClose: true,
     );
   } else {
-    // if (message.contains("成功")) {
-    if (true) {
-      toastification.show(
-        type: ToastificationType.success,
-        style: ToastificationStyle.flat,
-        title: Text("成功"),
-        description: Text(
-          message,
-        ),
-        alignment: Alignment.topCenter,
-        autoCloseDuration: const Duration(seconds: 6),
-        borderRadius: BorderRadius.circular(12.0),
-        dragToClose: true,
-      );
-      return;
-    } else {
-      toastification.show(
-        type: ToastificationType.error,
-        style: ToastificationStyle.flat,
-        title: Text("错误"),
-        description: Text(
-          message,
-        ),
-        alignment: Alignment.topCenter,
-        autoCloseDuration: const Duration(seconds: 6),
-        borderRadius: BorderRadius.circular(12.0),
-        dragToClose: true,
-      );
-    }
+    toastification.show(
+      type: isError ? ToastificationType.error : ToastificationType.success,
+      style: ToastificationStyle.flat,
+      title: Text(isError ? "错误" : "成功"),
+      description: Text(
+        message,
+      ),
+      alignment: Alignment.topCenter,
+      autoCloseDuration: const Duration(seconds: 6),
+      borderRadius: BorderRadius.circular(12.0),
+      dragToClose: true,
+    );
   }
 }
 

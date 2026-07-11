@@ -18,8 +18,8 @@ import 'package:refuge_next/src/repo/refuge_account.dart';
 class CirnoApiClient {
   static final CirnoApiClient _instance = CirnoApiClient._internal();
   late final Dio _dio;
-  final String baseUrl = "https://biaoju.site:6188/";
-  // final String baseUrl = "http://localhost:8080/";
+  // final String baseUrl = "https://biaoju.site:6188/";
+  final String baseUrl = "http://localhost:8088/";
 
   CirnoApiClient._internal() {
     _dio = Dio();
@@ -66,6 +66,12 @@ class CirnoApiClient {
   Future<Response> basicPost({required String endpoint, required Map<String, dynamic> data}) async {
     final response = await _dio.post("$baseUrl$endpoint", data: data, options: Options());
     return response;
+  }
+
+  /// 通用 GET（复用拦截器：cirno-token / JWT 自动注入）。
+  /// [baseUrlOverride] 用于指向本地/其它服务器，不传则用默认生产 baseUrl。
+  Future<Response> basicGet({required String endpoint, String? baseUrlOverride}) async {
+    return _dio.get("${baseUrlOverride ?? baseUrl}$endpoint");
   }
 
   /// SSE 原始流请求（复用本类的拦截器：cirno-token / JWT 自动注入）。

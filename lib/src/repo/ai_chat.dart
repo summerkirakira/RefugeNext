@@ -6,6 +6,7 @@ import 'package:synchronized/synchronized.dart';
 
 import '../datasource/models/ai/ai_message.dart';
 import '../datasource/models/ai/ai_stream_event.dart';
+import '../datasource/models/ai/ai_usage.dart';
 import '../datasource/models/ai/tool_call.dart';
 import '../network/cirno/ai_chat_service.dart';
 import '../utils/storage_path.dart';
@@ -64,6 +65,9 @@ class AiRepo {
   AiRepo({AiChatService? service, AiToolExecutor? tools})
       : _service = service ?? AiChatService(),
         _tools = tools ?? NoopAiToolExecutor();
+
+  /// 拉取当日 AI 用量（转发到 AiChatService）。
+  Future<AiUsage> fetchUsage() => _service.fetchUsage();
 
   // ---- 历史持久化（对齐 UserRepo：Lock + StoragePath + json 文件）----
   // 每个会话一个文件 ai_chat_<sessionId>.json；单会话场景传一个固定 id 即可。

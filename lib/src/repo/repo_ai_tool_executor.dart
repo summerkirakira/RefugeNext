@@ -58,6 +58,15 @@ class RepoAiToolExecutor implements AiToolExecutor {
         case 'show_item_card':
           return await _showItemCard(arguments);
         case 'plan_ccu_upgrade':
+          // 与手动 CCU 页一致的 VIP 门禁；isVIP 在会员信息未加载(property==null)时
+          // 返回 true → 放行，避免未加载时误拦。
+          if (!_model.isVIP) {
+            return {
+              'ok': false,
+              'error': 'vip_required',
+              'message': '该功能需要避难所 Premium 订阅',
+            };
+          }
           return await CcuPlanner(_model).planUpgrade(arguments);
         default:
           return {'is_error': true, 'error': 'tool not allowed: $name'};

@@ -7,6 +7,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../datasource/ai_chat_model.dart';
 import '../../datasource/data_model.dart';
 import '../../datasource/models/ai/ai_message.dart';
+import '../../datasource/models/ai/ai_usage.dart';
 import '../../datasource/models/ai/server_tools.dart';
 import '../../datasource/models/hangar.dart';
 import '../../datasource/models/buyback.dart';
@@ -181,6 +182,15 @@ class _AiChatPageState extends State<AiChatPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
+  void initState() {
+    super.initState();
+    // 进入 AI 页自动拉取一次当日用量。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AiChatModel>().refreshUsage();
+    });
+  }
+
+  @override
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
@@ -252,7 +262,11 @@ class _AiChatPageState extends State<AiChatPage> {
         children: [
           _AiTopBar(
             title: '小九',
-            onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            onMenuPressed: () {
+              // 打开会话抽屉前刷新一次用量，保证顶部用量卡是最新的。
+              context.read<AiChatModel>().refreshUsage();
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
           ),
           Expanded(
             child: showEmpty
@@ -614,11 +628,38 @@ class _AiTopBar extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontSize: 24),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontSize: 24),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // 测试功能标识：小九仍在 Beta 阶段。
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Beta',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             IconButton(
@@ -793,6 +834,93 @@ class _ItemCards extends StatelessWidget {
   }
 }
 
+/// 会话抽屉顶部的「今日用量」卡。usage 为 null（未拉到）时不显示。
+class _UsageCard extends StatelessWidget {
+  final AiUsage? usage;
+
+  const _UsageCard({required this.usage});
+
+  /// token 数简写：≥1000 显示 x.xk。
+  static String _fmt(int n) =>
+      n >= 1000 ? '${(n / 1000).toStringAsFixed(1)}k' : '$n';
+
+  /// 重置倒计时：Xh Ym / Ym / <1m。
+  static String _resetIn(int seconds) {
+    if (seconds <= 60) return '不到 1 分钟';
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    if (h > 0) return '$h 小时 $m 分';
+    return '$m 分钟';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final u = usage;
+    if (u == null) return const SizedBox.shrink();
+    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    final Widget body;
+    if (u.unlimited) {
+      body = Row(
+        children: [
+          Icon(Icons.all_inclusive, size: 18, color: cs.primary),
+          const SizedBox(width: 6),
+          Text('会员 · 无限额度',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+        ],
+      );
+    } else {
+      final remaining = u.remainingTokens ?? 0;
+      final budget = u.dailyBudget;
+      final ratio = budget > 0 ? (remaining / budget).clamp(0.0, 1.0) : 0.0;
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('今日剩余',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600)),
+              Text('${_fmt(remaining)} / ${_fmt(budget)}',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: cs.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 6,
+              backgroundColor: cs.surfaceContainerHighest,
+              color: ratio < 0.15 ? cs.error : cs.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text('${_resetIn(u.resetInSeconds)}后重置',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: cs.onSurfaceVariant)),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cs.primary.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: body,
+      ),
+    );
+  }
+}
+
 /// 右侧会话抽屉：新建 + 会话列表（切换/删除）。
 class _SessionDrawer extends StatelessWidget {
   final Future<void> Function(String id, String title) onDeleteSession;
@@ -811,6 +939,7 @@ class _SessionDrawer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _UsageCard(usage: model.usage),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text('会话', style: Theme.of(context).textTheme.titleMedium),

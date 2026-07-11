@@ -5,12 +5,15 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 
 import '../../datasource/models/ai/ai_message.dart';
 import '../../datasource/models/ai/ai_stream_event.dart';
+import '../../datasource/models/ai/ai_usage.dart';
 import '../../datasource/models/ai/server_tools.dart';
 import 'cirno_api.dart';
 
 /// AI 请求的 base URL 覆盖；null → 用 CirnoApiClient 默认（生产）。
-/// debug 也走生产；如需临时指向本地测试服务器，改回 'http://localhost:8080/'。
-const String? kDebugAiBaseUrl = null;
+/// 当前指向本地开发服务器以测试 /ai/usage（生产暂未推该接口）；
+/// 生产上线后改回 null 回到生产。
+// const String? kDebugAiBaseUrl = null;
+const String? kDebugAiBaseUrl = "http://localhost:8088/";
 
 /// 把单个 SSE 帧（事件类型 + data 文本）解析成 AiStreamEvent。
 /// 未知类型、空类型返回 null。提为顶层函数便于单测（test/ai_sse_parser_test.dart）。
@@ -166,6 +169,13 @@ class AiChatService {
       final ev = parseSseFrame(eventType, dataLines.join('\n'));
       if (ev != null) yield ev;
     }
+  }
+
+  /// 拉取当日 AI 用量（GET /ai/usage）。用与 openStream 相同的 baseUrl。
+  Future<AiUsage> fetchUsage() async {
+    final resp = await CirnoApiClient()
+        .basicGet(endpoint: 'ai/usage', baseUrlOverride: baseUrl);
+    return AiUsage.fromJson((resp.data as Map).cast<String, dynamic>());
   }
 }
 

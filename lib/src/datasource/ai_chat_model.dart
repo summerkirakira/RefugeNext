@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../repo/ai_chat.dart';
 import 'models/ai/ai_message.dart';
 import 'models/ai/ai_stream_event.dart';
+import 'models/ai/ai_usage.dart';
 
 /// AI 对话状态层（独立 ChangeNotifier，不并入 MainDataModel）。
 /// 职责：订阅 AiRepo.streamChat → 累积流式文本 → 管理生成态/停止/重生成 → 每轮结束自动持久化。
@@ -83,6 +86,20 @@ class AiChatModel extends ChangeNotifier {
   /// 最近一次错误是否可重试（LLM 429/5xx、网络错误为 true；业务/未知错误为 false）。
   /// 供 UI 决定是否显示「重试」入口。
   bool get lastErrorRetryable => _lastErrorRetryable;
+
+  /// 当日 AI 用量（null 表示尚未拉取到）。
+  AiUsage? _usage;
+  AiUsage? get usage => _usage;
+
+  /// 拉取当日用量并刷新 UI；静默失败（不影响聊天）。
+  Future<void> refreshUsage() async {
+    try {
+      _usage = await _repo.fetchUsage();
+      notifyListeners();
+    } catch (_) {
+      // 忽略：用量拉取失败不应打断对话
+    }
+  }
 
   /// 多会话初始化：加载会话列表 + 当前会话历史（进入页面时调用一次，名称沿用）。
   Future<void> loadFromDisk() async {
@@ -274,6 +291,8 @@ class AiChatModel extends ChangeNotifier {
       _cancelToken = null;
       _toolStatusLabel = null;
       notifyListeners();
+      // 本轮结束后刷新当日用量（不阻塞收尾）。
+      unawaited(refreshUsage());
     }
   }
 

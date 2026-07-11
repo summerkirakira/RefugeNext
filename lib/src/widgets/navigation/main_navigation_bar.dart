@@ -67,7 +67,7 @@ class _MainNavigationBarState extends State<MainNavigationBar> with TickerProvid
           icon: Icon(
               Provider.of<MainDataModel>(context).selectedPage == 4 ?
               Icons.auto_awesome : Icons.auto_awesome_outlined),
-          label: 'AI',
+          label: '小九',
         ),
         BottomNavigationBarItem(
           icon: Icon(
