@@ -12,8 +12,8 @@ import 'cirno_api.dart';
 /// AI 请求的 base URL 覆盖；null → 用 CirnoApiClient 默认（生产）。
 /// 当前指向本地开发服务器以测试 /ai/usage（生产暂未推该接口）；
 /// 生产上线后改回 null 回到生产。
-// const String? kDebugAiBaseUrl = null;
-const String? kDebugAiBaseUrl = "http://localhost:8088/";
+const String? kDebugAiBaseUrl = null;
+// const String? kDebugAiBaseUrl = "http://localhost:8088/";
 
 /// 把单个 SSE 帧（事件类型 + data 文本）解析成 AiStreamEvent。
 /// 未知类型、空类型返回 null。提为顶层函数便于单测（test/ai_sse_parser_test.dart）。
