@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:badges/badges.dart' as badges;
 import '../../datasource/data_model.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
@@ -19,7 +18,7 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
   @override
   void initState() {
     super.initState();
-    _controllers = List<AnimationController>.generate(7, (int index) {
+    _controllers = List<AnimationController>.generate(6, (int index) {
       return AnimationController(
         duration: const Duration(milliseconds: 300),
         vsync: this,
@@ -41,9 +40,6 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
     return NavigationRail(
       selectedIndex: context.watch<MainDataModel>().selectedPage,
       onDestinationSelected: (int index) {
-        if (index == 0) {
-          context.read<MainDataModel>().clearUnreadMessages();
-        }
         context.read<MainDataModel>().updateSelectedPage(index);
 
         for (var i = 0; i < _controllers.length; i++) {
@@ -57,37 +53,10 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
       labelType: NavigationRailLabelType.selected,
       groupAlignment: 0.0,
       destinations: [
-        NavigationRailDestination(
-          icon: badges.Badge(
-            showBadge: context.watch<MainDataModel>().unreadMessageCount > 0,
-            badgeContent: Text(
-              context.watch<MainDataModel>().unreadMessageCount.toString(),
-              style: const TextStyle(color: Colors.white, fontSize: 10),
-            ),
-            badgeStyle: const badges.BadgeStyle(
-              badgeColor: Colors.red,
-              padding: EdgeInsets.all(4),
-            ),
-            child: const Icon(Icons.people_outline_outlined),
-          ),
-          selectedIcon: badges.Badge(
-            showBadge: context.watch<MainDataModel>().unreadMessageCount > 0,
-            badgeContent: Text(
-              context.watch<MainDataModel>().unreadMessageCount.toString(),
-              style: const TextStyle(color: Colors.white, fontSize: 10),
-            ),
-            badgeStyle: const badges.BadgeStyle(
-              badgeColor: Colors.red,
-              padding: EdgeInsets.all(4),
-            ),
-            child: const Icon(Icons.people_rounded),
-          ),
-          label: const Text('好友'),
-        ),
         const NavigationRailDestination(
           icon: Icon(Icons.storage_outlined),
           selectedIcon: Icon(Icons.storage_rounded),
-          label: Text('数据库'),
+          label: Text('终端'),
         ),
         const NavigationRailDestination(
           icon: Icon(Icons.business_rounded),
@@ -105,14 +74,14 @@ class _MainNavigationRailState extends State<MainNavigationRail> with TickerProv
           label: Text('工具'),
         ),
         const NavigationRailDestination(
-          icon: Icon(Icons.account_circle_outlined),
-          selectedIcon: Icon(Icons.account_circle_rounded),
-          label: Text('我的'),
-        ),
-        const NavigationRailDestination(
           icon: Icon(Icons.auto_awesome_outlined),
           selectedIcon: Icon(Icons.auto_awesome),
           label: Text('AI'),
+        ),
+        const NavigationRailDestination(
+          icon: Icon(Icons.account_circle_outlined),
+          selectedIcon: Icon(Icons.account_circle_rounded),
+          label: Text('我的'),
         ),
       ],
     );

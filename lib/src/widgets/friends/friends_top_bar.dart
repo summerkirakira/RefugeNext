@@ -30,19 +30,34 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
             padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 0),
             height: 60,
             child: dataModel.currentUser == null
-                ? IconButton(
-                    onPressed: () {
-                      WoltModalSheet.show<void>(
-                          context: context,
-                          pageListBuilder: (modalSheetContext) {
-                            return [
-                              getLoginBottomSheet(modalSheetContext, context),
-                            ];
-                          });
-                    },
-                    icon: const Icon(Icons.person)) // Use a relevant icon for login prompt
+                ? Row(
+                    children: [
+                      if (Navigator.of(context).canPop())
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.of(context).maybePop(),
+                        ),
+                      IconButton(
+                          onPressed: () {
+                            WoltModalSheet.show<void>(
+                                context: context,
+                                pageListBuilder: (modalSheetContext) {
+                                  return [
+                                    getLoginBottomSheet(modalSheetContext, context),
+                                  ];
+                                });
+                          },
+                          icon: const Icon(
+                              Icons.person)), // Use a relevant icon for login prompt
+                    ],
+                  )
                 : Row(
                     children: [
+                      if (Navigator.of(context).canPop())
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.of(context).maybePop(),
+                        ),
                       Padding(
                           padding: const EdgeInsets.only(right: 10),
                           child: StatusAvatar(

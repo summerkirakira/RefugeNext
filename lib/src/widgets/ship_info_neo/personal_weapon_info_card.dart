@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:refuge_next/src/widgets/common/wiki_image_fallback.dart';
+import 'package:refuge_next/src/repo/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
@@ -101,7 +103,7 @@ class PersonalWeaponInfoCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            item.manufacturer!.name!,
+                            TranslationRepo().getTranslationSync(item.manufacturer!.name!),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -175,12 +177,21 @@ class PersonalWeaponInfoCard extends StatelessWidget {
           size: 26,
         ),
       ),
-      errorWidget: (context, _, __) => Container(
-        decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.12),
-          borderRadius: radius,
+      errorWidget: (context, _, __) => wikiImageFallback(
+        url,
+        imageBuilder: (context, imageProvider) => Container(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+          ),
         ),
-        child: Icon(Icons.broken_image_outlined, color: Colors.grey[400]),
+        onFail: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.withValues(alpha: 0.12),
+            borderRadius: radius,
+          ),
+          child: Icon(Icons.broken_image_outlined, color: Colors.grey[400]),
+        ),
       ),
       imageBuilder: (context, imageProvider) => Container(
         decoration: BoxDecoration(

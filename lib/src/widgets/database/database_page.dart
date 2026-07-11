@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tab_bar/library.dart';
@@ -12,6 +14,7 @@ import 'package:refuge_next/src/repo/quantum_drive.dart';
 import 'package:refuge_next/src/repo/shield.dart';
 import 'package:refuge_next/src/repo/vehicle_weapon.dart';
 import 'package:refuge_next/src/repo/weapon_attachment.dart';
+import 'package:refuge_next/src/repo/wiki_data_sync.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart'
     show
         kItemTypeValueCn,
@@ -58,13 +61,13 @@ class _DatabasePageState extends State<DatabasePage> {
 
   static const _titles = [
     '载具',
-    '载具武器',
-    '个人武器',
+    '舰载',
+    '单兵',
     '配件',
     '护盾',
     '冷却器',
     '发电机',
-    '量子引擎',
+    '量子',
   ];
 
   /// 当前全局版本码(null = 最新/默认);用作各列表 key,变化即重载。
@@ -324,6 +327,8 @@ class _VehicleDbListState extends State<_VehicleDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 价格 ——
@@ -776,6 +781,8 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——
@@ -1200,6 +1207,8 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——
@@ -1630,6 +1639,8 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——
@@ -2038,6 +2049,8 @@ class _ShieldDbListState extends State<_ShieldDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——
@@ -2461,6 +2474,8 @@ class _CoolerDbListState extends State<_CoolerDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——
@@ -2883,6 +2898,8 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——
@@ -3305,6 +3322,8 @@ class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
     } catch (_) {
       // 失败保留现有数据
     }
+    // 顺带补齐其它「缺失/有更新」的 wiki 数据(并发去重,不与下拉重复触发)。
+    unawaited(WikiDataSync().syncMissing(version: GameVersionManager().version));
   }
 
   // —— 排序 / 筛选 ——

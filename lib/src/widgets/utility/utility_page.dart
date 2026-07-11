@@ -1,5 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
+import 'package:refuge_next/src/widgets/friends/friends_status_page.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_full_page.dart';
 import 'package:refuge_next/src/widgets/utility/player_search_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/utility/crowdfunding_stats_page.dart';
@@ -48,10 +52,19 @@ class FeatureSelectionPage extends StatelessWidget {
     FeatureItem(icon: Icons.bug_report_outlined, title: '转移账号', onTap: (context) {
       showToast(message: "该功能未实现~");
     }),
-    FeatureItem(icon: Icons.science_outlined, title: '测试中心', onTap: (context) {
+    // 测试中心仅在调试构建中暴露,正式包不向用户展示。
+    if (kDebugMode)
+      FeatureItem(icon: Icons.science_outlined, title: '测试中心', onTap: (context) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DebugPage()),
+        );
+      }),
+    FeatureItem(icon: Icons.people_outline_outlined, title: '社交', onTap: (context) {
+      context.read<MainDataModel>().clearUnreadMessages(); // 保留「打开即已读」行为
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const DebugPage()),
+        MaterialPageRoute(builder: (_) => const FriendsStatusPage()),
       );
     }),
   ];

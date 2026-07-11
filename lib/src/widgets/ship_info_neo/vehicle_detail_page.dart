@@ -1,5 +1,6 @@
 import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:refuge_next/src/widgets/common/wiki_image_fallback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/data_model.dart';
@@ -244,7 +245,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
     if (selected == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('载具详情')),
-        body: const Center(child: Text('本地暂无数据,请先在 Game Vehicle 测试页拉取')),
+        body: const Center(child: Text('本地暂无数据,请先在数据库页下载')),
       );
     }
     // NestedScrollView:标题头随内容整体滚动(滚页签内容时头部一起滚走),
@@ -409,7 +410,8 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                 color: Colors.grey.withValues(alpha: 0.1),
                 child: const Center(child: CircularProgressIndicator()),
               ),
-              errorWidget: (context, url, error) => const SizedBox.shrink(),
+              errorWidget: (context, url, error) =>
+                  wikiImageFallback(url, onFail: const SizedBox.shrink()),
             ),
             if (showBack)
               Positioned(top: 8, left: 8, child: _backButton()),

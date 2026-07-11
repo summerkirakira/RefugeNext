@@ -65,6 +65,38 @@ AiStreamEvent? parseSseFrame(String? type, String data) {
   }
 }
 
+/// 把流前 HTTP 错误（非 2xx，body 为 {"detail":...}）映射成分类准确的 AiErrorEvent。
+/// 提为顶层纯函数便于单测（test/ai_sse_parser_test.dart）。规则见契约 §2.1：
+/// 仅依状态码 + detail 子串 + Retry-After，不硬编码任何阈值数字。
+AiStreamEvent mapPreStreamHttpError(int status, String? detail, int? retryAfterSeconds) {
+  final d = (detail ?? '').toLowerCase();
+  switch (status) {
+    case 401:
+      return const AiStreamEvent.error('设备身份已失效，请重新登录后再试', retryable: false);
+    case 413:
+      // detail 指明是消息条数 / 输入字符 / 工具数超限；统一提示精简。
+      return const AiStreamEvent.error('消息或输入过长，请精简后再发', retryable: false);
+    case 429:
+      if (d.contains('daily token budget')) {
+        // 当日额度满，立即重试无意义（次日恢复；会员不受此限）。
+        return const AiStreamEvent.error('今日 AI 额度已用完，明天再来吧（会员不受此限）', retryable: false);
+      }
+      if (d.contains('rate limit')) {
+        final suffix = (retryAfterSeconds != null && retryAfterSeconds > 0)
+            ? '，请 $retryAfterSeconds 秒后再试'
+            : '，请稍后再试';
+        return AiStreamEvent.error('请求太频繁$suffix', retryable: true);
+      }
+      // 其余 429（并发超限，无 Retry-After）。
+      return const AiStreamEvent.error('有一条请求正在进行，请稍后再试', retryable: true);
+    case 503:
+      return const AiStreamEvent.error('AI 服务暂时不可用，请稍后重试', retryable: true);
+    default:
+      final extra = (detail != null && detail.isNotEmpty) ? '：$detail' : '';
+      return AiStreamEvent.error('服务异常（HTTP $status）$extra', retryable: false);
+  }
+}
+
 /// AI 对话的 SSE 传输与解析。一次 openStream = 一段流：
 /// 服务端工具内联消化（不中断），遇端侧工具发 tool_request 后结束本段，
 /// 或在 done/error 收尾。自动续跑由 AiRepo 负责。
@@ -90,13 +122,23 @@ class AiChatService {
       'tools_version': toolsVersion,
     };
 
-    final ResponseBody respBody = await CirnoApiClient().postSse(
+    final Response<ResponseBody> resp = await CirnoApiClient().postSse(
       endpoint: 'ai/chat',
       data: body,
       cancelToken: cancelToken,
       baseUrlOverride: baseUrl,
     );
 
+    // 先看 HTTP 状态码（契约 §2.1）：非 2xx 是流前错误，解析 detail/Retry-After 后分类透出，不解析 SSE。
+    final status = resp.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      final detail = await _drainDetail(resp.data);
+      final retryAfter = _retryAfterSeconds(resp.headers);
+      yield mapPreStreamHttpError(status, detail, retryAfter);
+      return;
+    }
+
+    final ResponseBody respBody = resp.data!;
     String? eventType;
     final dataLines = <String>[];
 
@@ -124,4 +166,30 @@ class AiChatService {
       if (ev != null) yield ev;
     }
   }
+}
+
+/// 读尽流前错误 body（流式返回的 {"detail":...}）取 detail 文案；任何异常回退 null。
+Future<String?> _drainDetail(ResponseBody? body) async {
+  if (body == null) return null;
+  try {
+    final bytes = <int>[];
+    await for (final chunk in body.stream) {
+      bytes.addAll(chunk);
+    }
+    if (bytes.isEmpty) return null;
+    final decoded = jsonDecode(utf8.decode(bytes, allowMalformed: true));
+    if (decoded is Map && decoded['detail'] is String) {
+      return decoded['detail'] as String;
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// 取 Retry-After 头并按「秒」解析；缺省或非数字（如 HTTP-date）回退 null。
+int? _retryAfterSeconds(Headers headers) {
+  final v = headers.value('retry-after');
+  if (v == null) return null;
+  return int.tryParse(v.trim());
 }

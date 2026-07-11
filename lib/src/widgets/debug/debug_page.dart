@@ -42,6 +42,7 @@ import 'package:refuge_next/src/funcs/power_plant_rag_export.dart';
 import 'package:refuge_next/src/funcs/quantum_drive_rag_export.dart';
 import 'package:refuge_next/src/funcs/weapon_attachment_rag_export.dart';
 import 'package:refuge_next/src/funcs/all_rag_export.dart';
+import 'package:refuge_next/src/funcs/item_image_urls_export.dart';
 
 /// 通用开发测试中心。
 ///
@@ -80,6 +81,15 @@ class DebugPage extends StatelessWidget {
       title: '导出舰船 RAG JSON',
       subtitle: '把有中文别名的舰船导出为单个 JSON 数组',
       builder: (context) => const VehicleRagExportPage(),
+    ),
+    DebugEntry(
+      icon: Icons.image_outlined,
+      title: '导出物品图片链接 TXT',
+      subtitle: '把全部航船+物品的缩略图与大图 URL 导出为 txt，每行一个，供批量下载',
+      builder: (context) => RagExportPage(
+        title: '导出物品图片链接 TXT',
+        exporter: exportItemImageUrls,
+      ),
     ),
     DebugEntry(
       icon: Icons.gps_fixed,

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:refuge_next/src/widgets/common/wiki_image_fallback.dart';
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
@@ -178,7 +179,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
           padding: EdgeInsets.only(top: 24),
           child: Center(
             child: Text(
-              '未找到该物品对应的蓝图\n(需先在 Blueprint 测试页拉取蓝图数据)',
+              '未找到蓝图',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),
@@ -394,10 +395,13 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
               fit: BoxFit.cover,
               placeholder: (context, _) =>
                   Container(color: Colors.black12),
-              errorWidget: (context, _, __) => Container(
-                color: Colors.black12,
-                child: Icon(widget.fallbackIcon,
-                    size: 48, color: Colors.white54),
+              errorWidget: (context, _, __) => wikiImageFallback(
+                url,
+                onFail: Container(
+                  color: Colors.black12,
+                  child: Icon(widget.fallbackIcon,
+                      size: 48, color: Colors.white54),
+                ),
               ),
             ),
             if (showBack)
@@ -866,9 +870,17 @@ List<Widget> buildSystemCards(GameItem item) {
 /// 购买:游戏内购买。
 List<Widget> buildPurchaseCards(GameItem item) {
   final purchases = item.uexPrices?.purchase ?? const <UexPrice>[];
-  return [
-    if (purchases.isNotEmpty) uexPurchaseCard(purchases),
-  ];
+  if (purchases.isEmpty) {
+    return const [
+      Padding(
+        padding: EdgeInsets.only(top: 24),
+        child: Center(
+          child: Text('暂无购买位置', style: TextStyle(color: Colors.grey)),
+        ),
+      ),
+    ];
+  }
+  return [uexPurchaseCard(purchases)];
 }
 
 /// 蓝图卡片:制造时间 / 材料表 / 解锁任务(传入的 [bp] 最好是含解锁任务的详情)。

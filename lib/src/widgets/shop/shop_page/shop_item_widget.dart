@@ -4,6 +4,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 import 'package:refuge_next/src/repo/shop_catalog_cache.dart';
+import 'package:refuge_next/src/repo/translation.dart';
 import 'catalog_detail_bottomsheet.dart' show getCatalogItemDetailSheet;
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -39,18 +40,25 @@ class ShopItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final subtitle = catalogProperty.subtitle;
+    // 分类副标题(如 Standalone Ships)译成中文,未命中回退原文。
+    final subtitleCn =
+        subtitle.isEmpty ? '' : TranslationRepo().getTranslationSync(subtitle);
     final current = catalogProperty.nativePrice.amount;
     final cache = ShopCatalogCache();
     // discounted 视为促销时的更高原价;仅当其 > 现价才展示划线原价(联调可对调)。
     final disc = cache.discountedFor(catalogProperty.id);
     final hasDiscount = disc != null && disc > current;
 
-    // 状态标签 + RSI 原生标签;总数限制在 3 个以内,避免卡片高度溢出。
+    // 分类 + 状态标签 + RSI 原生标签;总数限制在 3 个以内,避免卡片高度溢出。
     final statusCount =
         (catalogProperty.isWarbond ? 1 : 0) + (catalogProperty.isPackage ? 1 : 0);
-    final rsiTags =
-        cache.tagsFor(catalogProperty.id).take(3 - statusCount).toList();
+    final subtitleCount = subtitleCn.isEmpty ? 0 : 1;
+    final rsiTags = cache
+        .tagsFor(catalogProperty.id)
+        .take((3 - statusCount - subtitleCount).clamp(0, 3))
+        .toList();
     final chips = <Widget>[
+      if (subtitleCn.isNotEmpty) _tagChip(cs.primary, subtitleCn),
       if (catalogProperty.isWarbond) _tagChip(Colors.orange, '战争债券'),
       if (catalogProperty.isPackage) _tagChip(cs.primary, '组合包'),
       for (final t in rsiTags) _tagChip(Colors.grey, t),
@@ -94,17 +102,6 @@ class ShopItemWidget extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 15, fontWeight: FontWeight.bold),
                       ),
-                      if (subtitle.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            subtitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 13, color: Colors.grey[600]),
-                          ),
-                        ),
                       if (chips.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),

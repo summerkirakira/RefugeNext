@@ -164,4 +164,61 @@ void main() {
       expect((parseSseFrame('done', '{}') as AiDoneEvent).usage, isEmpty);
     });
   });
+
+  group('mapPreStreamHttpError（契约 §2.1 流前 HTTP 错误分类）', () {
+    AiErrorEvent map(int s, String? d, int? ra) =>
+        mapPreStreamHttpError(s, d, ra) as AiErrorEvent;
+
+    test('401 缺/无效 cirno-token -> 引导重新登录，不可重试', () {
+      final ev = map(401, 'missing cirno-token', null);
+      expect(ev.retryable, false);
+      expect(ev.message, contains('重新登录'));
+    });
+
+    test('413 输入过大 -> 不可重试', () {
+      expect(map(413, 'too many messages (max 50)', null).retryable, false);
+      expect(map(413, 'input too large (max 8000 chars)', null).retryable, false);
+      expect(map(413, 'too many client_tools (max 12)', null).retryable, false);
+    });
+
+    test('429 每日额度用尽 -> 不可重试（次日恢复）', () {
+      final ev = map(429, 'daily token budget exceeded', 3600);
+      expect(ev.retryable, false);
+      expect(ev.message, contains('额度'));
+    });
+
+    test('429 频率超限带 Retry-After -> 可重试且文案含秒数', () {
+      final ev = map(429, 'rate limit exceeded', 12);
+      expect(ev.retryable, true);
+      expect(ev.message, contains('12 秒'));
+    });
+
+    test('429 频率超限缺 Retry-After -> 可重试，不带秒数', () {
+      final ev = map(429, 'rate limit exceeded', null);
+      expect(ev.retryable, true);
+      expect(ev.message, isNot(contains('秒后')));
+    });
+
+    test('429 并发超限（无 Retry-After，非 rate/daily）-> 可重试', () {
+      final ev = map(429, 'too many concurrent requests', null);
+      expect(ev.retryable, true);
+      expect(ev.message, contains('正在进行'));
+    });
+
+    test('503 依赖故障 -> 可重试', () {
+      final ev = map(503, 'privilege service unavailable', null);
+      expect(ev.retryable, true);
+    });
+
+    test('其它非 2xx -> 不可重试，含状态码', () {
+      final ev = map(500, null, null);
+      expect(ev.retryable, false);
+      expect(ev.message, contains('500'));
+    });
+
+    test('detail 缺失（null）也不崩', () {
+      expect(map(429, null, null).retryable, true); // 落到并发分支
+      expect(map(401, null, null).retryable, false);
+    });
+  });
 }

@@ -18,8 +18,8 @@ import 'package:refuge_next/src/repo/refuge_account.dart';
 class CirnoApiClient {
   static final CirnoApiClient _instance = CirnoApiClient._internal();
   late final Dio _dio;
-  // final String baseUrl = "https://biaoju.site:6188/";
-  final String baseUrl = "http://localhost:8080/";
+  final String baseUrl = "https://biaoju.site:6188/";
+  // final String baseUrl = "http://localhost:8080/";
 
   CirnoApiClient._internal() {
     _dio = Dio();
@@ -69,25 +69,27 @@ class CirnoApiClient {
   }
 
   /// SSE 原始流请求（复用本类的拦截器：cirno-token / JWT 自动注入）。
-  /// 返回 ResponseBody，由调用方按 SSE 帧解析（见 AiChatService）。
+  /// 返回完整 Response（含 statusCode / headers / data 流），由调用方**先判状态码**：
+  /// 非 2xx 是流前 HTTP 错误（body 为 {"detail":...}，见契约 §2.1），不要按 SSE 解析。
   /// [baseUrlOverride] 用于测试时指向本地/其它服务器（如 http://localhost:8080/），
   /// 不传则用默认的生产 baseUrl。
-  Future<ResponseBody> postSse({
+  Future<Response<ResponseBody>> postSse({
     required String endpoint,
     required Map<String, dynamic> data,
     CancelToken? cancelToken,
     String? baseUrlOverride,
   }) async {
-    final response = await _dio.post<ResponseBody>(
+    return _dio.post<ResponseBody>(
       "${baseUrlOverride ?? baseUrl}$endpoint",
       data: data,
       cancelToken: cancelToken,
       options: Options(
         responseType: ResponseType.stream,
         headers: {"Accept": "text/event-stream"},
+        // 非 2xx 不抛异常：交给调用方解析 detail/Retry-After 做分类处理（契约 §2.1）。
+        validateStatus: (_) => true,
       ),
     );
-    return response.data!;
   }
 
   Future<Response> basicPostList({required String endpoint, required List<String> data}) async {

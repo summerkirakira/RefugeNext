@@ -21,7 +21,6 @@ import 'package:refuge_next/src/funcs/tray_manager_service.dart';
 import 'package:refuge_next/src/funcs/launch_at_startup_service.dart';
 import 'package:refuge_next/src/datasource/config_storage.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
-import 'src/widgets/friends/friends_status_page.dart';
 import 'src/datasource/ai_chat_model.dart';
 import 'src/repo/ai_chat.dart';
 import 'src/repo/repo_ai_tool_executor.dart';
@@ -218,19 +217,17 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   Widget _getSelectedPage(int _selectedIndex) {
     switch (_selectedIndex) {
       case 0:
-        return const FriendsStatusPage();
-      case 1:
         return const DatabasePage();
-      case 2:
+      case 1:
         return ShopPage();
-      case 3:
+      case 2:
         return HangarPage();
-      case 4:
+      case 3:
         return FeatureSelectionPage();
+      case 4:
+        return const AiChatPage();
       case 5:
         return UserInfoPage();
-      case 6:
-        return const AiChatPage();
       default:
         return Text('Home Page');
     }

@@ -104,7 +104,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
     if (m == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('任务详情')),
-        body: const Center(child: Text('本地暂无数据,请先在 Mission 测试页拉取')),
+        body: const Center(child: Text('本地暂无数据,请先在数据库页下载')),
       );
     }
     return Scaffold(

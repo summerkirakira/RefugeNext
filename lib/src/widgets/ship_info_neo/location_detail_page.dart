@@ -63,7 +63,7 @@ class _LocationDetailPageState extends State<LocationDetailPage> {
     if (l == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('地点详情')),
-        body: const Center(child: Text('本地暂无数据,请先在 Location 测试页拉取')),
+        body: const Center(child: Text('本地暂无数据,请先在数据库页下载')),
       );
     }
     return Scaffold(
