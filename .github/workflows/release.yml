@@ -51,8 +51,8 @@ jobs:
           # 解码并保存 keystore 文件
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
 
-          # 构建发布版 APK
-          flutter build apk --release
+          # 构建发布版 APK（仅 arm64-v8a，去掉 armeabi-v7a/x86_64 以减小体积）
+          flutter build apk --release --target-platform android-arm64
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/refuge-android.apk
 
       - name: Build Windows
