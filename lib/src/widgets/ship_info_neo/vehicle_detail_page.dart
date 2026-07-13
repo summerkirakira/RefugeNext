@@ -523,8 +523,6 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                 height: 1.4,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
       ],
@@ -1308,7 +1306,8 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
         }
         return _CollapsibleCard(
           key: ValueKey(key),
-          title: '$key(${visible.length})',
+          title: _kPortCategoryCn[key] ?? key,
+          count: visible.length,
           initiallyExpanded: hideEmpty,
           children: visible
               .map((port) => _PortItem(port: port, hideEmpty: hideEmpty))
@@ -1741,17 +1740,60 @@ const Set<String> _kWeaponPortCategories = {
   'Missile & Bomb Racks',
 };
 
+/// 组件分组英文 category_label → 中文显示名。未命中则原样显示。
+const Map<String, String> _kPortCategoryCn = {
+  'Weapons': '武器',
+  'Turrets': '炮塔',
+  'Manned Turrets': '有人炮塔',
+  'Remote Turrets': '遥控炮塔',
+  'PDC Turrets': 'PDC 炮塔',
+  'Missile & Bomb Racks': '导弹/炸弹架',
+  'Shields': '护盾',
+  'Coolers': '散热器',
+  'Power Plants': '电源',
+  'Quantum Drives': '量子驱动器',
+  'Thrusters': '推进器',
+  'Flight Controller': '飞控',
+  'Radars': '雷达',
+  'Fuel': '燃料',
+  'Life Support': '生命维持',
+  'Cargo Grids': '货舱',
+  'Crew Stations': '乘员位',
+  'Doors & Hatches': '舱门',
+  'Landing Systems': '起落架',
+  'Counter Measures': '干扰弹',
+  'Mining & Salvage': '采矿与回收',
+  'Tractor Beams': '牵引光束',
+  'Docking': '对接口',
+  'Docked Vehicles': '停靠载具',
+  'AI Modules': 'AI 模块',
+  'Modules': '模块',
+  'Controllers': '控制器',
+  'Systems': '系统',
+  'Relays': '继电器',
+  'Paints': '涂装',
+  'Weapon Lockers': '武器柜',
+  'Armor': '装甲',
+  'EMP': 'EMP',
+  'QED': '量子封锁',
+  'Other': '其他',
+};
+
 /// 可折叠分组卡片:视觉沿用 [_VehicleDetailPageState._card],标题行可点击展开/收起。
 class _CollapsibleCard extends StatefulWidget {
   final String title;
   final List<Widget> children;
   final bool initiallyExpanded;
 
+  /// 标题后展示的数量徽章;为 null 时不显示。
+  final int? count;
+
   const _CollapsibleCard({
     super.key,
     required this.title,
     required this.children,
     this.initiallyExpanded = false,
+    this.count,
   });
 
   @override
@@ -1776,11 +1818,27 @@ class _CollapsibleCardState extends State<_CollapsibleCard> {
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Text(widget.title,
-                          style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.bold)),
-                    ),
+                    Text(widget.title,
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold)),
+                    if (widget.count != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text('${widget.count}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[600])),
+                        ),
+                      ),
+                    const Spacer(),
                     AnimatedRotation(
                       turns: _expanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 150),
