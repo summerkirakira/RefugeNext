@@ -897,6 +897,8 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
           _rows([
             _row('船体血量', _n(v.health), unit: 'HP', orange: true),
             _row('装甲血量', _n(a?.health), unit: 'HP'),
+            _row('物理抵抗', _n(a?.deflection?.physical)),
+            _row('能量抵抗', _n(a?.deflection?.energy)),
             _row('物理伤害', _mult(a?.damageMultiplier?.physical)),
             _row('能量伤害', _mult(a?.damageMultiplier?.energy)),
             _row('扭曲伤害', _mult(a?.damageMultiplier?.distortion)),
@@ -1277,14 +1279,42 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
       final key = port.categoryLabel ?? port.type ?? '其他';
       groups.putIfAbsent(key, () => []).add(port);
     }
-    final keys = groups.keys.toList()..sort();
+    // 武装类分组置顶(按 _kWeaponPortCategories 的优先级顺序:武器→炮塔→导弹),
+    // 其余分组按字母排序跟随其后。
+    final weaponOrder = _kWeaponPortCategories.toList();
+    final keys = groups.keys.toList()
+      ..sort((a, b) {
+        final aw = _kWeaponPortCategories.contains(a);
+        final bw = _kWeaponPortCategories.contains(b);
+        if (aw && bw) {
+          return weaponOrder.indexOf(a).compareTo(weaponOrder.indexOf(b));
+        }
+        if (aw != bw) {
+          return aw ? -1 : 1;
+        }
+        return a.compareTo(b);
+      });
     return [
       if (loadingHint != null) loadingHint,
       ...keys.map((key) {
         final list = groups[key]!;
-        return _card('$key(${list.length})',
-            list.map((port) => _PortItem(port: port)).toList());
-      }),
+        // 武装类分组隐藏空槽位(顶层 + 嵌套子槽),标题数量按已装配数计。
+        final hideEmpty = _kWeaponPortCategories.contains(key);
+        final visible = hideEmpty
+            ? list.where((p) => p.equippedItem?.name != null).toList()
+            : list;
+        if (visible.isEmpty) {
+          return null;
+        }
+        return _CollapsibleCard(
+          key: ValueKey(key),
+          title: '$key(${visible.length})',
+          initiallyExpanded: hideEmpty,
+          children: visible
+              .map((port) => _PortItem(port: port, hideEmpty: hideEmpty))
+              .toList(),
+        );
+      }).whereType<Widget>(),
     ];
   }
 
@@ -1609,7 +1639,11 @@ class _PortItem extends StatelessWidget {
   final GameVehiclePort port;
   final int depth;
 
-  const _PortItem({required this.port, this.depth = 0});
+  /// 为 true 时递归隐藏空槽位子挂点(用于武装类分组)。
+  final bool hideEmpty;
+
+  const _PortItem(
+      {required this.port, this.depth = 0, this.hideEmpty = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1689,8 +1723,79 @@ class _PortItem extends StatelessWidget {
         ),
         if (children != null && children.isNotEmpty)
           ...children
-              .map((child) => _PortItem(port: child, depth: depth + 1)),
+              .where((c) => !hideEmpty || c.equippedItem?.name != null)
+              .map((child) => _PortItem(
+                  port: child, depth: depth + 1, hideEmpty: hideEmpty)),
       ],
+    );
+  }
+}
+
+/// 组件页签中默认展开的武装类分组(`category_label`,英文原文)。
+const Set<String> _kWeaponPortCategories = {
+  'Weapons',
+  'Turrets',
+  'Manned Turrets',
+  'Remote Turrets',
+  'PDC Turrets',
+  'Missile & Bomb Racks',
+};
+
+/// 可折叠分组卡片:视觉沿用 [_VehicleDetailPageState._card],标题行可点击展开/收起。
+class _CollapsibleCard extends StatefulWidget {
+  final String title;
+  final List<Widget> children;
+  final bool initiallyExpanded;
+
+  const _CollapsibleCard({
+    super.key,
+    required this.title,
+    required this.children,
+    this.initiallyExpanded = false,
+  });
+
+  @override
+  State<_CollapsibleCard> createState() => _CollapsibleCardState();
+}
+
+class _CollapsibleCardState extends State<_CollapsibleCard> {
+  late bool _expanded = widget.initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(widget.title,
+                          style: const TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.bold)),
+                    ),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 150),
+                      child:
+                          Icon(Icons.expand_more, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_expanded) ...widget.children,
+            if (_expanded) const SizedBox(height: 4),
+          ],
+        ),
+      ),
     );
   }
 }
