@@ -1957,6 +1957,9 @@ class MainDataModel extends ChangeNotifier {
   Future<void> updateBuybackItems() async {
     try {
       await _updateBuybackItems();
+    } on FormatException catch (e) {
+      showAlert(message: "官网回购页面解析失败: ${e.message}");
+      return;
     } on ParserError catch (e) {
       showAlert(message: "登录失效, 正在重新登陆");
       final result = await reLogin();
