@@ -221,11 +221,13 @@ void main() {
         (tester) async {
       var pinned = false;
       var excluded = 0;
+      var opened = 0;
       await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: SingleChildScrollView(
                   child: CcuRouteStep(
                       edge: routeEdge,
+                      onTap: () => opened++,
                       index: 0,
                       from: ship,
                       to: ship,
@@ -253,6 +255,9 @@ void main() {
       await tester.tap(excludeButton);
       await tester.pumpAndSettle();
       expect(excluded, 1);
+      expect(opened, 0);
+      await tester.tap(find.text(ship.name));
+      expect(opened, routeEdge.isOwned ? 1 : 0);
       expect(find.byType(PopupMenuItem<String>), findsNothing);
       expect(tester.takeException(), isNull);
     });

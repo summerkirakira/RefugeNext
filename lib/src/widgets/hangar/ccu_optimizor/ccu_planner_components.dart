@@ -53,23 +53,43 @@ class CcuPanel extends StatelessWidget {
       {super.key,
       required this.child,
       this.borderColor,
+      this.onTap,
       this.padding = const EdgeInsets.all(20)});
   final Widget child;
   final Color? borderColor;
   final EdgeInsetsGeometry padding;
+  final VoidCallback? onTap;
   @override
-  Widget build(BuildContext context) => Container(
-      padding: padding,
-      decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-              color: borderColor ??
-                  Theme.of(context)
-                      .colorScheme
-                      .outlineVariant
-                      .withValues(alpha: .55))),
-      child: child);
+  Widget build(BuildContext context) {
+    if (onTap != null) {
+      return Material(
+        color: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+                color: borderColor ??
+                    Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: .55))),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+            onTap: onTap, child: Padding(padding: padding, child: child)),
+      );
+    }
+    return Container(
+        padding: padding,
+        decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+                color: borderColor ??
+                    Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: .55))),
+        child: child);
+  }
 }
 
 class CcuSourceOption extends StatelessWidget {
@@ -554,13 +574,15 @@ class CcuRouteStep extends StatelessWidget {
       required this.last,
       required this.pinned,
       required this.onPin,
-      required this.onExclude});
+      required this.onExclude,
+      this.onTap});
   final CcuOffer edge;
   final int index;
   final CcuShipView from, to;
   final bool last, pinned;
   final VoidCallback? onPin;
   final VoidCallback? onExclude;
+  final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -616,6 +638,7 @@ class CcuRouteStep extends StatelessWidget {
           child: Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: CcuPanel(
+                  onTap: edge.isOwned ? onTap : null,
                   padding: const EdgeInsets.all(14),
                   borderColor: unavailableEstimate
                       ? Colors.amber.withValues(alpha: .65)

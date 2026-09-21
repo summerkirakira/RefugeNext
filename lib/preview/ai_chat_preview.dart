@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../src/datasource/ai_chat_model.dart';
 import '../src/datasource/models/ai/ai_message.dart';
 import '../src/datasource/models/ai/ai_stream_event.dart';
+import '../src/datasource/models/ai/ai_usage.dart';
+import '../src/datasource/models/ai/tool_call.dart';
 import '../src/repo/ai_chat.dart';
 import '../src/widgets/ai_chat/ai_chat_page.dart';
 
@@ -49,20 +51,69 @@ Anvil 出品的远征探索舰，适合：
     yield const AiStreamEvent.done({});
   }
 
+  final Map<String, List<AiMessage>> _history = {
+    'preview': [
+      userMessage('帮我对比 Carrack 和 600i，看看哪艘更适合探索'),
+      const AiMessage(role: 'assistant', content: '我先查一下两艘船的资料。'),
+      const AiMessage(role: 'assistant', toolCalls: [
+        ToolCall(
+            id: 'docs', name: 'retrieve_docs', arguments: {'query': '探索舰对比'}),
+        ToolCall(id: 'spec', name: 'get_ship_spec'),
+      ]),
+      toolResultMessage(toolCallId: 'docs', content: {'documents': []}),
+      toolResultMessage(toolCallId: 'spec', content: {
+        'ships': ['Carrack', '600i']
+      }),
+      const AiMessage(role: 'assistant', content: _reply),
+    ],
+    'empty': [],
+    'long': [
+      for (var i = 1; i <= 18; i++) ...[
+        userMessage('第 $i 个问题：探索舰如何选择？'),
+        const AiMessage(role: 'assistant', content: _reply),
+      ],
+    ],
+  };
+  List<AiSessionMeta> _sessions = [
+    AiSessionMeta(id: 'preview', title: '探索舰对比', updatedAt: 3),
+    AiSessionMeta(id: 'empty', title: '新对话', updatedAt: 2),
+    AiSessionMeta(id: 'long', title: '长对话与滚动', updatedAt: 1),
+  ];
+
   @override
-  Future<List<AiMessage>> loadHistory(String sessionId) async => [
-        userMessage('帮我推荐一条适合探索的船'),
-        const AiMessage(
-          role: 'assistant',
-          content: '当然！你更看重**单人**还是**多人协作**？这会影响推荐方向。',
-        ),
+  Future<AiUsage> fetchUsage() async => const AiUsage(
+      tier: 'free',
+      usedTokens: 1200,
+      dailyBudget: 10000,
+      remainingTokens: 8800,
+      unlimited: false,
+      resetInSeconds: 3600);
+
+  @override
+  Future<List<AiSessionMeta>> loadSessions() async => [
+        for (final session in _sessions)
+          AiSessionMeta.fromJson(session.toJson()),
       ];
 
   @override
-  Future<void> saveHistory(String sessionId, List<AiMessage> messages) async {}
+  Future<void> saveSessions(List<AiSessionMeta> sessions) async {
+    _sessions = [
+      for (final session in sessions) AiSessionMeta.fromJson(session.toJson())
+    ];
+  }
 
   @override
-  Future<void> clearHistory(String sessionId) async {}
+  Future<List<AiMessage>> loadHistory(String sessionId) async =>
+      [...?_history[sessionId]];
+
+  @override
+  Future<void> saveHistory(String sessionId, List<AiMessage> messages) async {
+    _history[sessionId] = [...messages];
+  }
+
+  @override
+  Future<void> clearHistory(String sessionId) async =>
+      _history.remove(sessionId);
 }
 
 void main() {
@@ -78,35 +129,56 @@ class _PreviewApp extends StatefulWidget {
 
 class _PreviewAppState extends State<_PreviewApp> {
   ThemeMode _mode = ThemeMode.light;
+  double? _width;
+  late final AiChatModel _model = AiChatModel(repo: PreviewAiRepo())
+    ..loadFromDisk();
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: FlexColorScheme.light(scheme: FlexScheme.material, useMaterial3: false).toTheme,
-      darkTheme: FlexColorScheme.dark(scheme: FlexScheme.material, useMaterial3: false).toTheme,
-      themeMode: _mode,
-      home: ChangeNotifierProvider<AiChatModel>(
-        create: (_) =>
-            AiChatModel(sessionId: 'preview', repo: PreviewAiRepo())..loadFromDisk(),
-        child: const AiChatPage(),
-      ),
-      builder: (context, child) => Stack(
-        children: [
-          child!,
-          Positioned(
-            right: 12,
-            bottom: 96,
-            child: FloatingActionButton.small(
-              heroTag: 'previewThemeToggle',
-              onPressed: () => setState(
-                () => _mode = _mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,
-              ),
-              child: Icon(_mode == ThemeMode.light ? Icons.dark_mode : Icons.light_mode),
-            ),
-          ),
-        ],
-      ),
-    );
+  void dispose() {
+    _model.dispose();
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: FlexColorScheme.light(
+                scheme: FlexScheme.material, useMaterial3: false)
+            .toTheme,
+        darkTheme: FlexColorScheme.dark(
+                scheme: FlexScheme.material, useMaterial3: false)
+            .toTheme,
+        themeMode: _mode,
+        home: Scaffold(
+            body: SafeArea(
+                child: Column(children: [
+          Material(
+              child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('小九 · 离线预览')),
+                for (final width in <double?>[390, 768, null])
+                  TextButton(
+                      onPressed: () => setState(() => _width = width),
+                      child: Text(width == null ? '全宽' : '${width.toInt()}')),
+                IconButton(
+                    tooltip: '切换主题',
+                    onPressed: () => setState(() => _mode =
+                        _mode == ThemeMode.light
+                            ? ThemeMode.dark
+                            : ThemeMode.light),
+                    icon: Icon(_mode == ThemeMode.light
+                        ? Icons.dark_mode
+                        : Icons.light_mode)),
+              ])),
+          Expanded(
+              child: Center(
+                  child: SizedBox(
+                      width: _width ?? double.infinity,
+                      child: ChangeNotifierProvider<AiChatModel>.value(
+                          value: _model, child: const AiChatPage())))),
+        ]))),
+      );
 }

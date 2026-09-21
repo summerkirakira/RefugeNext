@@ -130,19 +130,21 @@ void main() {
 
     test('name 优先中文名，price 优先 currentPrice，含 id', () {
       final r = shapeHangarItems([
-        _hi(id: 42, name: 'Carrack', chineseName: '卡拉克', price: 100, currentPrice: 80, items: [_sub(kind: 'Ship')]),
+        _hi(id: 42, name: 'Carrack', chineseName: '卡拉克', price: 10000, currentPrice: 8075, items: [_sub(kind: 'Ship')]),
       ], {});
       final it = (r['items'] as List).single;
       expect(it['id'], 42);
       expect(it['name'], '卡拉克');
       expect(it['type'], 'ship');
       expect(it['qty'], 1);
-      expect(it['price'], 80);
+      expect(it['price'], 80.75);
+      expect(r['currency'], 'USD');
+      expect(r['moneyUnit'], 'dollars');
     });
 
     test('currentPrice<=0 时回退 price', () {
-      final r = shapeHangarItems([_hi(name: 'X', price: 50, currentPrice: 0)], {});
-      expect((r['items'] as List).single['price'], 50);
+      final r = shapeHangarItems([_hi(name: 'X', price: 5025, currentPrice: 0)], {});
+      expect((r['items'] as List).single['price'], 50.25);
     });
 
     test('contents 含子项(name 优先中文 + kind)，alsoContains 按 # 拆分', () {

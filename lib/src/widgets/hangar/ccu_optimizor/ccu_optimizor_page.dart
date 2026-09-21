@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../../../datasource/data_model.dart';
 import '../../../datasource/models/ccu_plan.dart';
@@ -12,6 +13,10 @@ import '../../../repo/ccu_plan_storage.dart';
 import '../../../repo/ship_alias.dart';
 import '../../../repo/ship_upgrade.dart';
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
+import '../hangar_item_detail_widget.dart';
+import '../ship_gift_modal.dart';
+import '../ship_recall_modal.dart';
+import '../ship_reclaim_modal.dart';
 import 'ccu_planner_components.dart';
 
 export 'ccu_planner_components.dart' show CcuCostSummary;
@@ -505,8 +510,28 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget>
     return id;
   }
 
+  void _openOwnedCcu(CcuOffer edge) {
+    final item = edge.itemId == null
+        ? null
+        : context.read<MainDataModel>().getHangarItemById(edge.itemId!);
+    if (item == null) {
+      showToast(message: '未找到对应机库物品，请刷新机库后重新计算方案');
+      return;
+    }
+    WoltModalSheet.show<void>(
+      context: context,
+      pageListBuilder: (modalSheetContext) => [
+        getHangarItemDetailSheet(modalSheetContext, item),
+        getReclaimPage(modalSheetContext, context, item),
+        getGiftPage(modalSheetContext, context, item),
+        getRecallPage(modalSheetContext, context, item),
+      ],
+    );
+  }
+
   Widget _step(CcuOffer edge, int index) => CcuRouteStep(
       key: ValueKey('$_selection:${edge.id}'),
+      onTap: edge.isOwned ? () => _openOwnedCcu(edge) : null,
       edge: edge,
       index: index,
       from: _shipView(edge.fromShipId),
@@ -808,25 +833,8 @@ class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget>
         settings: _settingsControls(),
         actions: _planningActions(),
         results: _resultsPanel(plan, expired),
-        stepCount: (plan?.steps.length ?? 0) +
-            ((_result?.diagnostics.isNotEmpty ?? false) ? 1 : 0),
-        stepBuilder: (context, index) {
-          if (index < (plan?.steps.length ?? 0)) {
-            return _step(plan!.steps[index], index);
-          }
-          return Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: CcuPanel(
-                  padding: EdgeInsets.zero,
-                  child: ExpansionTile(
-                      key: const PageStorageKey('ccu-diagnostics'),
-                      title: Text('数据提示 (${_result!.diagnostics.length})',
-                          style: theme.textTheme.bodyMedium),
-                      leading: const Icon(Icons.info_outline, size: 19),
-                      children: _result!.diagnostics
-                          .map((d) => ListTile(dense: true, title: Text(d)))
-                          .toList())));
-        });
+        stepCount: plan?.steps.length ?? 0,
+        stepBuilder: (context, index) => _step(plan!.steps[index], index));
   }
 
   @override

@@ -2,6 +2,7 @@ import '../datasource/data_model.dart';
 import '../datasource/models/hangar.dart';
 import '../datasource/models/buyback.dart';
 import '../datasource/models/searchProperty.dart';
+import '../datasource/models/user.dart';
 import '../funcs/search.dart';
 import 'ai_chat.dart';
 import 'ccu_planner.dart';
@@ -143,14 +144,7 @@ class RepoAiToolExecutor implements AiToolExecutor {
 
   Future<Map<String, dynamic>> _getUserInfo() async {
     final user = await _model.userRepo.getCurrentUser();
-    if (user == null) return {'isVIP': _model.isVIP};
-    // 暴露除敏感字段外的全部 User 信息（toJson 自动覆盖未来新增字段）。
-    final info = user.toJson();
-    info.remove('password'); // 密码
-    info.remove('email'); // 邮箱
-    info.remove('rsiToken'); // RSI 登录凭证，发给云端 LLM 即泄露，安全起见排除
-    info['isVIP'] = _model.isVIP;
-    return info;
+    return shapeUserInfo(user, isVIP: _model.isVIP);
   }
 
   Future<Map<String, dynamic>> _getBuyback(Map<String, dynamic> args) async {
@@ -162,6 +156,24 @@ class RepoAiToolExecutor implements AiToolExecutor {
 // ---------------------------------------------------------------------------
 // 纯函数（顶层，便于单测，不依赖 MainDataModel）
 // ---------------------------------------------------------------------------
+
+/// 本地美元金额按美分存储；工具结果统一换成美元，UEC / REC 保持原单位。
+Map<String, dynamic> shapeUserInfo(User? user, {required bool isVIP}) {
+  if (user == null) return {'isVIP': isVIP};
+  final info = user.toJson();
+  info.remove('password');
+  info.remove('email');
+  info.remove('rsiToken');
+  info.remove('rsiDevice');
+  info['usd'] = user.usd / 100;
+  info['totalSpent'] = user.totalSpent / 100;
+  info['hangarValue'] = user.hangarValue / 100;
+  info['currentHangarValue'] = user.currentHangarValue / 100;
+  info['currency'] = 'USD';
+  info['moneyUnit'] = 'dollars';
+  info['isVIP'] = isVIP;
+  return info;
+}
 
 /// show_item_card 的 ack 结果:按可用 uuid 集合把入参拆成 shown / missing。
 /// 纯函数,便于单测;非字符串入参转字符串,空串归 missing。
@@ -286,7 +298,7 @@ Map<String, dynamic> shapeHangarItems(
           'name': _displayName(i),
           'type': hangarItemType(i),
           'qty': i.number,
-          'price': _displayPrice(i),
+          'price': _displayPrice(i) / 100,
           // 包内容：结构化子项（船/涂装等）
           'contents': i.items
               .map((s) => {'name': _subName(s), 'kind': s.kind})
@@ -296,7 +308,12 @@ Map<String, dynamic> shapeHangarItems(
       })
       .toList();
 
-  return {'total': total, 'items': page};
+  return {
+    'total': total,
+    'items': page,
+    'currency': 'USD',
+    'moneyUnit': 'dollars',
+  };
 }
 
 /// get_buyback 的精简结果。复刻前端回购搜索：过滤直接走前端 processBuybackSearch

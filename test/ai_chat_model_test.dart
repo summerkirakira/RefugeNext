@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:refuge_next/src/datasource/ai_chat_model.dart';
 import 'package:refuge_next/src/datasource/models/ai/ai_message.dart';
 import 'package:refuge_next/src/datasource/models/ai/ai_stream_event.dart';
+import 'package:refuge_next/src/datasource/models/ai/ai_usage.dart';
 import 'package:refuge_next/src/datasource/models/ai/tool_call.dart';
 import 'package:refuge_next/src/repo/ai_chat.dart';
 
@@ -24,6 +25,15 @@ class FakeAiRepo extends AiRepo {
     this.historyById = const {},
     this.sessionsSeed = const [],
   });
+
+  @override
+  Future<AiUsage> fetchUsage() async => const AiUsage(
+      tier: 'free',
+      usedTokens: 0,
+      dailyBudget: 10000,
+      remainingTokens: 10000,
+      unlimited: false,
+      resetInSeconds: 3600);
 
   @override
   Stream<AiStreamEvent> streamChat({
@@ -181,7 +191,8 @@ void main() {
         const AiStreamEvent.token('我先查一下资料'),
         const AiStreamEvent.toolRunning('检索资料'),
         const AiStreamEvent.token('Avenger Titan 适合新手'),
-        AiStreamEvent.done(const {}, inlineMessages: [retrieveAsst, retrieveResult]),
+        AiStreamEvent.done(const {},
+            inlineMessages: [retrieveAsst, retrieveResult]),
       ]);
       final model = AiChatModel(sessionId: 's1', repo: repo);
 
@@ -324,7 +335,10 @@ void main() {
         ],
         historyById: {
           'a': [userMessage('问A')],
-          'b': [userMessage('问B'), const AiMessage(role: 'assistant', content: '答B')],
+          'b': [
+            userMessage('问B'),
+            const AiMessage(role: 'assistant', content: '答B')
+          ],
         },
       );
       final model = AiChatModel(repo: repo);
