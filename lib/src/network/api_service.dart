@@ -1,36 +1,39 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../datasource/models/friend.dart';
 import '../datasource/models/hangar/upgrade_target_property.dart';
-import 'utils.dart';
-import '../datasource/models/login/login_property.dart';
-import 'dart:io';
-import 'hangar/property.dart';
 import '../datasource/models/identify_response.dart';
+import '../datasource/models/login/login_property.dart';
+import '../datasource/models/spectrum/private_lobby.dart';
 import '../datasource/models/spectrum/spectrum_auth_property.dart';
 import '../datasource/models/spectrum/spectrum_message.dart';
-import '../datasource/models/spectrum/private_lobby.dart';
-import '../datasource/models/friend.dart';
+import '../funcs/toast.dart';
+import '../services/rsi_session_service.dart';
+import 'hangar/property.dart';
+import 'utils.dart';
 
 class RsiApiClient {
   static final RsiApiClient _instance = RsiApiClient._internal();
   late final Dio _dio;
 
-  String rsiDevice = "";
-  String rsiToken = "";
+  final session = RsiSessionService.instance;
+  String get rsiDevice => session.value('_rsi_device');
+  String get rsiToken => session.value('Rsi-Token');
   String xsrfToken = "";
-  String rsiAuth = "";
-  String upgradeContext = "";
+  String get rsiAuth => session.value('Rsi-Account-Auth');
+  String get upgradeContext => session.value('Rsi-ShipUpgrades-Context');
   String rsiCookieContent =
       "{stamp:%27OxTvKGMly/MLoYR3VVQb40QHQbh68uSc2ORKIfKGhLQyPGB71fbjEA==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:true%2Cmethod:%27explicit%27%2Cver:1%2Cutc:1698762520261%2Cregion:%27gb%27}; _ga=GA1.2.789579038.1698763289; wsc_view_count=1; wsc_hide=true";
 
   String baseUrl = "https://robertsspaceindustries.com/";
 
   String get rsiCookie =>
-      "CookieConsent=$rsiCookieContent;_rsi_device=$rsiDevice;Rsi-Token=$rsiToken;Rsi-Account-Auth=$rsiAuth;Rsi-ShipUpgrades-Context=$upgradeContext;";
+      "CookieConsent=$rsiCookieContent;${session.header}";
 
   factory RsiApiClient() => _instance;
 
@@ -39,13 +42,14 @@ class RsiApiClient {
       "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
       "Referer": "https://robertsspaceindustries.com/",
-      'cookie': 'CookieConsent=$rsiCookieContent;_rsi_device=$rsiDevice;Rsi-Token=$rsiToken;Rsi-Account-Auth=$rsiAuth;Rsi-ShipUpgrades-Context=$upgradeContext;',
+      'cookie': rsiCookie,
       'x-csrf-token': xsrfToken,
     };
   }
 
   RsiApiClient._internal() {
-    _dio = Dio();
+    _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 30)));
 
     (_dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
         (client) {
@@ -59,7 +63,23 @@ class RsiApiClient {
     };
 
     _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
+      onRequest: (options, handler) async {
+        final requestGeneration = session.generation;
+        if (options.extra['sessionProbe'] != true && !options.path.contains('launcher')) {
+          try {
+            await session.synchronizeFromWeb((cookies) => sessionIdentity(cookies: cookies));
+            session.assertGeneration(requestGeneration);
+          } catch (error) {
+            handler.reject(DioException(requestOptions: options, error: error));
+            return;
+          }
+        }
+        options.extra['sessionGeneration'] = session.generation;
+        options.extra['sessionRevision'] = session.revision;
+        if (options.extra['sessionProbe'] == true) {
+          handler.next(options);
+          return;
+        }
         // 在请求头中添加 cookie
         if (rsiToken.isNotEmpty) {
           options.headers["x-rsi-token"] = rsiToken;
@@ -83,36 +103,29 @@ class RsiApiClient {
         // }
         handler.next(options); // 继续处理请求
       },
-      onResponse: (response, handler) {
-        // 访问响应头中的 Set-Cookie 变量
-        if (response.headers['set-cookie'] != null) {
-          List<String> cookies = response.headers['set-cookie']!;
-          for (var cookie in cookies) {
-            if (cookie.contains("Rsi-Token")) {
-              final token = cookie.split(";")[0].split("=")[1];
-              rsiToken = token;
-            }
-            if (cookie.contains("_rsi_device")) {
-              final device = cookie.split(";")[0].split("=")[1];
-              rsiDevice = device;
-            }
-            if (cookie.contains("Rsi-Account-Auth")) {
-              final auth = cookie.split(";")[0].split("=")[1];
-              rsiAuth = auth;
-            }
-            if (cookie.contains("Rsi-ShipUpgrades-Context")) {
-              final context = cookie.split(";")[0].split("=")[1];
-              upgradeContext = context;
-            }
+      onResponse: (response, handler) async {
+        try {
+          final extra = response.requestOptions.extra;
+          session.assertGeneration(extra['sessionGeneration'] as int);
+          if (extra['sessionProbe'] != true) {
+            await session.acceptResponse(response.requestOptions.uri,
+              response.headers['set-cookie'] ?? [],
+              requestGeneration: extra['sessionGeneration'] as int,
+              requestRevision: extra['sessionRevision'] as int,
+            );
           }
+          session.assertGeneration(extra['sessionGeneration'] as int);
+          handler.next(response);
+        } catch (error) {
+          handler.reject(DioException(requestOptions: response.requestOptions,
+              error: error));
         }
-        handler.next(response); // 继续处理响应
       },
     ));
   }
 
   void setRSIDevice({required String device}) {
-    rsiDevice = device;
+    session.setValue('_rsi_device', device);
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('vip.kirakira.user.device', device);
@@ -120,15 +133,45 @@ class RsiApiClient {
   }
 
   void setRSIToken({required String token}) {
-    rsiToken = token;
+    session.setValue('Rsi-Token', token);
+  }
+
+  /// 候选网页凭证只用于身份核验，不进入响应 Cookie 同步。
+  Future<String?> sessionIdentity({String? cookies}) async {
+    try {
+      final response = await _dio.post('${baseUrl}graphql',
+        data: {'query': 'query { account { isAnonymous ... on RsiAuthenticatedAccount { nickname } } }',
+          'variables': <String, dynamic>{}},
+        options: Options(
+          headers: cookies == null ? null : {
+            'Cookie': cookies, 'x-csrf-token': xsrfToken,
+            'Referer': baseUrl, 'User-Agent': getHeaders()['User-Agent']!,
+          },
+          extra: {'sessionProbe': cookies != null},
+          sendTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 20),
+        ));
+      final data = response.data;
+      if (data is! Map || data['errors'] != null || data['data'] is! Map) {
+        throw StateError('无法验证网页登录状态，请重试');
+      }
+      final account = data['data']['account'];
+      if (account is! Map) throw StateError('无法验证网页登录状态，请重试');
+      if (account['isAnonymous'] == true) return null;
+      final handle = account['nickname'];
+      if (handle is! String || handle.isEmpty) throw StateError('无法验证网页登录状态，请重试');
+      return handle;
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401 || error.error is RsiSessionExpired) return null;
+      rethrow;
+    }
   }
 
   Future<void> refreshCsrfToken() async {
     final response = await basicGet(endpoint: "");
     final csrfToken = extractCsrfToken(response.data);
     if (csrfToken == null) {
-      // Error log
-      return;
+      throw StateError('无法获取网页认证信息，请重试');
     }
     xsrfToken = csrfToken;
   }
@@ -225,6 +268,9 @@ class RsiApiClient {
   
   Future<void> setAuthToken() async {
     final response = await basicPost(endpoint: 'api/account/v2/setAuthToken', data: {});
+    if (response.data is! Map || response.data['success'] != 1 || rsiAuth.isEmpty) {
+      throw StateError('无法建立网页登录状态，请重试');
+    }
   }
 
   Future<void> setContextToken() async {

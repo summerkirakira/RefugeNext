@@ -355,6 +355,7 @@ class MainDataModel extends ChangeNotifier {
   List<HangarItem> _hangarItems = [];
 
   List<List<UpgradeStep>> _upgradeSteps = [];
+  int _upgradeStepsRequest = 0;
 
   List<HangarItem> get hangarItems => processSearch(_hangarItems, searchProperty, _upgradeSteps);
 
@@ -533,6 +534,7 @@ class MainDataModel extends ChangeNotifier {
 
 
   User? _currentUser;
+  int _userSelectionVersion = 0;
 
   User? get currentUser => _currentUser;
   bool userInitFinished = false;
@@ -541,8 +543,18 @@ class MainDataModel extends ChangeNotifier {
 
   Ship? get currentShipInfo => _currentShipInfo;
 
-  void removeCurrentUser() {
+  Future<void> removeCurrentUser() async {
+    _userSelectionVersion++;
     _currentUser = null;
+    try {
+      await RsiApiClient().session.reset();
+    } catch (_) {
+      showAlert(message: '网页会话清理失败，下次打开时将重试');
+    }
+    RsiApiClient().xsrfToken = '';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('vip.kirakira.user.handle');
+    await prefs.remove('vip.kirakira.user.device');
     notifyListeners();
   }
 
@@ -570,11 +582,17 @@ class MainDataModel extends ChangeNotifier {
 
 
   Future<void> setUpdateStep(List<int> slots) async {
-    _upgradeSteps = [];
-    for (var slot in slots) {
-      final steps = await getStepsFromStorage(slot);
-      _upgradeSteps.add(steps);
+    final request = ++_upgradeStepsRequest;
+    final session = RsiApiClient().session;
+    final generation = session.generation;
+    final handle = _currentUser?.handle;
+    final steps = await Future.wait(slots.map(getStepsFromStorage));
+    if (request != _upgradeStepsRequest || session.generation != generation ||
+        _currentUser?.handle != handle) {
+      return;
     }
+    _upgradeSteps = steps;
+    notifyListeners();
   }
 
   // 可上传的日志类型白名单（排除包含 Flow 的类型）
@@ -2038,15 +2056,27 @@ class MainDataModel extends ChangeNotifier {
 
 
   Future<void> updateCurrentUser(User newUser) async {
+    final selectionVersion = ++_userSelectionVersion;
     final rsiApiClient = RsiApiClient();
     final prefs = await SharedPreferences.getInstance();
-    rsiApiClient.setRSIToken(token: newUser.rsiToken);
-    prefs.setString('vip.kirakira.user.handle', newUser.handle);
-
-    _currentUser = newUser;
-
-    rsiApiClient.setRSIToken(token: newUser.rsiToken);
+    // 列表中的 User 可能早于网页的 Token 轮换，优先读取已持久化的凭证。
+    final saved = await userRepo.getUser(handle: newUser.handle);
+    if (selectionVersion != _userSelectionVersion) return;
+    final selected = newUser.copyWith(
+      rsiToken: saved?.rsiToken ?? newUser.rsiToken,
+      rsiDevice: saved?.rsiDevice ?? newUser.rsiDevice,
+    );
+    if (rsiApiClient.session.account != selected.handle) {
+      await rsiApiClient.session.reset(handle: selected.handle,
+          token: selected.rsiToken, device: selected.rsiDevice);
+      rsiApiClient.xsrfToken = '';
+    }
+    if (selectionVersion != _userSelectionVersion) return;
+    await prefs.setString('vip.kirakira.user.handle', selected.handle);
+    if (selectionVersion != _userSelectionVersion) return;
+    _currentUser = selected;
     await rsiApiClient.refreshCsrfToken();
+    if (selectionVersion != _userSelectionVersion) return;
 
     // 重连 WS（旧连接是前一个账号的）
     await SpectrumWsService().disconnect();

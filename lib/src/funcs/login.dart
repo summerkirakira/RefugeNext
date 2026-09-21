@@ -1,10 +1,9 @@
+import 'dart:typed_data';
+
 import '../network/api_service.dart';
-import '../datasource/models/user.dart';
 import '../network/parsers/user_parser.dart';
 import '../repo/user.dart';
-import 'dart:typed_data';
-import './toast.dart';
-
+import 'toast.dart';
 
 class LoginStatus {
   final bool success;
@@ -22,6 +21,12 @@ class LoginStatus {
 
 Future<LoginStatus> loginFirstStep({required String email, required String password, String? captcha}) async {
   final rsiClient = RsiApiClient();
+  final previousDevice = rsiClient.rsiDevice;
+  final resetting = rsiClient.session.reset(device: previousDevice);
+  final loginGeneration = rsiClient.session.generation;
+  await resetting;
+  rsiClient.session.assertGeneration(loginGeneration);
+  rsiClient.xsrfToken = '';
 
   if (email == "934869815@qq.com") {
     rsiClient.setRSIDevice(device: "rtscszhpn5alodol14uj4v8dnb");
@@ -88,8 +93,10 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
           needCode: false,
           needCaptcha: false);
     }
+    rsiClient.session.assertGeneration(loginGeneration);
+    rsiClient.session.bindAccount(user.handle);
     final userRepo = UserRepo();
-    await userRepo.addUser(user);
+    await userRepo.addUser(user, replaceCredentials: true, selectUser: true);
     return LoginStatus(
         success: true,
         msg: loginResponse.msg,
@@ -121,6 +128,7 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
 Future<LoginStatus> loginSecondStep(
     String email, String password, String code) async {
   final rsiClient = RsiApiClient();
+  final loginGeneration = rsiClient.session.generation;
 
   final loginResponse = await rsiClient.loginWithCode(code: code);
 
@@ -142,8 +150,10 @@ Future<LoginStatus> loginSecondStep(
     if (user == null) {
       return LoginStatus(success: false, msg: "Failed to parse user data", needCode: false, needCaptcha: false);
     }
+    rsiClient.session.assertGeneration(loginGeneration);
+    rsiClient.session.bindAccount(user.handle);
     final userRepo = UserRepo();
-    await userRepo.addUser(user);
+    await userRepo.addUser(user, replaceCredentials: true, selectUser: true);
     return LoginStatus(success: true, msg: loginResponse.msg, needCode: false, needCaptcha: false);
   } else {
     return LoginStatus(success: false, msg: loginResponse.msg, needCode: false, needCaptcha: false);

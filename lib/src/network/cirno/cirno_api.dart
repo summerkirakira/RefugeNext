@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:refuge_next/src/datasource/models/cirno/promote_property.dart';
 import '../../datasource/models/cirno/upgrade_path.dart';
 import '../../datasource/models/cirno/upgrade_response.dart';
+import '../../datasource/models/ccu_plan.dart';
 import 'property/property.dart';
 import 'dart:convert';
 import 'package:refuge_next/src/funcs/cirno_auth.dart';
@@ -128,6 +129,36 @@ class CirnoApiClient {
     final data = config.toJson();
     final response = await basicPost(endpoint: 'v2/upgrade/path', data: data);
     return ShipUpgradeResponse.fromJson(response.data);
+  }
+
+  Future<CcuPlanResult> getCcuPlansV3(Map<String, dynamic> payload, CancelToken cancelToken) async {
+    const localUrl = String.fromEnvironment('REFUGE_CCU_LOCAL_URL');
+    var endpoint = '${baseUrl}v3/upgrade/path';
+    var client = _dio;
+    if (kDebugMode && localUrl.isNotEmpty) {
+      final uri = Uri.parse(localUrl);
+      if (uri.scheme != 'http' ||
+          !['127.0.0.1', 'localhost', '::1'].contains(uri.host) ||
+          uri.userInfo.isNotEmpty || uri.hasQuery || uri.hasFragment) {
+        throw StateError('本地 CCU 服务必须使用回环地址');
+      }
+      endpoint = uri.resolve('/v3/upgrade/path').toString();
+      // 本地规划器无需账户认证；不向开发服务发送设备或账户令牌。
+      client = Dio();
+    }
+    final Response response;
+    try {
+      response = await client.post(endpoint,
+      data: payload, cancelToken: cancelToken,
+      options: Options(sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30)));
+    } finally {
+      if (!identical(client, _dio)) client.close();
+    }
+    if (response.data is! Map || response.data['status'] is! String) {
+      throw StateError('服务端未返回新版 CCU 规划结果，请更新服务端后重试');
+    }
+    return CcuPlanResult.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 
   Future<void> uploadNotTranslatedTexts(List<String> texts) async {

@@ -15,10 +15,10 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
 
   final rsiClient = RsiApiClient();
 
-  if (rsiToken != null) {
+  if (rsiToken != null && rsiClient.session.account == null) {
     rsiClient.setRSIToken(token: rsiToken);
   }
-  if (rsiDevice != null) {
+  if (rsiDevice != null && rsiClient.session.account == null) {
     rsiClient.setRSIDevice(device: rsiDevice);
   }
 
@@ -161,7 +161,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
   dateFormatter = DateFormat('yyyy年MM月dd日', "zh_CN");
   String registerTimeString = dateFormatter.format(registerTime);
 
-  String? rsiTokenFinal = rsiToken ?? rsiClient.rsiToken;
+  final rsiTokenFinal = rsiClient.rsiToken;
 
   User newUser = User(
     handle: userHandle,
@@ -169,6 +169,7 @@ Future<User?> parseNewUser(String email, String password, String? rsiDevice, Str
     email: email,
     password: password,
     rsiToken: rsiTokenFinal,
+    rsiDevice: rsiClient.rsiDevice,
     profileImage: userImage,
     referralCode: accountQuery.account.referral_code,
     referralCount: referralValidCount,

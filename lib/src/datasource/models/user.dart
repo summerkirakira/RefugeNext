@@ -4,13 +4,14 @@ part 'user.freezed.dart';
 part 'user.g.dart';
 
 @unfreezed
-class User with _$User {
+abstract class User with _$User {
   factory User({
     required String handle,
     required String name,
     required String email,
     required String password,
     required String rsiToken,
+    @Default('') String rsiDevice,
     required String profileImage,
     required String referralCode,
     required int referralCount,

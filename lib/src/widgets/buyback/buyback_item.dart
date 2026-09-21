@@ -1,3 +1,4 @@
+import '../../services/rsi_web_session.dart';
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
@@ -90,18 +91,21 @@ class BuybackItemImageWidget extends StatelessWidget {
 
 
 Future<void> performBatchBuyback(BuildContext context, BuybackItem item, int quantity) async {
+  final attempt = RsiWebSessionAttempt();
   final ids = [...item.idList]..sort();
   final selected = ids.take(quantity).toList();
   for (int i = 0; i < selected.length; i++) {
     try {
-      await addBuybackToCartById(item, selected[i]);
+      await addBuybackToCartById(item, selected[i], attempt: attempt);
     } catch (e) {
       showAlert(message: "回购失败: $e");
       return;
     }
     showToast(message: '已添加第 ${i + 1}/${selected.length} 个到购物车');
     if (!context.mounted) return;
-    await openRsiCartWebview(context: context, replace: false);
+    final completed = await openRsiCartWebview(context: context,
+        replace: false, attempt: attempt);
+    if (!completed) return;
     if (i < selected.length - 1) {
       if (!context.mounted) return;
       final goOn = await _askContinueBatch(context, remaining: selected.length - i - 1);

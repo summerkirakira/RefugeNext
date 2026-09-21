@@ -65,10 +65,14 @@ Future<void> userInit() async {
 
   final rsiApiClient = RsiApiClient();
 
-  if (device != null) {
-    rsiApiClient.setRSIDevice(device: device);
+  final restoredDevice = user.rsiDevice.isNotEmpty ? user.rsiDevice : (device ?? '');
+  await rsiApiClient.session.reset(handle: user.handle,
+      token: user.rsiToken, device: restoredDevice);
+  if (user.rsiDevice.isEmpty && restoredDevice.isNotEmpty) {
+    await userRepo.updateSession(handle: user.handle, token: user.rsiToken,
+        device: restoredDevice);
   }
-  rsiApiClient.setRSIToken(token: user.rsiToken);
+
 }
 
 

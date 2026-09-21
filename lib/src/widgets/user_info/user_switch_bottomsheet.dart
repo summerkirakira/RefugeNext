@@ -107,14 +107,17 @@ WoltModalSheetPage getUserSwitchBottomSheet(BuildContext woltContext, BuildConte
               ),
               onPressed: () async {
                 // Provider.of<MainDataModel>(context, listen: false).clearCurrentUser();
-                final currentUser = Provider.of<MainDataModel>(context, listen: false).currentUser;
+                final model = Provider.of<MainDataModel>(context, listen: false);
+                final currentUser = model.currentUser;
                 if (currentUser == null) {
                   showAlert(message: '当前没有登录账号');
                   return;
                 }
                 await UserRepo().removeUser(handle: currentUser.handle);
-                Provider.of<MainDataModel>(context, listen: false).removeCurrentUser();
-                Navigator.of(context).pop();
+                if (model.currentUser?.handle == currentUser.handle) {
+                  await model.removeCurrentUser();
+                }
+                if (context.mounted) Navigator.of(context).pop();
               },
               child: const Text('退出当前账号'),
             ),

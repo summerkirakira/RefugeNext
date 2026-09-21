@@ -1,1084 +1,883 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:animated_custom_dropdown/custom_dropdown.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:refuge_next/src/funcs/toast.dart';
-import 'package:refuge_next/src/widgets/hangar/ccu_optimizor/utils.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../../../datasource/data_model.dart';
+import '../../../datasource/models/ccu_plan.dart';
+import '../../../funcs/toast.dart';
+import '../../../network/cirno/property/property.dart';
+import '../../../repo/ccu_plan_storage.dart';
+import '../../../repo/ship_alias.dart';
+import '../../../repo/ship_upgrade.dart';
+import '../../../datasource/models/shop/upgrade_ship_info.dart';
+import 'ccu_planner_components.dart';
 
+export 'ccu_planner_components.dart' show CcuCostSummary;
+import '../../../repo/translation.dart';
+import '../../../services/ccu_planning_service.dart';
+import '../../../services/rsi_session_service.dart';
 
 class ProductUpgradeWidget extends StatefulWidget {
-  const ProductUpgradeWidget({Key? key}) : super(key: key);
-
+  const ProductUpgradeWidget({super.key});
   @override
-  _ProductUpgradeWidgetState createState() => _ProductUpgradeWidgetState();
+  State<ProductUpgradeWidget> createState() => _ProductUpgradeWidgetState();
 }
 
-class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget> with AutomaticKeepAliveClientMixin {
-  String? _startProduct;
-  String? _endProduct;
-  List<UpgradeStep> _upgradePath = [];
+class _ProductUpgradeWidgetState extends State<ProductUpgradeWidget>
+    with AutomaticKeepAliveClientMixin {
+  final _storage = CcuPlanStorage();
+  final _session = RsiSessionService.instance;
+  List<ShipAlias> _ships = [];
+  Map<int, String> _savedNames = {};
+  List<UpgradeShipInfo>? _mediaSource;
+  List<ShipAlias>? _mediaAliases;
+  Map<int, UpgradeShipInfo> _media = {};
+  Map<String, String> _constraintLabels = {};
+  String? _account;
+  int? _fromId;
+  int? _toId;
+  int _request = 0;
+  int _selection = 0;
+  CcuSettings _settings = const CcuSettings();
+  List<String> _required = [];
+  List<String> _excluded = [];
+  List<List<int>> _excludedPairs = [];
+  List<CcuSourcePair> _excludedSourcePairs = [];
+  CcuPlanResult? _result;
+  CancelToken? _cancel;
+  bool _loading = false;
+  bool _stale = false;
+  String _progress = '';
+  String? _error;
+  Timer? _timer;
 
-  UpgradeSettings _upgradeSettings = UpgradeSettings();
-
-  final allShips = getValidateUpdateShips();
-
-  // 已屏蔽的升级列表
-  List<UpgradeStep> _blockedUpgrades = [];
-  List<UpgradeStep> _mustHaveUpgrades = [];
-
-  List<String> _fromShips = [];
-
-  List<String> _toShips = [];
-
-  Future<void> __calculateUpgradePath() async {
-
-    if (_startProduct == null || _endProduct == null) {
-      showToast(message: '请选择起始和目标舰船');
-      return;
-    }
-
-    final fromShip = allShips.firstWhere((element) => element.chineseName == _startProduct);
-    final toShip = allShips.firstWhere((element) => element.chineseName == _endProduct);
-
-    if (fromShip.getHighestSku() >= toShip.getHighestSku()) {
-      showToast(message: '目标舰船价格必须高于起始舰船');
-      return;
-    }
-
-    List<int> bannedShips = [];
-    for (var upgrade in _blockedUpgrades) {
-      bannedShips.add(upgrade.fromShip.id);
-      bannedShips.add(upgrade.toShip.id);
-    }
-
-    List<int> mustHaveShips = [];
-    for (var upgrade in _mustHaveUpgrades) {
-      mustHaveShips.add(upgrade.fromShip.id);
-      mustHaveShips.add(upgrade.toShip.id);
-    }
-
-
-    final model = Provider.of<MainDataModel>(context, listen: false);
-    final hangarItems = model.rawHangarItems;
-    final buybackItems = model.rawBuybackItems;
-    final result = await updateUpgradeSteps(_upgradeSettings, fromShip.id, toShip.id, hangarItems, buybackItems, bannedShips, mustHaveShips);
-
-    setState(() {
-      _upgradePath = result;
-    });
-  }
-
-  Future<void> _calculateUpgradePath() async {
-
-    final isVip = Provider.of<MainDataModel>(context, listen: false).isVIP;
-    if (!isVip) {
-      showVipAlert(context: context, move: true);
-      return;
-    }
-
-    try {
-      await __calculateUpgradePath();
-    } catch (e) {
-      _blockedUpgrades = [];
-      _mustHaveUpgrades = [];
-      showToast(message: '升级路线计算失败QAQ$e');
-    }
-
-  }
+  CcuPlan? get _plan => _result == null || _result!.plans.isEmpty
+      ? null
+      : _result!.plans[_selection.clamp(0, _result!.plans.length - 1)];
 
   @override
   void initState() {
     super.initState();
-    getUpgradeSettings().then((value) {
-      setState(() {
-        _upgradeSettings = value;
-      });
+    _account = _session.account;
+    _session.addListener(_accountChanged);
+    _load();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && _plan != null) setState(() {});
     });
   }
 
-  void _openUpgradeSettings() {
-    WoltModalSheet.show<void>(
-      context: context,
-      pageListBuilder: (BuildContext modalContext) {
-        return [
-          _buildSettingsPage(modalContext),
-        ];
-      },
-    );
-  }
-
-  String getBannedText(UpgradeStep item) {
-    return '${item.fromProduct} 到 ${item.toProduct}';
-  }
-
-
-  Widget getTotalInfoWidget() {
-    if (_upgradePath.isEmpty) {
-      return Container();
-    }
-
-    int totalHangarCost = 0;
-    int totalCreditCost = 0;
-    int totalWbCost = 0;
-    int originalCost = _upgradePath.last.toShip.getHighestSku() - _upgradePath.first.fromShip.getHighestSku();
-
-    for (var path in _upgradePath) {
-      if (path.tags.first == '机库中') {
-        totalHangarCost += path.cost;
-      } else if (path.tags.first == '历史WB') {
-        totalWbCost += path.cost;
-      } else {
-        totalCreditCost += path.cost;
+  Future<void> _load() async {
+    final account = _account;
+    final request = _request;
+    try {
+      final ships = (await ShipAliasRepo().getShipAliases())
+          .where((s) => s.upgradeId != null && s.getHighestSku() > 0)
+          .toList()
+        ..sort((a, b) => a.getHighestSku().compareTo(b.getHighestSku()));
+      final settings = await _storage.settings(account ?? '');
+      if (!mounted || account != _account || request != _request) return;
+      setState(() {
+        _ships = ships;
+        _settings = settings;
+      });
+    } catch (_) {
+      if (mounted && account == _account) {
+        setState(() {
+          _error = '舰船资料加载失败，请重试';
+        });
       }
     }
-
-    int totalNewCost = (totalCreditCost + totalHangarCost + totalWbCost) ~/ 100;
-    int savings = (originalCost ~/ 100) - totalNewCost;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).primaryColor.withOpacity(0.1),
-            Theme.of(context).primaryColor.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).primaryColor.withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // 头部标题
-          Row(
-            children: [
-              Icon(
-                Icons.calculate,
-                color: Theme.of(context).primaryColor,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '成本分析',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-              const Spacer(),
-              if (savings > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.trending_down, color: Colors.green, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '节省 \$${savings}',
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 价格对比
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                // 原价
-                Expanded(
-                  child: _buildPriceCard(
-                    title: '原价',
-                    price: originalCost ~/ 100,
-                    color: Colors.grey,
-                    icon: Icons.local_offer_outlined,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor.withOpacity(0.3),
-                  ),
-                ),
-                // 现价
-                Expanded(
-                  child: _buildPriceCard(
-                    title: '现价',
-                    price: totalNewCost,
-                    color: Colors.green,
-                    icon: Icons.price_change,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor.withOpacity(0.3),
-                  ),
-                ),
-                // 已拥有
-                Expanded(
-                  child: _buildPriceCard(
-                    title: '已拥有',
-                    price: totalHangarCost ~/ 100,
-                    color: Colors.blue,
-                    icon: Icons.inventory_2_outlined,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
-  Widget _buildPriceCard({
-    required String title,
-    required int price,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: color,
-          size: 20,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '\$${price}',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            color: color,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-
-
-  WoltModalSheetPage _buildSettingsPage(BuildContext modalContext) {
-    return WoltModalSheetPage(
-      navBarHeight: 50,
-      pageTitle: const Padding(
-          padding: EdgeInsets.only(left: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('升级设置',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))
-            ],
-          )),
-      trailingNavBarWidget: Container(
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.2), // 设置背景颜色
-          shape: BoxShape.circle, // 设置形状为圆形
-        ),
-        child: IconButton(
-          padding: const EdgeInsets.all(5),
-          icon: const Icon(Icons.close, size: 22),
-          onPressed: Navigator.of(context).pop,
-        ),
-      ),
-      topBarTitle: Text('升级设置', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-      isTopBarLayerAlwaysVisible: false,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'CCU来源'
-              ),
-              SizedBox(height: 16),
-              StatefulBuilder(
-                builder: (BuildContext context, StateSetter setModalState) {
-                  return Column(
-                    children: [
-                      SwitchListTile(
-                        title: Text('使用回购CCU'),
-                        value: _upgradeSettings.useBuyback,
-                        onChanged: (bool value) async {
-                          setModalState(() {
-                            _upgradeSettings.useBuyback = value;
-                          });
-                          setState(() {
-                            _upgradeSettings.useBuyback = value;
-                          });
-
-                          await saveUpgradeSettings(_upgradeSettings);
-
-                        },
-                      ),
-                      SwitchListTile(
-                        title: Text('使用机库CCU'),
-                        value: _upgradeSettings.useHangar,
-                        onChanged: (bool value) {
-                          setModalState(() {
-                            _upgradeSettings.useHangar = value;
-                          });
-                          setState(() {
-                            _upgradeSettings.useHangar = value;
-                          });
-
-                          saveUpgradeSettings(_upgradeSettings);
-                        },
-                      ),
-                      SwitchListTile(
-                        title: Text('使用历史WB'),
-                        value: _upgradeSettings.useHistory,
-                        onChanged: (bool value) async {
-                          setModalState(() {
-                            _upgradeSettings.useHistory = value;
-                          });
-                          setState(() {
-                            _upgradeSettings.useHistory = value;
-                          });
-
-                          await saveUpgradeSettings(_upgradeSettings);
-
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: 24),
-              Text(
-                '已屏蔽升级'
-              ),
-              SizedBox(height: 8),
-              StatefulBuilder(
-                builder: (BuildContext context, StateSetter setModalState) {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: _blockedUpgrades.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(getBannedText(_blockedUpgrades[index])),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            setModalState(() {
-                              _blockedUpgrades.removeAt(index);
-                            });
-                            setState(() {});
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-              SizedBox(height: 16),
-              // ElevatedButton(
-              //   child: Text('Add Blocked Upgrade'),
-              //   onPressed: () {
-              //     _showAddBlockedUpgradeDialog(modalContext);
-              //   },
-              // ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
-  void _removeUpgradeStep(int index) {
-    _blockedUpgrades.add(_upgradePath[index]);
-    _calculateUpgradePath();
+  void _accountChanged() {
+    // reset() also invalidates a run when the same account logs in again.
+    _cancel?.cancel();
+    _request++;
+    if (!mounted) return;
     setState(() {
-
+      _account = _session.account;
+      _fromId = null;
+      _toId = null;
+      _result = null;
+      _error = null;
+      _required = [];
+      _excluded = [];
+      _excludedPairs = [];
+      _excludedSourcePairs = [];
+      _savedNames = {};
+      _loading = false;
+      _stale = false;
+      _settings = const CcuSettings();
+      _constraintLabels = {};
     });
+    _load();
   }
 
-  void _addMustHaveUpgradeStep(int index) {
-    bool isFound = false;
-    for (var upgrade in _mustHaveUpgrades) {
-      if (upgrade.fromProduct == _upgradePath[index].fromProduct && upgrade.toProduct == _upgradePath[index].toProduct) {
-        isFound = true;
+  @override
+  void dispose() {
+    _cancel?.cancel();
+    _request++;
+    _session.removeListener(_accountChanged);
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _name(int? id) {
+    if (id == null) return '请选择';
+    for (final s in _ships) {
+      if (s.id == id) {
+        return s.chineseName ?? TranslationRepo().getTranslationSync(s.name);
+      }
+    }
+    return _savedNames[id] ?? '未知舰船 #$id';
+  }
+
+  void _updateMedia() {
+    final source = ShipUpgradeRepo().shipUpgrade;
+    if (identical(_mediaSource, source) && identical(_mediaAliases, _ships)) {
+      return;
+    }
+    _mediaSource = source;
+    _mediaAliases = _ships;
+    final ids = matchLiveCcuShips(
+        _ships, source.map((s) => {'id': s.id, 'name': s.name}).toList());
+    _media = {
+      for (final ship in source)
+        if (ids[ship.id] != null) ids[ship.id]!: ship
+    };
+  }
+
+  CcuShipView _shipView(int id) {
+    ShipAlias? alias;
+    for (final ship in _ships) {
+      if (ship.id == id) {
+        alias = ship;
         break;
       }
     }
-    if (isFound) {
-      _mustHaveUpgrades = _mustHaveUpgrades.where((element) => element.fromProduct != _upgradePath[index].fromProduct || element.toProduct != _upgradePath[index].toProduct).toList();
-      _calculateUpgradePath();
+    final media = _media[id]?.medias;
+    String? image(String? url) => url == null || url.isEmpty
+        ? null
+        : Uri.parse('https://robertsspaceindustries.com/')
+            .resolve(url)
+            .toString();
+    return CcuShipView(
+        name: _name(id),
+        englishName: alias?.name ?? '',
+        price: alias?.getHighestSku(),
+        imageUrl: image(media?.productThumbMediumAndSmall),
+        heroUrl: image(media?.slideShow));
+  }
+
+  void _invalidate() {
+    _cancel?.cancel();
+    _request++;
+    _loading = false;
+    _stale = _plan != null;
+    _error = null;
+  }
+
+  Future<void> _choose(bool from) async {
+    if (_ships.isEmpty) {
+      await _load();
+      if (!mounted) return;
+    }
+    final id = await showSearch<int?>(
+        context: context, delegate: _ShipSearch(_ships, _shipView));
+    if (id == null || !mounted) return;
+    setState(() {
+      _invalidate();
+      if (from) {
+        _fromId = id;
+      } else {
+        _toId = id;
+      }
+      _required = [];
+      _excluded = [];
+      _excludedPairs = [];
+      _excludedSourcePairs = [];
+    });
+  }
+
+  void _changeSettings(CcuSettings value) {
+    setState(() {
+      _invalidate();
+      _settings = value;
+    });
+    final account = _account;
+    if (account != null) {
+      unawaited(_storage.saveSettings(account, value).catchError((Object _) {
+        if (mounted) showToast(message: '设置保存失败，请重试');
+      }));
+    }
+  }
+
+  Future<void> _calculate({bool refresh = false}) async {
+    final model = context.read<MainDataModel>();
+    if (!model.isVIP) {
+      showVipAlert(context: context, move: true);
       return;
     }
-    _mustHaveUpgrades.add(_upgradePath[index]);
-    _calculateUpgradePath();
+    if (_fromId == null || _toId == null) {
+      showToast(message: '请选择起始和目标舰船');
+      return;
+    }
+    final account = _account;
+    if (account == null || model.currentUser?.handle != account) {
+      showToast(message: '请先登录 RSI 账号');
+      return;
+    }
+    _cancel?.cancel();
+    final token = _cancel = CancelToken();
+    final request = ++_request;
     setState(() {
-
+      _loading = true;
+      _stale = _plan != null;
+      _error = null;
+      _progress = '准备规划…';
     });
+    try {
+      final result = await CcuPlanningService.instance.plan(
+          account: account,
+          ships: _ships,
+          hangar: model.rawHangarItems,
+          buyback: model.rawBuybackItems,
+          fromId: _fromId!,
+          toId: _toId!,
+          settings: _settings,
+          cancelToken: token,
+          requiredIds: List.of(_required),
+          excludedIds: List.of(_excluded),
+          excludedPairs: _excludedPairs.map((e) => List<int>.of(e)).toList(),
+          excludedSourcePairs: List.of(_excludedSourcePairs),
+          refresh: refresh,
+          onProgress: (text) {
+            if (mounted && request == _request) {
+              setState(() {
+                _progress = text;
+              });
+            }
+          });
+      if (!mounted || request != _request || account != _account) return;
+      setState(() {
+        if (result.plans.isNotEmpty) {
+          _result = result;
+          _selection = 0;
+          _stale = false;
+        } else {
+          _error = result.message.isEmpty
+              ? '没有可用方案 (${result.status})'
+              : result.message;
+          _result ??= result;
+        }
+      });
+    } catch (error) {
+      if (!mounted || request != _request || token.isCancelled) return;
+      setState(() {
+        _error = error is StateError ? error.message : '规划失败，请检查网络与登录状态后重试';
+      });
+    } finally {
+      if (mounted && request == _request) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _slots({required bool save}) async {
+    final account = _account;
+    final plan = _plan;
+    if (account == null) {
+      showToast(message: '请先登录');
+      return;
+    }
+    if (save && (plan == null || _stale || _loading)) return;
+    final slots = <SavedCcuPlan?>[];
+    final errors = <int>{};
+    for (var i = 0; i < 10; i++) {
+      try {
+        slots.add(await _storage.load(account, i));
+      } catch (_) {
+        slots.add(null);
+        errors.add(i);
+      }
+    }
+    if (!mounted || account != _account) return;
+    final slot = await showModalBottomSheet<int>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        constraints: const BoxConstraints(maxWidth: 720),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        builder: (context) => SafeArea(
+            child: SizedBox(
+                height: MediaQuery.sizeOf(context).height * .75,
+                child: Column(children: [
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 8, 12),
+                      child: Row(children: [
+                        Expanded(
+                            child: Text(save ? '保存升级方案' : '我的升级方案',
+                                style: Theme.of(context).textTheme.titleLarge)),
+                        IconButton(
+                            tooltip: '关闭',
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close)),
+                      ])),
+                  Expanded(
+                      child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          itemCount: 10,
+                          itemBuilder: (context, i) {
+                            final saved = slots[i];
+                            return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: CcuPanel(
+                                    padding: EdgeInsets.zero,
+                                    child: ListTile(
+                                      minVerticalPadding: 12,
+                                      enabled: save || saved != null,
+                                      leading: SizedBox(
+                                          width: 56,
+                                          height: 44,
+                                          child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: saved == null
+                                                  ? Center(
+                                                      child: Text(
+                                                          '${i + 1}'
+                                                              .padLeft(2, '0'),
+                                                          style:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .titleMedium))
+                                                  : CcuShipImage(
+                                                      url: _shipView(saved.toId)
+                                                          .imageUrl))),
+                                      title: Text(
+                                          '槽位 ${i + 1}${saved?.legacy == true ? ' · 旧版方案（未归属账号）' : ''}'),
+                                      subtitle: Text(errors.contains(i)
+                                          ? '方案数据无法读取（原数据保留）'
+                                          : saved == null
+                                              ? '空槽位'
+                                              : '${saved.names[saved.fromId] ?? _name(saved.fromId)} → ${saved.names[saved.toId] ?? _name(saved.toId)}\n总成本 ${ccuMoney(saved.plan.totalCost)}'),
+                                      trailing: Icon(save
+                                          ? Icons.bookmark_add_outlined
+                                          : Icons.chevron_right),
+                                      onTap: save || saved != null
+                                          ? () => Navigator.pop(context, i)
+                                          : null,
+                                    )));
+                          })),
+                ]))));
+    if (slot == null || !mounted || account != _account) return;
+    if (save) {
+      // Parameters may have changed while the slot picker was open.
+      if (_stale || _loading || !identical(plan, _plan)) return;
+      try {
+        await _storage.save(
+            account,
+            slot,
+            SavedCcuPlan(
+                fromId: _fromId!,
+                toId: _toId!,
+                settings: _settings,
+                constraintLabels: Map.of(_constraintLabels),
+                plan: plan!,
+                requiredIds: List.of(_required),
+                excludedIds: List.of(_excluded),
+                excludedSourcePairs: List.of(_excludedSourcePairs),
+                excludedPairs:
+                    _excludedPairs.map((e) => List<int>.of(e)).toList(),
+                names: {for (final s in _ships) s.id: _name(s.id)}));
+        if (mounted && account == _account) {
+          final model = context.read<MainDataModel>();
+          await model
+              .setUpdateStep(model.searchProperty?.selectedCCUSlots ?? []);
+          if (!mounted || account != _account) return;
+          showToast(message: '方案已保存，可在机库搜索菜单中筛选');
+        }
+      } catch (_) {
+        if (mounted) showToast(message: '方案保存失败，请重试');
+      }
+    } else {
+      final saved = slots[slot]!;
+      setState(() {
+        _invalidate();
+        _fromId = saved.fromId;
+        _toId = saved.toId;
+        _settings = saved.settings;
+        _required = List.of(saved.requiredIds);
+        _excluded = List.of(saved.excludedIds);
+        _excludedSourcePairs = List.of(saved.excludedSourcePairs);
+        _excludedPairs =
+            saved.excludedPairs.map((e) => List<int>.of(e)).toList();
+        _savedNames = saved.names;
+        _constraintLabels = Map.of(saved.constraintLabels);
+        _result = CcuPlanResult(status: 'ok', plans: [saved.plan]);
+        _selection = 0;
+        _stale = true;
+      });
+      await _calculate(refresh: true);
+    }
+  }
+
+  Widget _constraints() => ExpansionTile(
+          key: const PageStorageKey('ccu-constraints'),
+          tilePadding: EdgeInsets.zero,
+          title: Text(
+              '固定 ${_required.length} · 排除 ${_excluded.length + _excludedPairs.length + _excludedSourcePairs.length}',
+              style: Theme.of(context).textTheme.bodyMedium),
+          children: [
+            if (_required.isEmpty &&
+                _excluded.isEmpty &&
+                _excludedPairs.isEmpty &&
+                _excludedSourcePairs.isEmpty)
+              const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Text('计算后，可在升级步骤中固定或排除具体升级。')),
+            for (final id in _required)
+              ListTile(
+                  title: Text('固定：${_offerLabel(id)}'),
+                  trailing: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        setState(() {
+                          _invalidate();
+                          _required.remove(id);
+                        });
+                        _calculate();
+                      })),
+            for (final id in _excluded)
+              ListTile(
+                  title: Text('排除：${_offerLabel(id)}'),
+                  trailing: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        setState(() {
+                          _invalidate();
+                          _excluded.remove(id);
+                        });
+                        _calculate();
+                      })),
+            for (final pair in _excludedSourcePairs)
+              ListTile(
+                  title: Text(
+                      '排除［${pair.label}］：${_name(pair.fromShipId)} → ${_name(pair.toShipId)}'),
+                  trailing: IconButton(
+                      tooltip: '撤销排除',
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        setState(() {
+                          _invalidate();
+                          _excludedSourcePairs.remove(pair);
+                        });
+                        _calculate();
+                      })),
+            for (final pair in _excludedPairs)
+              ListTile(
+                  title: Text('排除整段：${_name(pair[0])} → ${_name(pair[1])}'),
+                  trailing: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        setState(() {
+                          _invalidate();
+                          _excludedPairs.remove(pair);
+                        });
+                        _calculate();
+                      })),
+          ]);
+
+  String _offerLabel(String id) {
+    if (_constraintLabels.containsKey(id)) return _constraintLabels[id]!;
+    for (final plan in _result?.plans ?? <CcuPlan>[]) {
+      for (final edge in plan.steps) {
+        if (edge.id == id) {
+          return '${_name(edge.fromShipId)} → ${_name(edge.toShipId)} · ${edge.sourceLabel}';
+        }
+      }
+    }
+    return id;
+  }
+
+  Widget _step(CcuOffer edge, int index) => CcuRouteStep(
+      key: ValueKey('$_selection:${edge.id}'),
+      edge: edge,
+      index: index,
+      from: _shipView(edge.fromShipId),
+      to: _shipView(edge.toShipId),
+      last: index == _plan!.steps.length - 1,
+      pinned: _required.contains(edge.id),
+      onPin: _loading || _stale
+          ? null
+          : () {
+              setState(() {
+                _constraintLabels[edge.id] = _offerLabel(edge.id);
+                _invalidate();
+                if (!_required.remove(edge.id)) _required.add(edge.id);
+              });
+              _calculate();
+            },
+      onExclude: _loading || _stale
+          ? null
+          : () {
+              final pair = CcuSourcePair.fromOffer(edge);
+              // 每个有效方案包含全部固定步骤，也匹配同类型的其他副本。
+              final conflictingIds = {
+                edge.id,
+                for (final plan in _result?.plans ?? <CcuPlan>[])
+                  for (final offer in plan.steps)
+                    if (pair.matches(offer)) offer.id,
+              };
+              setState(() {
+                _invalidate();
+                _required.removeWhere(conflictingIds.contains);
+                if (!_excludedSourcePairs.contains(pair)) {
+                  _excludedSourcePairs.add(pair);
+                }
+              });
+              _calculate();
+            });
+
+  Widget _settingsControls() {
+    final theme = Theme.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text('优先优化', style: theme.textTheme.labelMedium),
+      const SizedBox(height: 8),
+      for (final option in [
+        ('additional', '补入金额最低', Icons.payments_outlined),
+        ('total', '升级链总成本最低', Icons.account_balance_wallet_outlined)
+      ])
+        Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Material(
+                color: _settings.objective == option.$1
+                    ? theme.colorScheme.primary.withValues(alpha: .09)
+                    : theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(10),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                    onTap: _loading
+                        ? null
+                        : () => _changeSettings(
+                            _settings.copyWith(objective: option.$1)),
+                    child: Semantics(
+                        selected: _settings.objective == option.$1,
+                        button: true,
+                        child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(children: [
+                              Icon(option.$3,
+                                  size: 19, color: theme.colorScheme.primary),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Text(option.$2,
+                                      style: theme.textTheme.bodyMedium)),
+                              if (_settings.objective == option.$1)
+                                Icon(Icons.check,
+                                    size: 18, color: theme.colorScheme.primary),
+                            ])))))),
+      const SizedBox(height: 18),
+      Text('参与规划的数据', style: theme.textTheme.labelMedium),
+      const SizedBox(height: 8),
+      CcuSourceOption(
+          label: '机库 CCU',
+          icon: Icons.inventory_2_outlined,
+          value: _settings.useHangar,
+          onChanged: _loading
+              ? null
+              : (v) => _changeSettings(_settings.copyWith(useHangar: v))),
+      const SizedBox(height: 6),
+      CcuSourceOption(
+          label: '回购',
+          icon: Icons.history,
+          value: _settings.useBuyback,
+          onChanged: _loading
+              ? null
+              : (v) => _changeSettings(_settings.copyWith(useBuyback: v))),
+      const SizedBox(height: 6),
+      CcuSourceOption(
+          label: '历史 WB',
+          icon: Icons.event_note_outlined,
+          value: _settings.useHistory,
+          onChanged: _loading
+              ? null
+              : (v) => _changeSettings(_settings.copyWith(useHistory: v))),
+      const SizedBox(height: 6),
+      Text('机库与回购使用已有数据',
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      const SizedBox(height: 12),
+      Theme(
+          data: theme.copyWith(dividerColor: Colors.transparent),
+          child: _constraints()),
+    ]);
+  }
+
+  Widget _planningActions() {
+    final theme = Theme.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      FilledButton.icon(
+          style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12))),
+          onPressed: _loading ? null : () => _calculate(),
+          icon: const Icon(Icons.route, size: 19),
+          label: const Text('计算方案')),
+      const SizedBox(height: 6),
+      TextButton.icon(
+          onPressed: _loading ? null : () => _calculate(refresh: true),
+          icon: const Icon(Icons.refresh, size: 18),
+          label: const Text('刷新商店并重算')),
+      if (_loading) ...[
+        const SizedBox(height: 12),
+        const LinearProgressIndicator(),
+        const SizedBox(height: 10),
+        Text(_progress, style: theme.textTheme.bodySmall),
+        TextButton(
+            onPressed: () => setState(_invalidate), child: const Text('取消')),
+      ],
+    ]);
+  }
+
+  Widget _resultsPanel(CcuPlan? plan, bool expired) {
+    final theme = Theme.of(context);
+    final plans = _result?.plans ?? [];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (_error != null)
+        CcuNotice(message: _error!, error: true, icon: Icons.error_outline),
+      if (_stale || expired)
+        const CcuNotice(message: '以下为旧结果，请刷新商店或重新计算后使用。', icon: Icons.update),
+      for (final scenario in ['current', 'waiting'])
+        if (plans.any((p) => p.scenario == scenario)) ...[
+          if (scenario == 'current')
+            Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(children: [
+                  Icon(Icons.check_circle_outline,
+                      size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text('当前可用',
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600))),
+                ])),
+          LayoutBuilder(builder: (context, constraints) {
+            final indexes = [
+              for (var i = 0; i < plans.length; i++)
+                if (plans[i].scenario == scenario) i
+            ];
+            final columns = constraints.maxWidth < 420
+                ? 1
+                : constraints.maxWidth < 660
+                    ? 2
+                    : 3;
+            final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
+            return Wrap(spacing: 10, runSpacing: 10, children: [
+              for (var n = 0; n < indexes.length; n++)
+                SizedBox(
+                    width: width,
+                    child: CcuPlanChoice(
+                        plan: plans[indexes[n]],
+                        number: n + 1,
+                        selected: indexes[n] == _selection,
+                        onSelected: () =>
+                            setState(() => _selection = indexes[n]))),
+            ]);
+          }),
+          const SizedBox(height: 18),
+        ],
+      if (plan != null) ...[
+        CcuCostSummary(plan: plan, objective: _settings.objective),
+        const SizedBox(height: 22),
+        Row(children: [
+          Text('升级路线',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(width: 10),
+          Text('${plan.steps.length} 步', style: theme.textTheme.bodySmall)
+        ]),
+        const SizedBox(height: 14),
+      ],
+      if (plan == null)
+        CcuPanel(
+            child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                child: Column(children: [
+                  Icon(
+                      _loading
+                          ? Icons.travel_explore
+                          : _error != null
+                              ? Icons.alt_route
+                              : Icons.route,
+                      size: 44,
+                      color: theme.colorScheme.primary.withValues(alpha: .6)),
+                  const SizedBox(height: 18),
+                  Text(
+                      _loading
+                          ? '正在规划升级路线'
+                          : _error != null
+                              ? '暂未找到合适的路线'
+                              : '点击计算方案开始规划',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium),
+                  if (_loading || _error != null) ...[
+                    const SizedBox(height: 10),
+                    Text(_loading ? _progress : '调整起止舰船或规划条件后重试',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ]))),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    
-    _fromShips = allShips.map((e) => e.chineseName!).toList();
-    _toShips = allShips.map((e) => e.chineseName!).toList();
-
-    return CustomScrollView(
-      slivers: <Widget>[
-        SliverAppBar(
-          expandedHeight: (Platform.isIOS | Platform.isAndroid) ? 220 : 260,
-          floating: false,
-          pinned: false,
-          flexibleSpace: FlexibleSpaceBar(
-            background: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).primaryColor.withOpacity(0.8),
-                    Theme.of(context).primaryColor,
-                  ],
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 16.0,
-                  right: 16.0,
-                  top: 6,
-                  bottom: 6,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 头部标题和按钮区域
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              '舰船升级规划器',
-                              style: TextStyle(
-                                fontSize: 24, 
-                                fontWeight: FontWeight.bold, 
-                                color: Colors.white,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '智能CCU链优化',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withOpacity(0.8),
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(Icons.save_outlined, color: Colors.white, size: 20),
-                                onPressed: () => showSaveSlotSelector(context),
-                                tooltip: '保存方案',
-                                padding: const EdgeInsets.all(8),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(Icons.tune, color: Colors.white, size: 20),
-                                onPressed: _openUpgradeSettings,
-                                tooltip: '升级设置',
-                                padding: const EdgeInsets.all(8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    // 选择器区域
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.rocket_launch,
-                                color: Theme.of(context).primaryColor,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '选择升级路径',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Theme(
-                            data: FlexColorScheme.light(scheme: FlexScheme.blue, useMaterial3: false).toTheme,
-                            child: CustomDropdown<String>.search(
-                              decoration: getUpgradeDropdownDecoration(Theme.of(context).brightness == Brightness.dark),
-                              hintText: '选择起始舰船',
-                              searchHintText: '搜索舰船名称...',
-                              items: _fromShips,
-                              initialItem: _startProduct,
-                              onChanged: (value) {
-                                _blockedUpgrades = [];
-                                _mustHaveUpgrades = [];
-                                setState(() {
-                                  _startProduct = value;
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Theme(
-                            data: FlexColorScheme.light(scheme: FlexScheme.blue, useMaterial3: false).toTheme,
-                            child: CustomDropdown<String>.search(
-                              hintText: '选择目标舰船',
-                              searchHintText: '搜索舰船名称...',
-                              items: _toShips,
-                              initialItem: _endProduct,
-                              onChanged: (value) {
-                                _blockedUpgrades = [];
-                                _mustHaveUpgrades = [];
-                                setState(() {
-                                  _endProduct = value;
-                                });
-                              },
-                              decoration: getUpgradeDropdownDecoration(Theme.of(context).brightness == Brightness.dark),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withOpacity(0.8),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: _calculateUpgradePath,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.auto_fix_high,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          '计算最优升级路线',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                getTotalInfoWidget(),
-              ],
-            ),
-          ),
-        ),
-        if (_upgradePath.isEmpty)
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.all(32),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor.withOpacity(0.2),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.route,
-                    size: 64,
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '暂无升级路径',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '请选择起始和目标舰船，然后点击计算按钮来生成最优升级方案',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                return _buildUpgradeCard(_upgradePath[index], index);
-              },
-              childCount: _upgradePath.length,
-            ),
-          ),
-      ],
-    );
-  }
-  
-  Widget customChip(String label) {
-    Color backgroundColor;
-    IconData icon;
-    
-    switch (label) {
-      case '机库中':
-        backgroundColor = Colors.green;
-        icon = Icons.inventory_2;
-        break;
-      case '回购中':
-        backgroundColor = Colors.red;
-        icon = Icons.restore;
-        break;
-      case '历史WB':
-        backgroundColor = Colors.orange;
-        icon = Icons.history;
-        break;
-      default:
-        backgroundColor = Colors.blue;
-        icon = Icons.shopping_cart;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: backgroundColor.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: backgroundColor,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: backgroundColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpgradeCard(UpgradeStep upgradeStep, int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 升级信息区域
-                Row(
-                  children: [
-                    // 起始舰船
-                    Expanded(
-                      flex: 2,
-                      child: _buildShipInfo(
-                        shipName: upgradeStep.fromProduct,
-                        price: upgradeStep.fromShip.getHighestSku() ~/ 100,
-                        isSource: true,
-                      ),
-                    ),
-                    // 箭头和成本
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.arrow_forward,
-                              color: Theme.of(context).primaryColor,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '+\$${upgradeStep.cost ~/ 100}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 目标舰船
-                    Expanded(
-                      flex: 2,
-                      child: _buildShipInfo(
-                        shipName: upgradeStep.toProduct,
-                        price: upgradeStep.toShip.getHighestSku() ~/ 100,
-                        isSource: false,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // 标签区域
-                Row(
-                  children: [
-                    Icon(
-                      Icons.label,
-                      size: 16,
-                      color: Theme.of(context).primaryColor.withOpacity(0.7),
-                    ),
+    context.watch<MainDataModel>();
+    _updateMedia();
+    final theme = Theme.of(context);
+    final plan = _plan;
+    final expired = plan?.scenario == 'current' &&
+        plan!.steps.any((e) => !e.freshAt(DateTime.now()));
+    final canSave = plan != null && !_stale && !_loading;
+    return CcuPlannerLayout(
+        headerBuilder: (context, openSettings) => LayoutBuilder(
+            builder: (context, constraints) => Row(children: [
+                  Expanded(
+                      child: Text('升级规划',
+                          style: theme.textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w700))),
+                  if (constraints.maxWidth >= 600) ...[
+                    TextButton.icon(
+                        onPressed: _loading ? null : () => _slots(save: false),
+                        icon: const Icon(Icons.folder_open, size: 19),
+                        label: const Text('载入方案')),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: upgradeStep.tags.map((tag) => customChip(tag)).toList(),
-                      ),
-                    ),
+                    OutlinedButton.icon(
+                        onPressed: canSave ? () => _slots(save: true) : null,
+                        icon: const Icon(Icons.bookmark_add_outlined, size: 19),
+                        label: const Text('保存方案')),
+                  ] else ...[
+                    IconButton(
+                        tooltip: '载入方案',
+                        onPressed: _loading ? null : () => _slots(save: false),
+                        icon: const Icon(Icons.folder_open)),
+                    IconButton(
+                        tooltip: '保存方案',
+                        onPressed: canSave ? () => _slots(save: true) : null,
+                        icon: const Icon(Icons.bookmark_add_outlined)),
                   ],
-                ),
-              ],
-            ),
-          ),
-          // 操作按钮
-          Positioned(
-            bottom: 8,
-            right: 8,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (index != 0)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(context).dividerColor.withOpacity(0.3),
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: getPushPinIcon(index),
-                      onPressed: () => _addMustHaveUpgradeStep(index),
-                      tooltip: '固定该升级步骤',
-                      iconSize: 18,
-                      padding: const EdgeInsets.all(8),
-                    ),
-                  ),
-                if (index != 0) const SizedBox(width: 4),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.red.withOpacity(0.3),
-                    ),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: () => _removeUpgradeStep(index),
-                    tooltip: '移除该升级步骤',
-                    iconSize: 18,
-                    padding: const EdgeInsets.all(8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShipInfo({
-    required String shipName,
-    required int price,
-    required bool isSource,
-  }) {
-    return Column(
-      crossAxisAlignment: isSource ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-      children: [
-        Text(
-          '\$${price}',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: isSource ? Colors.grey[600] : Theme.of(context).primaryColor,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          shipName,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-          textAlign: isSource ? TextAlign.left : TextAlign.right,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget getPushPinIcon(int index) {
-    bool isFound = false;
-    for (var upgrade in _mustHaveUpgrades) {
-      if (upgrade.fromProduct == _upgradePath[index].fromProduct && upgrade.toProduct == _upgradePath[index].toProduct) {
-        isFound = true;
-        break;
-      }
-    }
-
-    if (isFound) {
-      return Icon(
-        Icons.push_pin,
-        color: Theme.of(context).primaryColor,
-        size: 18,
-      );
-    } else {
-      return Icon(
-        Icons.push_pin_outlined,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-        size: 18,
-      );
-    }
-  }
-
-  Future<void> showSaveSlotSelector(BuildContext context) async {
-    final slots =  await getSlotsFromStorage(10);
-    WoltModalSheet.show<int>(
-      context: context,
-      pageListBuilder: (BuildContext modalContext) {
-        return [
-          WoltModalSheetPage(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            hasSabGradient: false,
-            pageTitle: const Padding(
-                padding: EdgeInsets.only(left: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('选择保存槽位',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))
-                  ],
-                )),
-            trailingNavBarWidget: Container(
-              height: 38,
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.2), // 设置背景颜色
-                shape: BoxShape.circle, // 设置形状为圆形
-              ),
-              child: IconButton(
-                padding: const EdgeInsets.all(5),
-                icon: const Icon(Icons.close, size: 22),
-                onPressed: Navigator.of(context).pop,
-              ),
-            ),
-            topBarTitle: Text('选择保存槽位', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            isTopBarLayerAlwaysVisible: false,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: List.generate(10, (index) {
-                  return ListTile(
-                    title: Text('槽位 ${index + 1} (${slots[index]})'),
-                    onTap: () {
-
-                      if (_upgradePath.isEmpty) {
-                        showToast(message: '当前升级链为空~');
-                        return;
-                      }
-
-                      saveStepsToStorage(_upgradePath, index);
-                      showToast(message: '升级链保存成功~后续可在机库搜索菜单中进行筛选~');
-                      Navigator.of(modalContext).pop(index);
-                    },
-                    trailing: Icon(Icons.save),
-                  );
-                }),
-              ),
-            ),
-          ),
-        ];
-      },
-    );
+                  if (openSettings != null)
+                    IconButton(
+                        tooltip: '规划设置',
+                        onPressed: openSettings,
+                        icon: const Icon(Icons.tune)),
+                ])),
+        ships: LayoutBuilder(builder: (context, constraints) {
+          final compact = constraints.maxWidth < 600;
+          final from = CcuShipSelector(
+              label: '起始舰船',
+              ship: _fromId == null ? null : _shipView(_fromId!),
+              compact: compact,
+              onTap: _loading ? null : () => _choose(true));
+          final to = CcuShipSelector(
+              label: '目标舰船',
+              ship: _toId == null ? null : _shipView(_toId!),
+              compact: compact,
+              isTarget: true,
+              onTap: _loading ? null : () => _choose(false));
+          return compact
+              ? Column(children: [from, const SizedBox(height: 10), to])
+              : Row(children: [
+                  Expanded(child: from),
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Icon(Icons.arrow_forward,
+                          color: theme.colorScheme.primary)),
+                  Expanded(child: to)
+                ]);
+        }),
+        settings: _settingsControls(),
+        actions: _planningActions(),
+        results: _resultsPanel(plan, expired),
+        stepCount: (plan?.steps.length ?? 0) +
+            ((_result?.diagnostics.isNotEmpty ?? false) ? 1 : 0),
+        stepBuilder: (context, index) {
+          if (index < (plan?.steps.length ?? 0)) {
+            return _step(plan!.steps[index], index);
+          }
+          return Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: CcuPanel(
+                  padding: EdgeInsets.zero,
+                  child: ExpansionTile(
+                      key: const PageStorageKey('ccu-diagnostics'),
+                      title: Text('数据提示 (${_result!.diagnostics.length})',
+                          style: theme.textTheme.bodyMedium),
+                      leading: const Icon(Icons.info_outline, size: 19),
+                      children: _result!.diagnostics
+                          .map((d) => ListTile(dense: true, title: Text(d)))
+                          .toList())));
+        });
   }
 
   @override
   bool get wantKeepAlive => true;
 }
 
+class _ShipSearch extends SearchDelegate<int?> {
+  _ShipSearch(this.ships, this.shipView)
+      : super(searchFieldLabel: '搜索舰船中文名或英文名');
+  final List<ShipAlias> ships;
+  final CcuShipView Function(int) shipView;
+  @override
+  List<Widget> buildActions(BuildContext context) => [
+        IconButton(
+            onPressed: () {
+              query = '';
+            },
+            icon: const Icon(Icons.clear))
+      ];
+  @override
+  Widget buildLeading(BuildContext context) => IconButton(
+      onPressed: () => close(context, null),
+      icon: const Icon(Icons.arrow_back));
+  @override
+  Widget buildResults(BuildContext context) => buildSuggestions(context);
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final key = query.toLowerCase().trim();
+    final matches = ships
+        .where((s) =>
+            '${s.name} ${s.chineseName ?? TranslationRepo().getTranslationSync(s.name)} ${s.alias.join(' ')}'
+                .toLowerCase()
+                .contains(key))
+        .toList();
+    return ListView.builder(
+        itemCount: matches.length,
+        itemBuilder: (context, index) {
+          final ship = matches[index];
+          return ListTile(
+              minVerticalPadding: 12,
+              leading: SizedBox(
+                  width: 64,
+                  height: 48,
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CcuShipImage(url: shipView(ship.id).imageUrl))),
+              title: Text(ship.chineseName ??
+                  TranslationRepo().getTranslationSync(ship.name)),
+              subtitle:
+                  Text('${ship.name} · 价格 ${ccuMoney(ship.getHighestSku())}'),
+              onTap: () => close(context, ship.id));
+        });
+  }
+}

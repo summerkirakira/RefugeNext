@@ -61,10 +61,11 @@ void main(List<String> args) async {
     // 检查是否是通过开机自启动启动的
     final isAutoStarted = args.contains('--autostart');
 
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(1280, 720),
+    final windowOptions = WindowOptions(
+      size: const Size(1280, 720),
       center: true,
-      backgroundColor: Colors.transparent,
+      // macOS 保留系统窗口背景，避免原生标题栏透底。
+      backgroundColor: Platform.isMacOS ? null : Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.normal,
       title: '星河避难所',

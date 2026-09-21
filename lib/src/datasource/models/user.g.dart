@@ -6,12 +6,13 @@ part of 'user.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
+_User _$UserFromJson(Map<String, dynamic> json) => _User(
       handle: json['handle'] as String,
       name: json['name'] as String,
       email: json['email'] as String,
       password: json['password'] as String,
       rsiToken: json['rsiToken'] as String,
+      rsiDevice: json['rsiDevice'] as String? ?? '',
       profileImage: json['profileImage'] as String,
       referralCode: json['referralCode'] as String,
       referralCount: (json['referralCount'] as num).toInt(),
@@ -38,13 +39,13 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
       newReferralsCount: (json['newReferralsCount'] as num?)?.toInt() ?? 0,
     );
 
-Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
       'handle': instance.handle,
       'name': instance.name,
       'email': instance.email,
       'password': instance.password,
       'rsiToken': instance.rsiToken,
+      'rsiDevice': instance.rsiDevice,
       'profileImage': instance.profileImage,
       'referralCode': instance.referralCode,
       'referralCount': instance.referralCount,

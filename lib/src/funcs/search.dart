@@ -229,7 +229,8 @@ bool slotSearch(HangarItem item, List<List<UpgradeStep>> slots) {
 
   for (var slot in slots) {
     for (var step in slot) {
-      if (step.fromShip.id == item.fromShip!.id && step.toShip.id == item.toShip!.id && step.cost == item.price) {
+      if (step.fromShip.id == item.fromShip!.id && step.toShip.id == item.toShip!.id &&
+          (step.itemId != null ? (item.id == step.itemId || item.idList.contains(step.itemId)) : step.cost == item.price)) {
         return true;
       }
     }

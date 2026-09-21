@@ -1,13 +1,14 @@
-import '../datasource/models/user.dart';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
+
+import '../datasource/models/user.dart';
 import '../utils/storage_path.dart';
 
-
 class UserRepo {
-  final Lock _lock = Lock();
+  static final Lock _lock = Lock();
   Future<String> get _localPath async {
     return await StoragePath.getAppDataPath();
   }
@@ -37,27 +38,54 @@ class UserRepo {
     });
   }
 
-  Future<void> addUser(User user) async {
-    removeUser(handle: user.handle);
-    List<User> users = await readUsers();
-    List<User> newUsers = [];
-    for (var u in users) {
-      if (u.handle != user.handle) {
-        newUsers.add(u);
+  Future<void> addUser(User user,
+      {bool replaceCredentials = false, bool selectUser = false}) async {
+    await _lock.synchronized(() async {
+      final users = await _readUnlocked();
+      final existing = users.where((u) => u.handle == user.handle).firstOrNull;
+      final updated = !replaceCredentials && existing != null
+          ? user.copyWith(
+              rsiToken: existing.rsiToken, rsiDevice: existing.rsiDevice)
+          : user;
+      users.removeWhere((u) => u.handle == user.handle);
+      users.add(updated);
+      final file = await _localFile;
+      await file.writeAsString(jsonEncode(users));
+      if (selectUser) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('vip.kirakira.user.handle', user.handle);
       }
+    });
+  }
+
+  Future<List<User>> _readUnlocked() async {
+    try {
+      final data = jsonDecode(await (await _localFile).readAsString()) as List;
+      return data.map((e) => User.fromJson(e)).toList();
+    } catch (_) {
+      return [];
     }
-    newUsers.add(user);
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('vip.kirakira.user.handle', user.handle);
-    await writeUsers(newUsers);
   }
 
-  Future<void> removeUser({required String handle}) async {
-    List<User> users = await readUsers();
-    users.removeWhere((element) => element.handle == handle);
-    await writeUsers(users);
-  }
+  Future<void> updateSession(
+          {required String handle,
+          required String token,
+          required String device}) =>
+      _lock.synchronized(() async {
+        final users = await _readUnlocked();
+        final index = users.indexWhere((user) => user.handle == handle);
+        if (index < 0) return;
+        users[index] =
+            users[index].copyWith(rsiToken: token, rsiDevice: device);
+        await (await _localFile).writeAsString(jsonEncode(users));
+      });
+
+  Future<void> removeUser({required String handle}) =>
+      _lock.synchronized(() async {
+        final users = await _readUnlocked();
+        users.removeWhere((user) => user.handle == handle);
+        await (await _localFile).writeAsString(jsonEncode(users));
+      });
 
   Future<User?> getCurrentUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -67,7 +95,6 @@ class UserRepo {
     }
     return getUser(handle: handle);
   }
-
 
   Future<User?> getUser({required String handle}) async {
     List<User> users = await readUsers();
