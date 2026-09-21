@@ -1,298 +1,367 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:refuge_next/src/datasource/data_model.dart';
 
-import '../../../datasource/models/hangar/hangar_log.dart';
-import '../../../repo/hangar.dart';
+import '../../../datasource/data_model.dart';
+import '../../../datasource/models/hangar.dart';
 import '../../../repo/translation.dart';
+import 'hangar_log_entry.dart';
 
-
-class TimelineItemData {
-  final IconData icon;
-  final Color iconBackgroundColor;
-  final String title;
-  final String description;
-  final String time;
-  final int targetItemId;
-  final int price;
-
-  TimelineItemData({
-    required this.icon,
-    required this.iconBackgroundColor,
-    required this.title,
-    required this.description,
-    required this.time,
-    required this.targetItemId,
-    this.price = 0,
-  });
-}
-
-String parseTime(int time) {
-  final DateFormat format = DateFormat("yyyy年MM月d日, hh:mm", 'zh_CN');
-  return format.format(DateTime.fromMillisecondsSinceEpoch(time));
-}
-
-TimelineItemData convertSingleHangarLogToTimelineItemData(HangarLog log) {
-
-  final translationRepo = TranslationRepo();
-  final hangarItemRepo = HangarRepo();
-
-  IconData icon = Icons.shopping_cart;
-  Color iconBackgroundColor = Colors.blue;
-  String title = log.name;
-  String description = log.chineseName ?? log.name;
-  String time = parseTime(log.time);
-  int targetItemId = log.target == null ? 0 : int.parse(log.target!);
-  String itemName = translationRepo.getTranslationSync(log.name);
-  title = itemName;
-
-  if (log.type == 'CREATED') {
-    // title = '购买物品';
-    icon = Icons.airplanemode_active_outlined;
-    iconBackgroundColor = Colors.deepOrangeAccent;
-    description = "购买了 $itemName(#$targetItemId)";
-  } else if (log.type == 'RECLAIMED') {
-    // title = '回收物品';
-    icon = Icons.remove;
-    iconBackgroundColor = Colors.green;
-    description = "回收了 $itemName(#$targetItemId)";
-  } else if (log.type == 'GIFT') {
-    // title = '赠送礼物';
-    icon = Icons.card_giftcard;
-    iconBackgroundColor = Colors.pink;
-    description = "赠送了 $itemName(#$targetItemId)";
-  } else if (log.type == 'GIFT_CLAIMED') {
-    // title = '领取礼物';
-    icon = Icons.card_giftcard;
-    iconBackgroundColor = Colors.pink;
-    description = "${log.operator} 领取了$itemName(#$targetItemId)";
-  } else if (log.type == 'GIFT_CANCELLED') {
-    // title = '取消赠品';
-    icon = Icons.card_giftcard;
-    iconBackgroundColor = Colors.pink;
-    description = "取消了 $itemName(#$targetItemId)";
-  } else if (log.type == 'CONSUMED') {
-    // title = '消耗物品';
-    icon = Icons.airplanemode_inactive_rounded;
-    iconBackgroundColor = Colors.red;
-    description = "消耗了 $itemName(#$targetItemId)";
-  } else if (log.type == 'APPLIED_UPGRADE') {
-    // title = '升级物品';
-    icon = Icons.arrow_upward;
-    iconBackgroundColor = Colors.orange;
-
-    final upgradeName = translationRepo.getTranslationSync(log.reason!);
-
-    description = "使用 $upgradeName(#${log.source})\n升级了:\n$itemName(#$targetItemId)";
-  } else if (log.type == 'BUYBACK') {
-    // title = '回购物品';
-    icon = Icons.shopping_cart;
-    iconBackgroundColor = Colors.blue;
-    description = "回购了 $itemName(#$targetItemId)";
-  } else if (log.type == 'NAME_CHANGE') {
-    // title = '改名';
-    icon = Icons.edit;
-    iconBackgroundColor = Colors.blue;
-    description = "改名为 ${log.reason}";
-  } else if (log.type == 'NAME_CHANGE_RECLAIMED') {
-    // title = '取消改名';
-    icon = Icons.edit;
-    iconBackgroundColor = Colors.blue;
-    description = "取消改名为 ${log.reason}";
-  } else if (log.type == 'GIVEAWAY') {
-    icon = Icons.card_giftcard;
-    iconBackgroundColor = Colors.pink;
-    description = "获得了 $itemName(#$targetItemId)";
-  }
-
-
-  return TimelineItemData(
-    icon: icon,
-    iconBackgroundColor: iconBackgroundColor,
-    title: title,
-    description: description,
-    time: time,
-    targetItemId: targetItemId,
-    price: log.price ?? 0,
-  );
-}
-
-List<TimelineItemData> convertHangarLogsToTimelineItems(List<HangarLog> logs) {
-  return logs.map(convertSingleHangarLogToTimelineItemData).toList();
-}
-
-
+/// 直接参与弹窗的 Sliver 滚动，避免嵌套列表一次构建所有日志。
 class HangarLogPage extends StatefulWidget {
-  int? targetItemId;
+  const HangarLogPage({super.key, this.targetItemIds, this.item});
 
-  HangarLogPage({super.key, this.targetItemId});
+  final Set<int>? targetItemIds;
+  final HangarItem? item;
 
   @override
   State<HangarLogPage> createState() => _HangarLogPageState();
 }
 
 class _HangarLogPageState extends State<HangarLogPage> {
-  late List<TimelineItemData> items;
-  int limit = 50;
+  int _limit = 50;
+  final _expandedIds = <String>{};
 
   @override
   void initState() {
     super.initState();
-    _updateItems(limit); // 初始加载50条
-  }
-
-  void _updateItems(int limit) {
-    List<HangarLog> logs = context.read<MainDataModel>().getHangarLogByTargetId(widget.targetItemId);
-    if (limit > 0 && logs.length > limit) {
-      logs = logs.sublist(0, limit);
-    }
-    setState(() {
-      items = convertHangarLogsToTimelineItems(logs);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<MainDataModel>().refreshHangarLogs();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return TimelineItem(
-              item: item,
-              onTap: () {
-                // Navigator.of(context).push(...);
-              },
+    final model = context.watch<MainDataModel>();
+    final logs = model.getHangarLogsByTargetIds(widget.targetItemIds);
+    final count = logs.length < _limit ? logs.length : _limit;
+    final colors = Theme.of(context).colorScheme;
+    final item = widget.item;
+    final itemName = item == null
+        ? null
+        : model.enableHangarTranslation
+            ? item.chineseName ?? item.name
+            : item.name;
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (itemName != null) ...[
+                      Text(itemName,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                    ],
+                    Text(
+                      '${widget.targetItemIds != null && widget.targetItemIds!.length > 1 ? '${widget.targetItemIds!.length} 件物品 · ' : ''}共 ${logs.length} 条记录',
+                      style: TextStyle(
+                          color: colors.onSurfaceVariant, fontSize: 12),
+                    ),
+                    if (model.hangarLogError != null && logs.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: _RefreshError(message: model.hangarLogError!),
+                      ),
+                  ],
+                ),
+              );
+            }
+            if (index == count + 1) {
+              if (logs.isEmpty) {
+                return _EmptyLogs(
+                  loading: model.isRefreshingHangarLogs,
+                  error: model.hangarLogError,
+                );
+              }
+              if (count < logs.length) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Center(
+                    child: TextButton.icon(
+                      onPressed: () => setState(() => _limit += 50),
+                      icon: const Icon(Icons.expand_more_rounded),
+                      label: Text('加载更多（剩余 ${logs.length - count} 条）'),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox(height: 8);
+            }
+            final logIndex = index - 1;
+            final log = logs[logIndex];
+            final date = DateTime.fromMillisecondsSinceEpoch(log.time);
+            final startOfDay = logIndex == 0 ||
+                !DateUtils.isSameDay(
+                    date,
+                    DateTime.fromMillisecondsSinceEpoch(
+                        logs[logIndex - 1].time));
+            final endOfDay = logIndex == count - 1 ||
+                !DateUtils.isSameDay(
+                    date,
+                    DateTime.fromMillisecondsSinceEpoch(
+                        logs[logIndex + 1].time));
+            final entry = HangarLogEntry(log,
+                translate: model.enableHangarTranslation
+                    ? TranslationRepo().getTranslationSync
+                    : (value) => value);
+            return Column(
+              key: ValueKey(log.id),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (startOfDay)
+                  Padding(
+                    padding: EdgeInsets.only(
+                        top: logIndex == 0 ? 0 : 12, bottom: 14),
+                    child: Text(DateFormat('yyyy年M月d日').format(date),
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: colors.onSurfaceVariant)),
+                  ),
+                _TimelineEntry(
+                  entry: entry,
+                  showName: item == null,
+                  showId: (widget.targetItemIds?.length ?? 0) > 1,
+                  showLine: !endOfDay,
+                  expanded: _expandedIds.contains(log.id),
+                  onToggle: () => setState(() {
+                    if (!_expandedIds.add(log.id)) _expandedIds.remove(log.id);
+                  }),
+                ),
+              ],
             );
           },
+          childCount: count + 2,
         ),
-        if (items.length == limit)
-          GestureDetector(
-            onTap: () {
-              limit += 100;
-              _updateItems(limit); // 加载全部数据
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              child: const Center(
-                child: Text(
-                  '查看更多',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 16,
-                  ),
+      ),
+    );
+  }
+}
+
+class _TimelineEntry extends StatelessWidget {
+  const _TimelineEntry({
+    required this.entry,
+    required this.showName,
+    required this.showId,
+    required this.showLine,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  final HangarLogEntry entry;
+  final bool showName;
+  final bool showId;
+  final bool showLine;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final log = entry.log;
+    final time = DateFormat('HH:mm')
+        .format(DateTime.fromMillisecondsSinceEpoch(log.time));
+    final accent = log.type == 'RECLAIMED' ? colors.tertiary : colors.primary;
+    return Stack(
+      children: [
+        if (showLine)
+          Positioned(
+            left: 15,
+            top: 36,
+            bottom: 0,
+            child: Container(width: 1, color: colors.outlineVariant),
+          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                  color: accent.withValues(alpha: .10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: Icon(entry.icon, size: 18, color: accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Semantics(
+                      button: true,
+                      expanded: expanded,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: onToggle,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(entry.title,
+                                        style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600)),
+                                  ),
+                                  Text(time,
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: colors.onSurfaceVariant)),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                      expanded
+                                          ? Icons.expand_less_rounded
+                                          : Icons.expand_more_rounded,
+                                      size: 18,
+                                      color: colors.onSurfaceVariant),
+                                ],
+                              ),
+                              if (showName) ...[
+                                const SizedBox(height: 6),
+                                Text(entry.name,
+                                    style: const TextStyle(fontSize: 14)),
+                              ],
+                              if (entry.summary != null) ...[
+                                const SizedBox(height: 6),
+                                Text(entry.summary!,
+                                    style: TextStyle(
+                                        height: 1.5,
+                                        fontSize: 13,
+                                        color: colors.onSurfaceVariant)),
+                              ],
+                              if (entry.amount != null || showId) ...[
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 6,
+                                  children: [
+                                    if (entry.amount != null)
+                                      Text(
+                                          '${entry.amountLabel} ${entry.amount}',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: accent)),
+                                    if (showId && log.target != null)
+                                      Text('#${log.target}',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: colors.onSurfaceVariant)),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (expanded)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: SelectionArea(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final field in entry.details)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(field.$1,
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: colors.onSurfaceVariant)),
+                                      const SizedBox(height: 2),
+                                      Text(field.$2,
+                                          style: const TextStyle(fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-          ),
-        if (items.isEmpty)
-          const Center(
-            child: Text('暂无数据'),
-          ),
-        if (items.length < 5)
-          SizedBox(height: 400)
+          ],
+        ),
       ],
     );
   }
 }
 
+class _RefreshError extends StatelessWidget {
+  const _RefreshError({required this.message});
+  final String message;
 
-class TimelineItem extends StatelessWidget {
-  final TimelineItemData item;
-  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        children: [
+          Text(message,
+              style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          TextButton(
+            onPressed: context.watch<MainDataModel>().isRefreshingHangarLogs
+                ? null
+                : context.read<MainDataModel>().refreshHangarLogs,
+            child: const Text('重试'),
+          ),
+        ],
+      );
+}
 
-  const TimelineItem({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
+class _EmptyLogs extends StatelessWidget {
+  const _EmptyLogs({required this.loading, this.error});
+  final bool loading;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-        onTap: onTap,
-        // 添加自定义形状使波纹效果更好看
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 左侧图标部分
-              SizedBox(
-                width: 72,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: item.iconBackgroundColor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Icon(
-                        item.icon,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // 右侧内容部分
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.description,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          item.time,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        Spacer(),
-                        if (item.price != 0)
-                          Text(
-                            '价值 \$${item.price / 100}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.lightGreen,
-                            ),
-                          ),
-                        const SizedBox(
-                          width: 8,
-                        )
-                      ]
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        children: [
+          if (loading)
+            const SizedBox.square(
+                dimension: 28, child: CircularProgressIndicator(strokeWidth: 2))
+          else
+            Icon(
+                error == null ? Icons.history_rounded : Icons.cloud_off_rounded,
+                size: 32,
+                color: colors.onSurfaceVariant),
+          const SizedBox(height: 12),
+          if (!loading && error != null)
+            _RefreshError(message: error!)
+          else
+            Text(loading ? '正在加载日志…' : '暂无日志记录',
+                style: TextStyle(color: colors.onSurfaceVariant)),
+        ],
+      ),
+    );
   }
 }

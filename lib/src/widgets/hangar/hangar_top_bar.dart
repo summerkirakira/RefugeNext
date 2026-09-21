@@ -92,7 +92,7 @@ class _HangarTopBarState extends State<HangarTopBar> {
                             context: context,
                             pageListBuilder: (modalSheetContext) {
                               return [
-                                getHangarLogBottomSheet(context, null)
+                                getHangarLogBottomSheet(modalSheetContext)
                               ];
                             });
                       }, icon: const Icon(Icons.description_outlined)),

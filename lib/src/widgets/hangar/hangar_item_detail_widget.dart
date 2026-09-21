@@ -481,7 +481,7 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
           children: [
             GestureDetector(
               onTap: () {
-                final hangarLogPage = getHangarLogBottomSheet(context, hangarItem.id);
+                final hangarLogPage = getHangarLogBottomSheet(context, item: hangarItem);
                 WoltModalSheet.of(context).addPage(hangarLogPage);
                 lastPage += 1;
                 WoltModalSheet.of(context).showAtIndex(lastPage);

@@ -376,12 +376,30 @@ class MainDataModel extends ChangeNotifier {
 
   List<HangarLog> get hangarLogs => _hangarLogs;
 
-  List<HangarLog> getHangarLogByTargetId(int? targetId) {
-    if (targetId == null) {
-      return _hangarLogs;
+  List<HangarLog> getHangarLogByTargetId(int? targetId) =>
+      getHangarLogsByTargetIds(targetId == null ? null : [targetId]);
+
+  List<HangarLog> getHangarLogsByTargetIds(Iterable<int>? targetIds) {
+    final ids = targetIds?.map((id) => id.toString()).toSet();
+    final unique = <String, HangarLog>{};
+    for (final log in _hangarLogs) {
+      if (ids == null || ids.contains(log.target)) {
+        unique.putIfAbsent(log.id, () => log);
+      }
     }
-    return _hangarLogs.where((element) => element.target == targetId.toString()).toList();
+    final indexed = unique.values.toList().asMap().entries.toList();
+    indexed.sort((a, b) {
+      final timeOrder = b.value.time.compareTo(a.value.time);
+      return timeOrder != 0 ? timeOrder : a.key.compareTo(b.key);
+    });
+    return indexed.map((entry) => entry.value).toList();
   }
+
+  Future<void>? _hangarLogRefresh;
+  bool _isRefreshingHangarLogs = false;
+  bool get isRefreshingHangarLogs => _isRefreshingHangarLogs;
+  String? _hangarLogError;
+  String? get hangarLogError => _hangarLogError;
 
   UpgradeShipInfo? _fromShip = null;
   Skus? _toSku = null;
@@ -852,9 +870,23 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshHangarLogs() async {
-    _hangarLogs = await hangarLogRepo.refreshHangarLogs();
+  Future<void> refreshHangarLogs() {
+    return _hangarLogRefresh ??= _refreshHangarLogs();
+  }
+
+  Future<void> _refreshHangarLogs() async {
+    _isRefreshingHangarLogs = true;
+    _hangarLogError = null;
     notifyListeners();
+    try {
+      _hangarLogs = await hangarLogRepo.refreshHangarLogs();
+    } catch (_) {
+      _hangarLogError = '日志刷新失败，请重试';
+    } finally {
+      _isRefreshingHangarLogs = false;
+      _hangarLogRefresh = null;
+      notifyListeners();
+    }
   }
 
   // Game Log 相关方法
