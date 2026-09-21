@@ -13,6 +13,7 @@ import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/network/cirno/cirno_api.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import './theme_settings/color_pick_bottomsheet.dart';
+import './theme_settings/theme_mode_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
@@ -42,6 +43,29 @@ class _SettingsPageState extends State<SettingsPage> {
   AccountInfoResponse? _refugeAccountInfo;
   bool _isLoadingRefugeAccount = true;
   bool _isRefreshing = false;
+
+  Future<void> _selectThemeMode() async {
+    final model = context.read<MainDataModel>();
+    if (!model.isVIP) {
+      showVipAlert(context: context);
+      return;
+    }
+    final mode = await showModalBottomSheet<ThemeMode>(
+      context: context,
+      showDragHandle: true,
+      constraints: const BoxConstraints(maxWidth: 600),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => ThemeModeSheet(selectedMode: model.themeMode),
+    );
+    if (!mounted || mode == null) return;
+    if (!model.isVIP) {
+      showVipAlert(context: context);
+      return;
+    }
+    await model.setThemeMode(mode);
+  }
 
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -385,7 +409,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   SettingsItem(
-                    onTap: () {},
+                    onTap: () {
+                      final model = context.read<MainDataModel>();
+                      model.setPreferHangarShipImage(!model.preferHangarShipImage);
+                    },
+                    icons: Icons.image_outlined,
+                    iconStyle: IconStyle(
+                      iconsColor: Colors.white,
+                      withBackground: true,
+                      backgroundColor: Colors.teal,
+                    ),
+                    title: '优先显示舰船图片',
+                    subtitle: '使用包内舰船作为封面',
+                    trailing: Switch.adaptive(
+                      value: context.watch<MainDataModel>().preferHangarShipImage,
+                      onChanged: context.read<MainDataModel>().setPreferHangarShipImage,
+                    ),
+                  ),
+                  SettingsItem(
+                    onTap: _selectThemeMode,
                     icons: Icons.dark_mode_rounded,
                     iconStyle: IconStyle(
                       iconsColor: Colors.white,
@@ -393,18 +435,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       backgroundColor: Colors.red,
                     ),
                     title: '夜间模式',
-                    subtitle: Provider.of<MainDataModel>(context).isVIP ? "自动切换" : "缺少有效的避难所Premium",
-                    trailing: Switch.adaptive(
-                      value: Provider.of<MainDataModel>(context).isDarkMode,
-                      onChanged: (value) {
-                        if (!Provider.of<MainDataModel>(context, listen: false).isVIP) {
-                          showVipAlert(context: context);
-                          return;
-                        }
-                        Provider.of<MainDataModel>(context, listen: false)
-                            .toggleDarkMode();
-                      },
-                    ),
+                    subtitle: Provider.of<MainDataModel>(context).isVIP
+                        ? themeModeLabel(Provider.of<MainDataModel>(context).themeMode)
+                        : "缺少有效的避难所Premium",
+                    trailing: const Icon(Icons.chevron_right_rounded),
                   ),
                   SettingsItem(
                     onTap: () {},

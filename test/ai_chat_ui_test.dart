@@ -68,7 +68,8 @@ void main() {
             lessThanOrEqualTo(776));
         await model.newSession();
         await tester.pumpAndSettle();
-        expect(find.text('你好，我是小九'), findsOneWidget);
+        expect(find.text('你好，我是小九'), findsNothing);
+        expect(find.text('星际公民 AI 助手 · Beta'), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.tap(find.byTooltip('会话'));
         await tester.pumpAndSettle();

@@ -423,7 +423,6 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return AiChatWidth(
         child: Center(
       child: SingleChildScrollView(
@@ -431,23 +430,14 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                  color: cs.primaryContainer.withValues(alpha: .5),
-                  borderRadius: BorderRadius.circular(22)),
-              child: Icon(Icons.auto_awesome_outlined,
-                  size: 32, color: cs.primary),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '你好，我是小九',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '星际公民 AI 助手 · Beta',
-              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+            const ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+              child: Image(
+                image: AssetImage('assets/images/cirno_ai.jpg'),
+                width: 64,
+                height: 64,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(height: 24),
             Wrap(
@@ -456,17 +446,16 @@ class _EmptyState extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 _SuggestionChip(
-                    emoji: '🚀',
                     prompt: '帮我规划极光到英仙座的 CCU 升级路径',
                     onPrompt: onPrompt),
                 _SuggestionChip(
-                    emoji: '🛠', prompt: '看看我的机库', onPrompt: onPrompt),
+                    prompt: '看看我的机库', onPrompt: onPrompt),
                 _SuggestionChip(
-                    emoji: '♻️', prompt: '我的回购里有什么？', onPrompt: onPrompt),
+                    prompt: '我的回购里有什么？', onPrompt: onPrompt),
                 _SuggestionChip(
-                    emoji: '💰', prompt: '极光MR多少钱？', onPrompt: onPrompt),
+                    prompt: '极光MR多少钱？', onPrompt: onPrompt),
                 _SuggestionChip(
-                    emoji: '❓', prompt: '锤头鲨有多大？', onPrompt: onPrompt),
+                    prompt: '锤头鲨有多大？', onPrompt: onPrompt),
               ],
             ),
           ],
@@ -478,12 +467,10 @@ class _EmptyState extends StatelessWidget {
 
 /// 空状态里的示例提问药丸：浅底圆角 + 点击涟漪，点了把 [prompt] 发给小九。
 class _SuggestionChip extends StatelessWidget {
-  final String emoji;
   final String prompt;
   final ValueChanged<String> onPrompt;
 
   const _SuggestionChip({
-    required this.emoji,
     required this.prompt,
     required this.onPrompt,
   });
@@ -500,7 +487,7 @@ class _SuggestionChip extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           child: Text(
-            '$emoji  $prompt',
+            prompt,
             style: TextStyle(fontSize: 13, color: cs.onSurface),
           ),
         ),

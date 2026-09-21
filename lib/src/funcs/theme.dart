@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-
 class FlexSchemeHelper {
   static final Map<String, FlexScheme> _schemeMap = {
     'material': FlexScheme.material,
@@ -80,12 +78,7 @@ extension FlexSchemeExtension on FlexScheme {
   }
 }
 
-
-
-
-
-class ThemeManager {
-
+class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   static final ThemeManager _instance = ThemeManager._internal();
 
   ThemeManager._internal();
@@ -93,19 +86,48 @@ class ThemeManager {
   factory ThemeManager() => _instance;
 
   bool isInitialized = false;
-  bool isDark = false;
+  ThemeMode _themeMode = ThemeMode.light;
   String theme = 'blue';
 
+  ThemeMode get themeMode => _themeMode;
+
+  bool get isDark => switch (_themeMode) {
+        ThemeMode.dark => true,
+        ThemeMode.light => false,
+        ThemeMode.system =>
+          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+              Brightness.dark,
+      };
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    isDark = prefs.getBool('isDark') ?? false;
+    // 兼容旧版手动开关；未选择过的用户仍默认关闭夜间模式。
+    _themeMode = switch (prefs.getString('themeMode')) {
+      'system' => ThemeMode.system,
+      'dark' => ThemeMode.dark,
+      'light' => ThemeMode.light,
+      _ =>
+        (prefs.getBool('isDark') ?? false) ? ThemeMode.dark : ThemeMode.light,
+    };
     theme = prefs.getString('theme') ?? 'blue';
 
-    changeSystemUIOverlayStyle();
-
-
+    if (!isInitialized) {
+      WidgetsBinding.instance.addObserver(this);
+    }
     isInitialized = true;
+    _notifyThemeChanged();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    if (_themeMode == ThemeMode.system) {
+      _notifyThemeChanged();
+    }
+  }
+
+  void _notifyThemeChanged() {
+    changeSystemUIOverlayStyle();
+    notifyListeners();
   }
 
   void changeSystemUIOverlayStyle() {
@@ -114,20 +136,21 @@ class ThemeManager {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         systemNavigationBarColor: Colors.black,
-        // systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ));
     } else {
       SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.white,
-        // systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ));
     }
   }
 
   static ThemeData getTheme(BuildContext context) {
-
     if (!_instance.isInitialized) {
       return FlexColorScheme.light(
         scheme: FlexScheme.material,
@@ -154,13 +177,27 @@ class ThemeManager {
   static Future<void> setTheme(bool? isDark, String? theme) async {
     final prefs = await SharedPreferences.getInstance();
     if (isDark != null) {
-      await prefs.setBool('isDark', isDark);
-      _instance.isDark = isDark;
+      await _instance._saveThemeMode(
+          prefs, isDark ? ThemeMode.dark : ThemeMode.light);
     }
     if (theme != null) {
       await prefs.setString('theme', theme);
       _instance.theme = theme;
     }
-    _instance.changeSystemUIOverlayStyle();
+    _instance._notifyThemeChanged();
+  }
+
+  static Future<void> setThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await _instance._saveThemeMode(prefs, mode);
+    _instance._notifyThemeChanged();
+  }
+
+  Future<void> _saveThemeMode(SharedPreferences prefs, ThemeMode mode) async {
+    await prefs.setString('themeMode', mode.name);
+    if (mode != ThemeMode.system) {
+      await prefs.setBool('isDark', mode == ThemeMode.dark);
+    }
+    _themeMode = mode;
   }
 }

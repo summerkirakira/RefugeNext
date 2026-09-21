@@ -94,7 +94,8 @@ class _HangarPageState extends State<HangarPage> {
   @override
   Widget build(BuildContext context) {
 
-    final items = Provider.of<MainDataModel>(context).hangarItems;
+    final model = context.watch<MainDataModel>();
+    final items = model.hangarItems;
 
     return  Column(
       children: [
@@ -169,6 +170,7 @@ class _HangarPageState extends State<HangarPage> {
 
                             return HangarItemWidget(
                               hangarItem: items[index],
+                              preferShipImage: model.preferHangarShipImage,
                               onTap: onTap,
                             );
                           }

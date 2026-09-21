@@ -426,6 +426,24 @@ class MainDataModel extends ChangeNotifier {
 
   bool _enableHangarTranslation = true;
 
+  bool _preferHangarShipImage = false;
+
+  bool get preferHangarShipImage => _preferHangarShipImage;
+
+  Future<void> setPreferHangarShipImage(bool enabled) async {
+    _preferHangarShipImage = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('app.settings.preferHangarShipImage', enabled);
+  }
+
+  Future<void> loadPreferHangarShipImageSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    _preferHangarShipImage =
+        prefs.getBool('app.settings.preferHangarShipImage') ?? false;
+    notifyListeners();
+  }
+
   bool get enableHangarTranslation => _enableHangarTranslation;
 
   Future<void> setEnableHangarTranslation(bool enabled) async {
@@ -569,14 +587,20 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> setTheme(bool? isDark, FlexScheme scheme) async {
     final themeName = scheme.name;
+    if (!isVIP) return;
     await ThemeManager.setTheme(isDark, themeName);
-    notifyListeners();
   }
 
   Future<void> toggleDarkMode() async {
-    await ThemeManager.setTheme(!isDarkMode, null);
-    notifyListeners();
+    await setThemeMode(isDarkMode ? ThemeMode.light : ThemeMode.dark);
   }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    if (!isVIP) return;
+    await ThemeManager.setThemeMode(mode);
+  }
+
+  ThemeMode get themeMode => ThemeManager().themeMode;
 
   bool get isDarkMode => ThemeManager().isDark;
 
@@ -634,6 +658,9 @@ class MainDataModel extends ChangeNotifier {
   Future<void> refreshVipStatus() async {
     final cirnoAuth = await CirnoAuth.getInstance();
     await cirnoAuth.refreshProperty();
+    if (!isVIP) {
+      await ThemeManager.setTheme(false, 'blue');
+    }
     notifyListeners();
 
     // 刷新VIP状态后检查实时同步，非VIP静默关闭
@@ -644,13 +671,21 @@ class MainDataModel extends ChangeNotifier {
 
 
   MainDataModel() {
+    ThemeManager().addListener(notifyListeners);
     initUser();
     initialize();
+  }
+
+  @override
+  void dispose() {
+    ThemeManager().removeListener(notifyListeners);
+    super.dispose();
   }
 
   Future<void> initialize() async {
     await initUser();
     await loadShowRefreshButtonSetting();
+    await loadPreferHangarShipImageSetting();
     await loadEnableHangarTranslationSetting();
     await loadGameDirectory();
     await loadEnableRealtimeLogSyncSetting();

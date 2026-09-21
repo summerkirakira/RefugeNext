@@ -4,8 +4,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../datasource/models/hangar.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'hangar_cover_image.dart';
 
 
 String priceString(int price) {
@@ -168,10 +167,12 @@ class TagWidget extends StatelessWidget {
 
 class HangarItemImageWidget extends StatelessWidget {
   final HangarItem hangarItem;
+  final bool preferShipImage;
 
   const HangarItemImageWidget({
     super.key,
     required this.hangarItem,
+    this.preferShipImage = false,
   });
 
   @override
@@ -181,28 +182,13 @@ class HangarItemImageWidget extends StatelessWidget {
       height: 100,
       child: Stack(
         children: [
-          CachedNetworkImage(
-              imageUrl: hangarItem.image,
-              placeholder: (context, url) => Container(
-                padding: EdgeInsets.all(40),
-                child: LoadingAnimationWidget.threeArchedCircle(
-                  color: Theme.of(context).indicatorColor, 
-                  size: 30
-                )
+          HangarCoverImage(
+              item: hangarItem,
+              preferShipImage: preferShipImage,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(5),
+                bottomLeft: Radius.circular(5),
               ),
-              errorWidget: (context, url, error) => Icon(Icons.error),
-              imageBuilder: (context, imageProvider) => Container(
-                decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(5),
-                      bottomLeft: Radius.circular(5),
-                    )
-                ),
-              )
           ),
 
           Positioned(
@@ -258,11 +244,13 @@ class HangarItemImageWidget extends StatelessWidget {
 class HangarItemWidget extends StatelessWidget {
   final HangarItem hangarItem;
   final Function(HangarItem, BuildContext) onTap;
+  final bool preferShipImage;
 
   const HangarItemWidget({
     super.key,
     required this.hangarItem,
     required this.onTap,
+    this.preferShipImage = false,
   });
 
   @override
@@ -280,7 +268,10 @@ class HangarItemWidget extends StatelessWidget {
               Container(
                   width: 100,
                   height: 100,
-                  child: HangarItemImageWidget(hangarItem: hangarItem)
+                  child: HangarItemImageWidget(
+                    hangarItem: hangarItem,
+                    preferShipImage: preferShipImage,
+                  )
               ),
               Expanded(
                 child: Padding(

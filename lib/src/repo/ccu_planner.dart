@@ -66,7 +66,7 @@ class CcuPlanner {
                     ...s.toJson(),
                     'from': name(s.fromShipId),
                     'to': name(s.toShipId),
-                    'source_label': s.sourceLabel,
+                    'source_label': s.tagLabel,
                     'cost_usd': (s.cost / 100).toStringAsFixed(2)
                   })
               .toList(),
@@ -78,7 +78,7 @@ class CcuPlanner {
       'plans': result.plans.map(shape).toList(),
       'diagnostics': result.diagnostics,
       'cost_basis':
-          'USD，税前升级链成本，不含起始舰船；机库部分为账面成本，回购使用本地参考价。waiting 方案包含等待或待核实步骤。'
+          'USD，税前升级链成本，不含起始舰船；机库部分为已有成本。'
     };
   }
 }

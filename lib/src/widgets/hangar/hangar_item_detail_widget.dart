@@ -19,6 +19,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../funcs/images.dart';
 import '../ship_info/ship_full_page.dart';
 import 'ccu_optimizor/hangar_util.dart';
+import 'hangar_cover_image.dart';
 
 
 String priceString(int price) {
@@ -567,19 +568,16 @@ Widget getMainPage(ScreenshotController controller, BuildContext context, Hangar
               Container(
                 height: 120,
                 width: 120,
-                child: CachedNetworkImage(
-                    imageUrl: hangarItem.image,
-                    placeholder: (context, url) => LoadingAnimationWidget.threeArchedCircle(color: Theme.of(context).indicatorColor, size: 60),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
-                    imageBuilder: (context, imageProvider) => Container(
-                      decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: imageProvider,
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius: const BorderRadius.all(Radius.circular(10))
-                      ),
-                    )
+                child: Selector<MainDataModel, bool>(
+                  selector: (_, model) => model.preferHangarShipImage,
+                  builder: (_, preferShipImage, __) => HangarCoverImage(
+                    item: hangarItem,
+                    preferShipImage: preferShipImage,
+                    width: 120,
+                    height: 120,
+                    loadingSize: 60,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
