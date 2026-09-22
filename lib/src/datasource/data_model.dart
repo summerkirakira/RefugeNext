@@ -2122,7 +2122,8 @@ class MainDataModel extends ChangeNotifier {
 
 
 
-  Future<void> updateCurrentUser(User newUser) async {
+  Future<void> updateCurrentUser(User newUser,
+      {bool refreshInBackground = false}) async {
     final selectionVersion = ++_userSelectionVersion;
     final rsiApiClient = RsiApiClient();
     final prefs = await SharedPreferences.getInstance();
@@ -2142,11 +2143,26 @@ class MainDataModel extends ChangeNotifier {
     await prefs.setString('vip.kirakira.user.handle', selected.handle);
     if (selectionVersion != _userSelectionVersion) return;
     _currentUser = selected;
-    await rsiApiClient.refreshCsrfToken();
+    notifyListeners();
+
+    // 登录已完成，官网令牌刷新和好友同步不能阻塞退出验证码页。
+    final refresh = _refreshCurrentUserServices(selectionVersion);
+    if (refreshInBackground) {
+      unawaited(refresh.catchError((Object error, StackTrace stack) {
+        debugPrint('登录后同步失败: ${error.runtimeType}');
+      }));
+    } else {
+      await refresh;
+    }
+  }
+
+  Future<void> _refreshCurrentUserServices(int selectionVersion) async {
+    await RsiApiClient().refreshCsrfToken();
     if (selectionVersion != _userSelectionVersion) return;
 
     // 重连 WS（旧连接是前一个账号的）
     await SpectrumWsService().disconnect();
+    if (selectionVersion != _userSelectionVersion) return;
     SpectrumWsService().connect();
     _spectrumEventSub?.cancel();
     _spectrumEventSub = SpectrumWsService().eventStream.listen(_onSpectrumEvent);

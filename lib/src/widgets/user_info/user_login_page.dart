@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,7 @@ Future<bool?> openLoginPage(BuildContext context) {
       builder: (_) => UserLoginPage(onSignedIn: () async {
         final user = await UserRepo().getCurrentUser();
         if (user == null) throw StateError('登录信息未保存');
-        await model.updateCurrentUser(user);
+        await model.updateCurrentUser(user, refreshInBackground: true);
       }),
     ),
   );
@@ -53,6 +54,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
   Uint8List? _captcha;
   bool _processing = false;
   bool _hidePassword = true;
+  bool _authenticated = false;
   String? _error;
 
   @override
@@ -85,13 +87,20 @@ class _UserLoginPageState extends State<UserLoginPage> {
   }
 
   Future<void> _submit() async {
-    if (_processing || !_formKey.currentState!.validate()) return;
+    if (_processing || (!_authenticated && !_formKey.currentState!.validate())) {
+      return;
+    }
     FocusScope.of(context).unfocus();
     setState(() {
       _processing = true;
       _error = null;
     });
     try {
+      // 验证码只能使用一次；账号切换失败后仅重试本地切换，不重复验证。
+      if (_authenticated) {
+        await _finishSignIn();
+        return;
+      }
       final status = _step == _LoginStep.emailCode
           ? await widget.secondStep(
               _email.text.trim(), _password.text, _verification.text.trim())
@@ -104,10 +113,8 @@ class _UserLoginPageState extends State<UserLoginPage> {
             );
       if (!mounted) return;
       if (status.success) {
-        await widget.onSignedIn();
-        if (!mounted) return;
-        setState(() => _processing = false);
-        Navigator.of(context).pop(true);
+        _authenticated = true;
+        await _finishSignIn();
       } else if (status.needCode) {
         setState(() {
           _step = _LoginStep.emailCode;
@@ -128,11 +135,39 @@ class _UserLoginPageState extends State<UserLoginPage> {
       } else {
         setState(() => _error = status.msg.isEmpty ? '登录未成功，请重试' : status.msg);
       }
-    } catch (_) {
-      if (mounted) setState(() => _error = '登录暂未完成，请检查网络后重试');
+    } catch (error, stack) {
+      // 不记录异常正文/请求内容，避免将密码、验证码或 Cookie 写入日志。
+      debugPrint('登录失败（${_authenticated ? '切换账号' : _step.name}）: '
+          '${error.runtimeType}\n$stack');
+      if (mounted) setState(() => _error = _loginErrorMessage(error));
     } finally {
       if (mounted) setState(() => _processing = false);
     }
+  }
+
+  Future<void> _finishSignIn() async {
+    await widget.onSignedIn();
+    if (!mounted) return;
+    setState(() => _processing = false);
+    Navigator.of(context).pop(true);
+  }
+
+  String _loginErrorMessage(Object error) {
+    if (_authenticated) return '验证已通过，切换账号失败，请点击重试';
+    if (error is DioException) {
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return '连接官网失败，请检查网络后重试';
+      }
+      final status = error.response?.statusCode;
+      if (status != null) return '官网请求失败（$status），请稍后重试';
+    }
+    if (error is FormatException || error is TypeError) {
+      return '官网返回的数据无法解析，请稍后重试';
+    }
+    return '登录处理失败，请稍后重试';
   }
 
   InputDecoration _decoration(String label, IconData icon,
@@ -220,7 +255,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                           TextFormField(
                             key: const ValueKey('login-email'),
                             controller: _email,
-                            enabled: !_processing,
+                            enabled: !_processing && !_authenticated,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                             autofillHints: const [AutofillHints.username],
@@ -236,7 +271,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                           TextFormField(
                             key: const ValueKey('login-password'),
                             controller: _password,
-                            enabled: !_processing,
+                            enabled: !_processing && !_authenticated,
                             obscureText: _hidePassword,
                             autocorrect: false,
                             enableSuggestions: false,
@@ -289,7 +324,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                           TextFormField(
                             key: ValueKey(_step),
                             controller: _verification,
-                            enabled: !_processing,
+                            enabled: !_processing && !_authenticated,
                             autocorrect: false,
                             textInputAction: TextInputAction.done,
                             autofillHints: captcha
@@ -323,7 +358,11 @@ class _UserLoginPageState extends State<UserLoginPage> {
                                   dimension: 22,
                                   child:
                                       CircularProgressIndicator(strokeWidth: 2))
-                              : Text(credentials ? '登录' : '继续登录'),
+                              : Text(_authenticated
+                                  ? '重试进入应用'
+                                  : credentials
+                                      ? '登录'
+                                      : '继续登录'),
                         ),
                         if (!credentials) ...[
                           const SizedBox(height: 12),
@@ -332,6 +371,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                                 ? null
                                 : () => setState(() {
                                       _step = _LoginStep.credentials;
+                                      _authenticated = false;
                                       _error = null;
                                       _verification.clear();
                                     }),

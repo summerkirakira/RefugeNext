@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:refuge_next/src/funcs/login.dart';
@@ -162,13 +163,16 @@ void main() {
     var attempts = 0;
     await open(tester,
         first: ({required email, required password, captcha}) async {
-      if (++attempts == 1) throw StateError('offline');
+      if (++attempts == 1) {
+        throw DioException.connectionError(
+            requestOptions: RequestOptions(path: '/signin'), reason: 'offline');
+      }
       return status(code: true);
     });
     await credentials(tester);
     await submit(tester);
     await tester.pumpAndSettle();
-    expect(find.text('登录暂未完成，请检查网络后重试'), findsOneWidget);
+    expect(find.text('连接官网失败，请检查网络后重试'), findsOneWidget);
     expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
         isNotNull);
     await submit(tester);
@@ -178,6 +182,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('登录 RSI 账号'), findsOneWidget);
     expect(find.text(' test@example.com '), findsOneWidget);
+  });
+
+  testWidgets('验证码通过后切换账号失败，重试不重复提交一次性验证码', (tester) async {
+    var codeSubmissions = 0;
+    var selections = 0;
+    await open(tester,
+        first: ({required email, required password, captcha}) async =>
+            status(code: true),
+        second: (_, __, code) async {
+          codeSubmissions++;
+          return status(success: true);
+        },
+        onSignedIn: () async {
+          if (++selections == 1) throw StateError('selection failed');
+        });
+    await credentials(tester);
+    await submit(tester);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), '123456');
+    await submit(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('验证已通过，切换账号失败，请点击重试'), findsOneWidget);
+    expect(find.text('重试进入应用'), findsOneWidget);
+    await submit(tester);
+    await tester.pumpAndSettle();
+    expect(codeSubmissions, 1);
+    expect(selections, 2);
+    expect(find.byType(UserLoginPage), findsNothing);
+  });
+
+  testWidgets('官网数据解析异常不会误报网络问题，按钮恢复可操作', (tester) async {
+    await open(tester,
+        first: ({required email, required password, captcha}) async =>
+            status(code: true),
+        second: (_, __, ___) async => throw const FormatException('bad data'));
+    await credentials(tester);
+    await submit(tester);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), '123456');
+    await submit(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('官网返回的数据无法解析，请稍后重试'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNotNull);
   });
 
   for (final width in [320.0, 1100.0]) {

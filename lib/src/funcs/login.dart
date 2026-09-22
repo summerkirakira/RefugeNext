@@ -21,12 +21,16 @@ class LoginStatus {
 
 Future<LoginStatus> loginFirstStep({required String email, required String password, String? captcha}) async {
   final rsiClient = RsiApiClient();
-  final previousDevice = rsiClient.rsiDevice;
-  final resetting = rsiClient.session.reset(device: previousDevice);
+  if (captcha == null || captcha.isEmpty) {
+    final previousDevice = rsiClient.rsiDevice;
+    final resetting = rsiClient.session.reset(device: previousDevice);
+    final generation = rsiClient.session.generation;
+    await resetting;
+    rsiClient.session.assertGeneration(generation);
+    rsiClient.xsrfToken = '';
+  }
+  // 图片验证码属于上一请求创建的挑战，提交时必须保留会话。
   final loginGeneration = rsiClient.session.generation;
-  await resetting;
-  rsiClient.session.assertGeneration(loginGeneration);
-  rsiClient.xsrfToken = '';
 
   if (email == "934869815@qq.com") {
     rsiClient.setRSIDevice(device: "rtscszhpn5alodol14uj4v8dnb");
@@ -64,6 +68,16 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
     );
   }
 
+  final details = loginResponse.data;
+  if (details?.device_id != null) {
+    rsiClient.setRSIDevice(device: details!.device_id!);
+  }
+  if (details != null && details.session_id.isNotEmpty) {
+    rsiClient.setRSIToken(token: details.session_id);
+  }
+  final challenge = _challengeStatus(loginResponse.code, loginResponse.msg);
+  if (challenge != null) return challenge;
+
   if (loginResponse.data == null) {
     showToast(message: "登录信息为空QAQ，错误代码: ${loginResponse.code}");
     return LoginStatus(
@@ -72,14 +86,6 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
         needCode: false,
         needCaptcha: false
     );
-  }
-
-  if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.device_id != null) {
-    rsiClient.setRSIDevice(device: loginResponse.data!.device_id!);
-  }
-
-  if (loginResponse.code != "ErrNoGamePackage" && loginResponse.data!.session_id.isNotEmpty) {
-    rsiClient.setRSIToken(token: loginResponse.data!.session_id);
   }
 
   if (loginResponse.success == 1 || loginResponse.code == "ErrNoGamePackage") {
@@ -102,27 +108,18 @@ Future<LoginStatus> loginFirstStep({required String email, required String passw
         msg: loginResponse.msg,
         needCode: false,
         needCaptcha: false);
-  } else {
-    if (loginResponse.code == "ErrCaptchaRequiredLauncher") {
-      return LoginStatus(
-          success: false,
-          msg: loginResponse.msg,
-          needCaptcha: true,
-          needCode: false);
-    } else if (loginResponse.code == "ErrMultiStepRequired") {
-      return LoginStatus(
-          success: false,
-          msg: loginResponse.msg,
-          needCode: true,
-          needCaptcha: false);
-    } else {
-      return LoginStatus(
-          success: false,
-          msg: loginResponse.msg,
-          needCode: false,
-          needCaptcha: false);
-    }
   }
+  return LoginStatus(success: false, msg: loginResponse.msg,
+      needCode: false, needCaptcha: false);
+}
+
+LoginStatus? _challengeStatus(String code, String message) {
+  if (code != 'ErrCaptchaRequiredLauncher' && code != 'ErrMultiStepRequired') {
+    return null;
+  }
+  return LoginStatus(success: false, msg: message,
+      needCode: code == 'ErrMultiStepRequired',
+      needCaptcha: code == 'ErrCaptchaRequiredLauncher');
 }
 
 Future<LoginStatus> loginSecondStep(
@@ -131,6 +128,9 @@ Future<LoginStatus> loginSecondStep(
   final loginGeneration = rsiClient.session.generation;
 
   final loginResponse = await rsiClient.loginWithCode(code: code);
+
+  final challenge = _challengeStatus(loginResponse.code, loginResponse.msg);
+  if (challenge != null) return challenge;
 
   if (loginResponse.data == null && loginResponse.code != "ErrNoGamePackage") {
     return LoginStatus(success: false, msg: loginResponse.msg, needCode: false, needCaptcha: false);

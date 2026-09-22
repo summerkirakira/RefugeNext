@@ -15,6 +15,7 @@ import '../datasource/models/spectrum/spectrum_message.dart';
 import '../funcs/toast.dart';
 import '../services/rsi_session_service.dart';
 import 'hangar/property.dart';
+import 'parsers/launcher_login_parser.dart';
 import 'utils.dart';
 
 class RsiApiClient {
@@ -218,7 +219,7 @@ class RsiApiClient {
       "captcha": captcha,
       "remember": true,
     });
-    return LauncherLoginProperty.fromJson(response.data);
+    return parseLauncherLoginResponse(response.data);
   }
 
   Future<LauncherLoginProperty> loginWithCode({required String code}) async {
@@ -229,7 +230,7 @@ class RsiApiClient {
       "device_type": "computer",
       "duration": "year",
     });
-    return LauncherLoginProperty.fromJson(response.data);
+    return parseLauncherLoginResponse(response.data);
   }
 
   Future<Uint8List?> getCaptchaImage() async {
@@ -599,4 +600,3 @@ class RsiApiClient {
     }
   }
 }
-

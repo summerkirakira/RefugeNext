@@ -1,11 +1,21 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:refuge_next/src/datasource/models/user.dart';
+import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:refuge_next/src/repo/user.dart';
+
+class _LoginModel extends MainDataModel {
+  @override
+  Future<void> initUser() async {}
+  @override
+  Future<void> initialize() async {}
+}
 
 class _TemporaryPaths extends PathProviderPlatform {
   _TemporaryPaths(this.path);
@@ -53,6 +63,29 @@ void main() {
   test('legacy user without device remains readable', () {
     final json = account('Alice').toJson()..remove('rsiDevice');
     expect(User.fromJson(json).rsiDevice, '');
+  });
+
+  test('登录后官网同步失败不阻塞账号切换，立即通知已登录状态', () async {
+    final model = _LoginModel();
+    addTearDown(model.dispose);
+    final syncFailed = Completer<void>();
+    final originalDebugPrint = debugPrint;
+    debugPrint = (message, {wrapWidth}) {
+      if (message?.startsWith('登录后同步失败:') == true && !syncFailed.isCompleted) {
+        syncFailed.complete();
+      }
+    };
+    addTearDown(() => debugPrint = originalDebugPrint);
+    final notifiedUsers = <String?>[];
+    model.addListener(() => notifiedUsers.add(model.currentUser?.handle));
+    final user = account('Alice');
+    await UserRepo().addUser(user, selectUser: true);
+    // 测试 binding 的 HTTP 客户端返回 400，模拟验证码通过后官网刷新失败。
+    await model.updateCurrentUser(user, refreshInBackground: true);
+    expect(model.currentUser?.handle, 'Alice');
+    expect(notifiedUsers, contains('Alice'));
+    await syncFailed.future.timeout(const Duration(seconds: 5));
+    expect(model.currentUser?.handle, 'Alice');
   });
 
   test('session persistence does not change selected account', () async {
