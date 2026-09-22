@@ -89,6 +89,10 @@ flutter build ios
 flutter build windows
 ```
 
+Windows 构建官网浏览窗口需要将 NuGet CLI 加入 PATH（CI 已自动配置）。
+运行时需要 Microsoft Edge WebView2 Runtime；缺少时 App 会提示安装。
+macOS 与 Windows 的官网网页在独立窗口打开，并沿用 App 登录状态。
+
 ## 联系方式
 
 如有问题或建议，欢迎通过 QQ 群: 689970313交流反馈。

@@ -8,7 +8,7 @@ import 'package:flutter_advanced_avatar/flutter_advanced_avatar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
-import './user_login_bottomsheet.dart';
+import './user_login_page.dart';
 
 
 WoltModalSheetPage getUserSwitchBottomSheet(BuildContext woltContext, BuildContext context, List<User> users) {
@@ -91,8 +91,8 @@ WoltModalSheetPage getUserSwitchBottomSheet(BuildContext woltContext, BuildConte
                 backgroundColor: Theme.of(context).primaryColor,
               ),
               onPressed: () {
-                WoltModalSheet.of(woltContext).addPages([getLoginBottomSheet(woltContext, context)]);
-                WoltModalSheet.of(woltContext).showNext();
+                Navigator.of(woltContext).pop();
+                openLoginPage(context);
               },
               child: const Text('添加新账号'),
             ),

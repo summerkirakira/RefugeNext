@@ -4,7 +4,7 @@ import 'package:refuge_next/src/widgets/hangar/hangar_log/hangar_log_bottomsheet
 import 'hangar_search_bottomsheet.dart';
 import 'hangar_export_bottomsheet.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-import '../user_info/user_login_bottomsheet.dart';
+import '../user_info/user_login_page.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import '../game_logs/game_log_modal.dart';
@@ -37,13 +37,7 @@ class _HangarTopBarState extends State<HangarTopBar> {
             child: dataModel.currentUser == null
                 ? IconButton(
                     onPressed: () {
-                      WoltModalSheet.show<void>(
-                          context: context,
-                          pageListBuilder: (modalSheetContext) {
-                            return [
-                              getLoginBottomSheet(modalSheetContext, context),
-                            ];
-                          });
+                      openLoginPage(context);
                     },
                     icon: const Icon(Icons.search))
                 : Row(

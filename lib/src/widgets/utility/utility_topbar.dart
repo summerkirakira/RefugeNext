@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-import '../user_info/user_login_bottomsheet.dart';
+import '../user_info/user_login_page.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import '../common/status_avatar.dart';
@@ -25,16 +24,7 @@ class _ShopTopBarState extends State<UtilityTopBar> {
           child: Provider.of<MainDataModel>(context).currentUser == null
               ? IconButton(
               onPressed: () {
-                WoltModalSheet.show<void>(
-                    context: context,
-                    pageListBuilder: (modalSheetContext) {
-                      return [
-                        // getSearchBottomSheet(context)
-                        getLoginBottomSheet(modalSheetContext, context),
-                        // getCaptchaInputBottomSheet(modalSheetContext),
-                        // getEmailInputBottomSheet(modalSheetContext)
-                      ];
-                    });
+                openLoginPage(context);
               },
               icon: const Icon(Icons.search))
               : Row(

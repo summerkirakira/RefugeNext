@@ -5,7 +5,7 @@ import 'package:refuge_next/src/widgets/shop/upgrade_shop/upgrade_checkout_botto
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../funcs/validation.dart';
-import '../user_info/user_login_bottomsheet.dart';
+import '../user_info/user_login_page.dart';
 import 'shop_search_bottomsheet.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
@@ -38,16 +38,7 @@ class _ShopTopBarState extends State<ShopTopBar> {
           child: Provider.of<MainDataModel>(context).currentUser == null
               ? IconButton(
               onPressed: () {
-                WoltModalSheet.show<void>(
-                    context: context,
-                    pageListBuilder: (modalSheetContext) {
-                      return [
-                        // getSearchBottomSheet(context)
-                        getLoginBottomSheet(modalSheetContext, context),
-                        // getCaptchaInputBottomSheet(modalSheetContext),
-                        // getEmailInputBottomSheet(modalSheetContext)
-                      ];
-                    });
+                openLoginPage(context);
               },
               icon: const Icon(Icons.search))
               : Row(

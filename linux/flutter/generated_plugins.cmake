@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  desktop_multi_window
   flutter_secure_storage_linux
   open_file_linux
   screen_retriever_linux

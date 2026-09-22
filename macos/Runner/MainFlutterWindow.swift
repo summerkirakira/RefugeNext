@@ -1,6 +1,7 @@
 import Cocoa
 import FlutterMacOS
 import WebKit
+import desktop_multi_window
 
 class MainFlutterWindow: NSWindow {
   override func awakeFromNib() {
@@ -10,6 +11,9 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    FlutterMultiWindowPlugin.setOnWindowCreatedCallback { controller in
+      RegisterGeneratedPlugins(registry: controller)
+    }
     let bridge = RsiCookieBridge()
     let channel = FlutterMethodChannel(name: "vip.kirakira.refuge_next/rsi_cookies",
                                       binaryMessenger: flutterViewController.engine.binaryMessenger)

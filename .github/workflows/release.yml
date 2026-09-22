@@ -55,6 +55,10 @@ jobs:
           flutter build apk --release --target-platform android-arm64
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/refuge-android.apk
 
+      - name: Setup NuGet for WebView2
+        if: matrix.os == 'windows-latest'
+        uses: NuGet/setup-nuget@v2
+
       - name: Build Windows
         if: matrix.os == 'windows-latest'
         run: |
@@ -95,4 +99,4 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

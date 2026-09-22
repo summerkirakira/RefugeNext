@@ -25,9 +25,11 @@ import 'src/datasource/ai_chat_model.dart';
 import 'src/repo/ai_chat.dart';
 import 'src/repo/repo_ai_tool_executor.dart';
 import 'src/widgets/ai_chat/ai_chat_page.dart';
+import 'src/widgets/webview/desktop_browser_app.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (await runDesktopBrowserWindow()) return;
 
   // Windows平台：确保单实例运行
   // 当用户再次点击应用图标时，会唤醒已有实例并显示窗口

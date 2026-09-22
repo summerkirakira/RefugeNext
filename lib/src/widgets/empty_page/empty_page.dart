@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:refuge_next/src/widgets/user_info/user_login_bottomsheet.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:refuge_next/src/widgets/user_info/user_login_page.dart';
 
 class EmptyPage extends StatelessWidget {
-  const EmptyPage({Key? key}) : super(key: key);
+  const EmptyPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +20,7 @@ class EmptyPage extends StatelessWidget {
           const SizedBox(height: 30),
           ElevatedButton(
               onPressed: () {
-                WoltModalSheet.show<void>(
-                    context: context,
-                    pageListBuilder: (modalSheetContext) {
-                      return [
-                        getLoginBottomSheet(modalSheetContext, context),
-                      ];
-                    });
+                openLoginPage(context);
               },
               child: const Text('点此登录'))
         ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
-import '../user_info/user_login_bottomsheet.dart';
+import '../user_info/user_login_page.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'widgets/add_friend_modal.dart';
 import 'widgets/friend_request_modal.dart';
@@ -39,13 +39,7 @@ class _FriendsTopBarState extends State<FriendsTopBar> {
                         ),
                       IconButton(
                           onPressed: () {
-                            WoltModalSheet.show<void>(
-                                context: context,
-                                pageListBuilder: (modalSheetContext) {
-                                  return [
-                                    getLoginBottomSheet(modalSheetContext, context),
-                                  ];
-                                });
+                            openLoginPage(context);
                           },
                           icon: const Icon(
                               Icons.person)), // Use a relevant icon for login prompt
