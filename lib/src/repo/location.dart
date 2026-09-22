@@ -1,5 +1,6 @@
 import '../network/wiki/wiki_api.dart';
 import 'base/versioned_list_repo.dart';
+import 'base/wiki_pagination.dart';
 
 /// 地点仓库。
 ///
@@ -15,6 +16,8 @@ class LocationRepo extends VersionedListRepo<GameStarmapLocation> {
           versionPrefKey: 'app.location.selected_version',
           fromJsonElement: GameStarmapLocation.fromJson,
           toJsonElement: (e) => e.toJson(),
+          // 旧缓存可能仅包含第一页，重新下载后才视为可用。
+          schemaVersion: 2,
         );
 
   factory LocationRepo() => _instance;
@@ -48,13 +51,18 @@ class LocationRepo extends VersionedListRepo<GameStarmapLocation> {
         version: version,
       );
       final body = res.data;
+      if (body?.data == null) {
+        throw StateError('Wiki 第 $page 页缺少数据');
+      }
       final items = body?.data ?? const <GameStarmapLocation>[];
       all.addAll(items);
 
-      final lastPage = body?.meta?.lastPage;
-      if (items.isEmpty ||
-          items.length < _pageSize ||
-          (lastPage != null && page >= lastPage)) {
+      if (!hasMoreWikiPages(
+        page: page,
+        itemCount: items.length,
+        lastPage: body?.meta?.lastPage,
+        maxPages: _maxPages,
+      )) {
         break;
       }
       page++;

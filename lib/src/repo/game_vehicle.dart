@@ -1,6 +1,7 @@
 import '../network/wiki/wiki_api.dart';
 import 'base/filtered_repo_view.dart';
 import 'base/versioned_list_repo.dart';
+import 'base/wiki_pagination.dart';
 
 /// GameVehicle 通用查询方法。
 ///
@@ -81,6 +82,8 @@ class GameVehicleRepo extends VersionedListRepo<GameVehicle>
           versionPrefKey: 'app.game_vehicle.selected_version',
           fromJsonElement: GameVehicle.fromJson,
           toJsonElement: (e) => e.toJson(),
+          // 旧缓存可能仅包含第一页，重新下载后才视为可用。
+          schemaVersion: 2,
         );
 
   factory GameVehicleRepo() => _instance;
@@ -117,13 +120,18 @@ class GameVehicleRepo extends VersionedListRepo<GameVehicle>
         version: version,
       );
       final body = res.data;
+      if (body?.data == null) {
+        throw StateError('Wiki 第 $page 页缺少数据');
+      }
       final items = body?.data ?? const <GameVehicle>[];
       all.addAll(items);
 
-      final lastPage = body?.meta?.lastPage;
-      if (items.isEmpty ||
-          items.length < _pageSize ||
-          (lastPage != null && page >= lastPage)) {
+      if (!hasMoreWikiPages(
+        page: page,
+        itemCount: items.length,
+        lastPage: body?.meta?.lastPage,
+        maxPages: _maxPages,
+      )) {
         break;
       }
       page++;

@@ -44,8 +44,7 @@ void main() {
     test('磁盘信封格式包含 schemaVersion / updatedAt / data', () async {
       await buildStore().write(['x']);
 
-      final contents =
-          await File('${tempDir.path}/items.json').readAsString();
+      final contents = await File('${tempDir.path}/items.json').readAsString();
       final Map<String, dynamic> envelope = jsonDecode(contents);
       expect(envelope['schemaVersion'], 1);
       expect(DateTime.tryParse(envelope['updatedAt'] as String), isNotNull);
@@ -75,6 +74,21 @@ void main() {
       expect(await store.lastUpdated(), isNull);
     });
 
+    test('升级缓存格式后裸数据和无版本信封需要重新下载', () async {
+      final file = File('${tempDir.path}/items.json');
+      for (final value in [
+        ['legacy'],
+        {
+          'data': ['legacy']
+        }
+      ]) {
+        await file.writeAsString(jsonEncode(value));
+        expect(await buildStore(schemaVersion: 2).read(), isNull);
+        expect(await buildStore(schemaVersion: 2).hasCompatibleData(), isFalse);
+        expect(await buildStore().read(), ['legacy']);
+      }
+    });
+
     test('write 后 lastUpdated 非空,且无残留 .tmp 文件', () async {
       final store = buildStore();
       await store.write(['a']);
@@ -91,8 +105,7 @@ void main() {
         directoryPath: tempPath,
       );
       await store.write(['a']);
-      expect(
-          await File('${tempDir.path}/sub/dir/items.json').exists(), isTrue);
+      expect(await File('${tempDir.path}/sub/dir/items.json').exists(), isTrue);
     });
 
     test('clear 删除文件并清空缓存', () async {
@@ -128,12 +141,13 @@ void main() {
   });
 
   group('VersionedJsonStore', () {
-    VersionedJsonStore<List<String>> buildVersioned() {
+    VersionedJsonStore<List<String>> buildVersioned({int schemaVersion = 1}) {
       return VersionedJsonStore.list<String>(
         dirName: 'wiki/test_data',
         fromJsonElement: (json) => json['v'] as String,
         toJsonElement: (e) => {'v': e},
         directoryPath: tempPath,
+        schemaVersion: schemaVersion,
       );
     }
 
@@ -167,8 +181,22 @@ void main() {
       expect(await store.read('4.1'), isNull);
     });
 
+    test('旧缓存不计入可用版本，刷新后可用且保留旧文件直到成功写入', () async {
+      await buildVersioned().write('4.1', ['partial']);
+      final upgraded = buildVersioned(schemaVersion: 2);
+      expect(await upgraded.hasVersion('4.1'), isFalse);
+      expect(await upgraded.listLocalVersions(), isEmpty);
+      expect(await upgraded.read('4.1'), isNull);
+      expect(await buildVersioned().read('4.1'), ['partial']);
+      await upgraded.write('4.1', ['complete']);
+      expect(await upgraded.hasVersion('4.1'), isTrue);
+      expect(await upgraded.listLocalVersions(), ['4.1']);
+      expect(await buildVersioned(schemaVersion: 2).read('4.1'), ['complete']);
+    });
+
     test('版本码净化:非法字符替换为下划线', () async {
-      expect(VersionedJsonStore.sanitizeVersion('4.2 PTU/live'), '4.2_PTU_live');
+      expect(
+          VersionedJsonStore.sanitizeVersion('4.2 PTU/live'), '4.2_PTU_live');
 
       final store = buildVersioned();
       await store.write('4.2 PTU/live', ['a']);

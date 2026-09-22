@@ -66,6 +66,25 @@ class JsonFileStore<T> {
     });
   }
 
+  bool _matchesSchema(Object? decoded) {
+    final version =
+        decoded is Map<String, dynamic> && decoded.containsKey('data')
+            ? decoded['schemaVersion'] ?? 1
+            : 1;
+    return version == schemaVersion;
+  }
+
+  /// 仅检查文件和缓存版本，不反序列化领域模型。旧格式视为版本 1。
+  Future<bool> hasCompatibleData() async {
+    if (_cache != null) return true;
+    try {
+      final file = await _file;
+      return _matchesSchema(jsonDecode(await file.readAsString()));
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// 原子写入磁盘(先写 `.tmp` 再 rename)并更新内存缓存与 updatedAt。
   Future<void> write(T value) {
     return _lock.synchronized(() async {
@@ -120,15 +139,12 @@ class JsonFileStore<T> {
       final file = await _file;
       final contents = await file.readAsString();
       final decoded = jsonDecode(contents);
+      if (!_matchesSchema(decoded)) return null;
 
       Object? data;
       DateTime? updatedAt;
       if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
         // 信封格式
-        final version = decoded['schemaVersion'];
-        if (version is int && version != schemaVersion) {
-          return null;
-        }
         final updatedAtRaw = decoded['updatedAt'];
         if (updatedAtRaw is String) {
           updatedAt = DateTime.tryParse(updatedAtRaw);

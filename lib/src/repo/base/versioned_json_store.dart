@@ -82,7 +82,8 @@ class VersionedJsonStore<T> {
       final versions = <String>[];
       await for (final entity in dir.list()) {
         if (entity is File && entity.path.endsWith('.json')) {
-          versions.add(p.basenameWithoutExtension(entity.path));
+          final version = p.basenameWithoutExtension(entity.path);
+          if (await hasVersion(version)) versions.add(version);
         }
       }
       versions.sort();
@@ -92,17 +93,9 @@ class VersionedJsonStore<T> {
     }
   }
 
-  /// 本地是否已存在指定版本的数据文件。
-  Future<bool> hasVersion(String version) async {
-    try {
-      final root = await _directoryPath();
-      final file =
-          File(p.join(root, dirName, '${sanitizeVersion(version)}.json'));
-      return file.exists();
-    } catch (e) {
-      return false;
-    }
-  }
+  /// 本地是否存在当前缓存格式的数据；旧格式不会阻止同步器重新下载。
+  Future<bool> hasVersion(String version) =>
+      _storeFor(version).hasCompatibleData();
 
   /// 删除指定版本的本地数据。
   Future<void> delete(String version) async {
