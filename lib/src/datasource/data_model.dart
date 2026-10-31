@@ -796,7 +796,7 @@ class MainDataModel extends ChangeNotifier {
     if (toId == null) {
       int totalWbNumber = 0;
       for (var ship in upgradeToShip) {
-        if (ship.skus != null && ship.skus!.length > 1) {
+        if (ship.skus?.any((sku) => sku.isWarbond && sku.canPurchase) == true) {
           totalWbNumber += 1;
         }
       }

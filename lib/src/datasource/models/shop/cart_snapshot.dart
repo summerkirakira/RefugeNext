@@ -99,8 +99,8 @@ class CartTax {
   final int amount;
 }
 
-String cartMoney(int cents, String currency) {
-  final value = (cents.abs() / 100).toStringAsFixed(2);
+String cartMoney(int cents, String currency, {int decimalDigits = 2}) {
+  final value = (cents.abs() / 100).toStringAsFixed(decimalDigits);
   final sign = cents < 0 ? '-' : '';
   return switch (currency) {
     'USD' => '$sign\$$value',

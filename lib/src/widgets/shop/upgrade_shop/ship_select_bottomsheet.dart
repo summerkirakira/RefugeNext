@@ -1,252 +1,301 @@
-import 'package:provider/provider.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-import 'package:flutter/material.dart';
-import '../../../datasource/models/shop/upgrade_ship_info.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 
-List<int> getSkuPrice(UpgradeShipInfo ship) {
-  int leastPrice = 0;
-  int mostPrice = 0;
+import '../../../datasource/models/shop/cart_snapshot.dart' show cartMoney;
+import '../../../datasource/models/shop/upgrade_ship_info.dart';
 
-  for (var sku in ship.skus!) {
-    if (sku.price! < leastPrice || leastPrice == 0) {
-      leastPrice = sku.price!;
-    }
-    if (sku.price! > mostPrice) {
-      mostPrice = sku.price!;
-    }
-  }
+String upgradeShipName(UpgradeShipInfo ship) =>
+    ship.chineseName.isNotEmpty ? ship.chineseName : (ship.name ?? '未知舰船');
 
-  if (ship.shipAlias != null) {
-    return [leastPrice ~/ 100, ship.shipAlias!.getHighestSku() ~/ 100];
-  }
-
-  return [leastPrice ~/ 100, mostPrice ~/ 100];
+class ShipPickerState {
+  String query = '';
+  bool restricted = false, ascending = true;
+  double offset = 0;
 }
 
-class ShipItem extends StatelessWidget {
-  final UpgradeShipInfo ship;
-  final Function(UpgradeShipInfo) onSelected;
-  bool isFromShip = false;
+Future<UpgradeShipInfo?> selectUpgradeShip(BuildContext context,
+        {required List<UpgradeShipInfo> ships,
+        required bool source,
+        required String currency,
+        required ShipPickerState state,
+        int? selectedId}) =>
+    showModalBottomSheet<UpgradeShipInfo>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (_) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * .85,
+        child: UpgradeShipPicker(
+            ships: ships,
+            source: source,
+            currency: currency,
+            state: state,
+            selectedId: selectedId),
+      ),
+    );
 
-  ShipItem(this.ship, this.onSelected, this.isFromShip);
+class UpgradeShipPicker extends StatefulWidget {
+  const UpgradeShipPicker(
+      {super.key,
+      required this.ships,
+      required this.source,
+      required this.currency,
+      required this.state,
+      this.selectedId});
+  final List<UpgradeShipInfo> ships;
+  final bool source;
+  final String currency;
+  final ShipPickerState state;
+  final int? selectedId;
+  @override
+  State<UpgradeShipPicker> createState() => _UpgradeShipPickerState();
+}
 
-  Widget getPriceWidget(BuildContext context) {
-    if (ship.skus == null) {
-      if (ship.shipAlias != null) {
-        return Row(
-          children: [
-            Text('\$',
-                style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
-            Text(
-              (ship.shipAlias!.getHighestSku() ~/ 100).toString(),
-              style: TextStyle(fontSize: 20),
-            ),
-          ],
-        );
-      }
-      return const Text('无价格');
-    }
-    if (!isFromShip && ship.skus != null && ship.skus!.length > 1) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (ship.skus != null && ship.skus!.length > 1)
-            Row(
-              children: [
-                Text(
-                  '\$${getSkuPrice(ship)[1]}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).hintColor,
-                    decoration: TextDecoration.lineThrough,
-                  ),
+class _UpgradeShipPickerState extends State<UpgradeShipPicker> {
+  late final _search = TextEditingController(text: widget.state.query);
+  late final _scroll =
+      ScrollController(initialScrollOffset: widget.state.offset);
 
-                ),
-              ],
-            ),
-          Row(
-            children: [
-              Text('\$',
-                  style: TextStyle(
-                      fontSize: 12, color: Theme.of(context).hintColor)),
-              Text(
-                getSkuPrice(ship)[0].toString(),
-                style: TextStyle(fontSize: 20),
-              ),
-            ],
-          ),
-        ],
-      );
-    } else {
-      return Row(
-        children: [
-          Text('\$',
-              style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
-          Text(
-            getSkuPrice(ship)[1].toString(),
-            style: TextStyle(fontSize: 20),
-          ),
-        ],
-      );
-    }
+  int? _price(UpgradeShipInfo ship) => ship.msrp;
+
+  void _changed(VoidCallback change) {
+    setState(change);
+    widget.state.offset = 0;
+    if (_scroll.hasClients) _scroll.jumpTo(0);
+  }
+
+  @override
+  void dispose() {
+    if (_scroll.hasClients) widget.state.offset = _scroll.offset;
+    _scroll.dispose();
+    _search.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        onSelected(ship);
-      },
-      child: Stack(
-        children: [
-          Card(
-              elevation: 0,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                      height: 80,
-                      width: 120,
-                      child: CachedNetworkImage(
-                          imageUrl: ship.medias!.productThumbMediumAndSmall!,
-                          errorWidget: (context, url, error) => Icon(Icons.error),
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                  fit: BoxFit.cover,
-                                ),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(5),
-                                  bottomLeft: Radius.circular(5),
-                                )),
-                          ))),
-                  Container(
-                    // width: 240,
-                    height: 80,
-                    child: Container(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            left: 10, top: 2, right: 10, bottom: 0
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            if (ship.skus != null && ship.skus!.length > 1)
-                              Text(ship.chineseName,
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    color: Colors.orange
-                                  ))
-                            else
-                              Text(ship.chineseName,
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                  )),
-                            Text(ship.focus!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                            Spacer(),
-                            Padding(padding: const EdgeInsets.all(0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    getPriceWidget(context),
-                                  ],
-                                )
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )),
-          // if (ship.skus != null && ship.skus!.length > 1)
-          //   Positioned(
-          //     right: 0,
-          //     bottom: 0,
-          //     child: Container(
-          //       // decoration: BoxDecoration(
-          //       //   color: Colors.orange, // 设置背景颜色
-          //       //   shape: BoxShape.rectangle, // 设置形状为圆形
-          //       // ),
-          //       child: Icon(
-          //         Icons.sell,
-          //         color: Colors.orange,
-          //         size: 30,
-          //       ),
-          //     ),
-          //   )
-        ],
-      ),
-    );
+    final key = widget.state.query.toLowerCase().trim();
+    final ships = widget.ships.where((s) {
+      if (!widget.source && !(s.skus?.any((v) => v.canPurchase) ?? false)) {
+        return false;
+      }
+      if (widget.state.restricted &&
+          (widget.source
+              ? s.owned != true
+              : !(s.skus?.any((v) => v.isWarbond && v.canPurchase) ?? false))) {
+        return false;
+      }
+      final words =
+          '${s.name} ${s.chineseName} ${s.shipAlias?.alias.join(' ') ?? ''} ${s.manufacturer?.name ?? ''}'
+              .toLowerCase();
+      return key.split(RegExp(r'\s+')).every(words.contains);
+    }).toList()
+      ..sort((a, b) {
+        final x = _price(a), y = _price(b);
+        if (x == null) return y == null ? 0 : 1;
+        if (y == null) return -1;
+        final order = widget.state.ascending ? x.compareTo(y) : y.compareTo(x);
+        return order != 0 ? order : (a.name ?? '').compareTo(b.name ?? '');
+      });
+    const label = '价格';
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Theme(
+        data: theme.copyWith(
+          chipTheme: theme.chipTheme.copyWith(
+            backgroundColor: colors.surfaceContainerLow,
+            selectedColor: colors.primary.withValues(alpha: .09),
+            side: BorderSide.none,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            labelStyle:
+                theme.textTheme.labelLarge?.copyWith(color: colors.onSurface),
+            checkmarkColor: colors.primary,
+          ),
+        ),
+        child: Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+          child: Column(children: [
+            Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
+                child: Row(children: [
+                  Expanded(
+                      child: Text(widget.source ? '选择起始舰船' : '选择目标舰船',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w700))),
+                  IconButton(
+                      tooltip: '关闭选船',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close)),
+                ])),
+            Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (value) =>
+                      _changed(() => widget.state.query = value),
+                  decoration: InputDecoration(
+                      hintText: '搜索中文名、英文名或别名',
+                      filled: true,
+                      fillColor: colors.surfaceContainerLow,
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: widget.state.query.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: '清空搜索',
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                _search.clear();
+                                _changed(() => widget.state.query = '');
+                              }),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12))),
+                )),
+            SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(children: [
+                  ChoiceChip(
+                      label: const Text('全部'),
+                      selected: !widget.state.restricted,
+                      onSelected: (_) =>
+                          _changed(() => widget.state.restricted = false)),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                      label: Text(widget.source ? '已拥有' : '战争债券'),
+                      selected: widget.state.restricted,
+                      onSelected: (_) =>
+                          _changed(() => widget.state.restricted = true)),
+                  const SizedBox(width: 8),
+                  ActionChip(
+                      avatar: Icon(
+                          widget.state.ascending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 16),
+                      label: Text(
+                          '$label${widget.state.ascending ? '由低到高' : '由高到低'}'),
+                      onPressed: () => _changed(() =>
+                          widget.state.ascending = !widget.state.ascending)),
+                ])),
+            Expanded(
+                child: ships.isEmpty
+                    ? Center(
+                        child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                                widget.state.restricted && widget.source
+                                    ? '没有匹配的已拥有舰船，可切换“全部”选择起点'
+                                    : '没有匹配的舰船，试试其他名称或筛选条件',
+                                textAlign: TextAlign.center)))
+                    : ListView.builder(
+                        controller: _scroll,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                        itemCount: ships.length,
+                        itemBuilder: (context, index) {
+                          final ship = ships[index];
+                          final price = _price(ship);
+                          return Card(
+                              elevation: 0,
+                              clipBehavior: Clip.antiAlias,
+                              color: ship.id == widget.selectedId
+                                  ? colors.primary.withValues(alpha: .07)
+                                  : colors.surface,
+                              child: InkWell(
+                                  onTap: () => Navigator.pop(context, ship),
+                                  child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            UpgradeShipThumbnail(ship: ship),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                                child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                  Text(upgradeShipName(ship),
+                                                      style: const TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600)),
+                                                  if (ship.name !=
+                                                      upgradeShipName(ship))
+                                                    Text(ship.name ?? '',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall),
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                      price == null
+                                                          ? '待确认'
+                                                          : cartMoney(price,
+                                                              widget.currency,
+                                                              decimalDigits: 0),
+                                                      style: TextStyle(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          fontWeight:
+                                                              FontWeight.w600)),
+                                                  if (widget.source &&
+                                                      ship.owned == true)
+                                                    const Text('已拥有',
+                                                        style: TextStyle(
+                                                            fontSize: 12)),
+                                                  if (!widget.source &&
+                                                      (ship.skus?.any((s) =>
+                                                              s.isWarbond &&
+                                                              s.canPurchase) ??
+                                                          false))
+                                                    const Text('可选战争债券',
+                                                        style: TextStyle(
+                                                            fontSize: 12)),
+                                                ])),
+                                            if (ship.id == widget.selectedId)
+                                              const Icon(Icons.check, size: 20),
+                                          ]))));
+                        })),
+          ]),
+        ));
   }
 }
 
-Widget getPageTitle(bool isFromShip) {
-  if (isFromShip) {
-    return const Padding(
-        padding: EdgeInsets.only(left: 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('请选择起始舰船',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-          ],
-        ));
-  } else {
-    return const Padding(
-        padding: EdgeInsets.only(left: 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('请选择目标舰船',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-          ],
-        ));
+class UpgradeShipThumbnail extends StatelessWidget {
+  const UpgradeShipThumbnail({super.key, required this.ship});
+  final UpgradeShipInfo? ship;
+  @override
+  Widget build(BuildContext context) {
+    final url = ship?.medias?.productThumbMediumAndSmall;
+    final placeholder = ColoredBox(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        child: const Center(child: Icon(Icons.rocket_launch_outlined)));
+    return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox(
+            width: 72,
+            height: 56,
+            child: url == null || url.isEmpty
+                ? placeholder
+                : CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => placeholder,
+                    errorWidget: (_, __, ___) => placeholder)));
   }
-}
-
-WoltModalSheetPage getShipSelectBottomSheet(
-    BuildContext context,
-    List<UpgradeShipInfo> ships,
-    Function(UpgradeShipInfo) onSelected,
-    bool isFromShip) {
-  return WoltModalSheetPage(
-      navBarHeight: 50,
-      pageTitle: Padding(
-          padding: EdgeInsets.only(left: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              getPageTitle(isFromShip)
-            ],
-          )),
-      trailingNavBarWidget: Container(
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.2), // 设置背景颜色
-          shape: BoxShape.circle, // 设置形状为圆形
-        ),
-        child: IconButton(
-          padding: const EdgeInsets.all(5),
-          icon: const Icon(Icons.close, size: 22),
-          onPressed: Navigator.of(context).pop,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            for (var ship in ships) ShipItem(ship, onSelected, isFromShip),
-            if (ships.length < 3)
-              const SizedBox(
-                height: 100,
-              )
-          ],
-        ),
-      ));
 }

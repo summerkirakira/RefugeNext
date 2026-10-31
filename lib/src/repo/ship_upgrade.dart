@@ -70,7 +70,7 @@ class ShipUpgradeRepo {
     if (response == null) {
       throw StateError('无法读取商店 CCU 目录');
     }
-    // 保存初始化响应；升级界面的筛选会改写 _shipUpgrade 中的 SKU。
+    // 保存基础目录；每次筛选返回独立的舰船与 SKU 快照。
     _planningCatalog = ShipUpgradeCatalog(query.catalogData!, DateTime.now());
     _shipUpgrade = response;
     return response;
@@ -96,8 +96,10 @@ class ShipUpgradeRepo {
 
   Future<List<List<UpgradeShipInfo>>> filterShipUpgrade(
       int? fromId, int? toId) async {
+    final generation = rsiApiClient.session.generation;
     final response =
         await FilterUpgradeShip(fromId: fromId, toId: toId).execute();
+    rsiApiClient.session.assertGeneration(generation);
 
     List<int> fromIds = [];
     List<int> toIds = [];
@@ -117,24 +119,21 @@ class ShipUpgradeRepo {
 
   List<UpgradeShipInfo> getShipsByIds(
       List<int> idList, List<List<Skus>>? toSkus) {
-    List<UpgradeShipInfo> result = [];
-    final upgradeMap = {for (var upgrade in _shipUpgrade) upgrade.id: upgrade};
-    if (upgradeMap.isEmpty) {
-      return result;
-    }
-    List<UpgradeShipInfo> ships = [];
-    for (var id in idList) {
-      if (upgradeMap.containsKey(id)) {
-        ships.add(upgradeMap[id]!);
-      } else {
-        debugPrint("Warning: Ship with ID $id not found in upgrade map.");
+    final upgradeMap = {for (var ship in _shipUpgrade) ship.id: ship};
+    final ships = <UpgradeShipInfo>[];
+    for (var i = 0; i < idList.length; i++) {
+      final source = upgradeMap[idList[i]];
+      if (source == null) {
+        debugPrint('Ship with ID ${idList[i]} not found in upgrade catalog.');
+        continue;
       }
-    }
-
-    if (toSkus != null) {
-      for (int i = 0; i < toSkus.length; i++) {
-        ships[i].skus = toSkus[i];
+      // Do not mutate the shared catalog or match SKU arrays after dropping IDs.
+      final ship = UpgradeShipInfo.fromJson(source.toJson());
+      if (toSkus != null) {
+        ship.skus =
+            toSkus[i].map((sku) => Skus.fromJson(sku.toJson())).toList();
       }
+      ships.add(ship);
     }
     return ships;
   }

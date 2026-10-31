@@ -1,26 +1,17 @@
-import 'package:refuge_next/src/network/graphql/shop/clear_cart.dart';
-
 import '../../api_service.dart' show RsiApiClient;
 
-
 class ApplyUpgradeToken {
-
   final String upgradeToken;
-
   ApplyUpgradeToken({required this.upgradeToken});
 
   Future<void> execute() async {
-    final data = {
-      "jwt": upgradeToken,
-    };
-
-    final response = await RsiApiClient().basicPost(endpoint: "api/store/v2/cart/token", data: data);
-    if (response.data!["success"] == 0) {
-      if (response.data!['msg'] == 'Invalid cart') {
-        await ClearCart().execute();
-        throw Exception("库存错误，已清空购物车，请重试");
-      }
-      throw Exception(response.data!["code"]);
+    final response = await RsiApiClient().basicPost(
+        endpoint: 'api/store/v2/cart/token', data: {'jwt': upgradeToken});
+    final body = response.data;
+    if (body is Map && body['success'] == 1) return;
+    if (body is Map && body['msg'] == 'Invalid cart') {
+      throw StateError('购物车状态不兼容，请检查现有商品后再添加升级包');
     }
+    throw StateError('未能确认升级包已加入购物车，请检查购物车');
   }
 }

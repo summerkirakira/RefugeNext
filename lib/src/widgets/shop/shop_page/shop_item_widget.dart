@@ -59,7 +59,7 @@ class ShopItemWidget extends StatelessWidget {
                                           style: const TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 2),
+                                      const SizedBox(height: 6),
                                       CatalogBadges(item: catalogProperty),
                                     ],
                                   ),

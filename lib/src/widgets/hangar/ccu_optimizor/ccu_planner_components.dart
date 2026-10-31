@@ -147,12 +147,14 @@ class CcuShipSelector extends StatelessWidget {
       required this.ship,
       required this.onTap,
       this.compact = false,
-      this.isTarget = false});
+      this.isTarget = false,
+      this.priceText});
   final String label;
   final CcuShipView? ship;
   final VoidCallback? onTap;
   final bool compact;
   final bool isTarget;
+  final String? priceText;
 
   @override
   Widget build(BuildContext context) {
@@ -191,8 +193,8 @@ class CcuShipSelector extends StatelessWidget {
           runSpacing: 4,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            if (ship?.price != null)
-              Text('价格 ${ccuMoney(ship!.price!)}',
+            if (priceText != null || ship?.price != null)
+              Text(priceText ?? '价格 ${ccuMoney(ship!.price!)}',
                   style: theme.textTheme.labelLarge?.copyWith(
                       color: foreground, fontFeatures: _moneyFeatures)),
             Text(ship == null ? '点击选择 →' : '更换舰船 →',

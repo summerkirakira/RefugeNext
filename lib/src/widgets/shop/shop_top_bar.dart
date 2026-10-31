@@ -27,6 +27,7 @@ class ShopTopBar extends StatefulWidget {
 
 class _ShopTopBarState extends State<ShopTopBar> {
   bool _openingCart = false;
+  bool _openingUpgrade = false;
 
   Future<void> _openCart() async {
     if (_openingCart) return;
@@ -98,18 +99,21 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   },
                   icon: const Icon(Icons.refresh),
                 ),
-              GestureDetector(
-                onTap: () async {
-                  await onPressUpgrade(context);
+              IconButton(
+                tooltip: '舰船升级',
+                onPressed: _openingUpgrade ? null : () async {
+                  setState(() => _openingUpgrade = true);
+                  try { await onPressUpgrade(context); }
+                  finally { if (mounted) setState(() => _openingUpgrade = false); }
                 },
-                child: badges.Badge(
+                icon: ExcludeSemantics(child: badges.Badge(
                   showBadge: Provider.of<MainDataModel>(context).upgradeWbNumber > 0,
                   badgeStyle: badges.BadgeStyle(
                     badgeColor: Colors.orange,
                   ),
                   badgeContent: Text(Provider.of<MainDataModel>(context).upgradeWbNumber.toString(), style: TextStyle(color: Colors.white),),
                   child: Icon(Icons.keyboard_double_arrow_up_outlined, size: 30,),
-                ),
+                )),
               ),
               SizedBox(width: 5,),
               IconButton(tooltip: '打开购物车', onPressed: _openingCart ? null : _openCart,

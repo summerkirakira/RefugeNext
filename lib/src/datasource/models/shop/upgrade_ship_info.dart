@@ -15,25 +15,24 @@ class UpgradeShipInfo {
   String chineseName = "";
   ShipAlias? shipAlias;
 
-
   UpgradeShipInfo(
       {this.id,
-        this.name,
-        this.medias,
-        this.manufacturer,
-        this.focus,
-        this.type,
-        this.flyableStatus,
-        this.owned,
-        this.msrp,
-        this.link,
-        this.skus});
+      this.name,
+      this.medias,
+      this.manufacturer,
+      this.focus,
+      this.type,
+      this.flyableStatus,
+      this.owned,
+      this.msrp,
+      this.link,
+      this.skus});
 
   UpgradeShipInfo.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name'];
     medias =
-    json['medias'] != null ? new Medias.fromJson(json['medias']) : null;
+        json['medias'] != null ? new Medias.fromJson(json['medias']) : null;
     manufacturer = json['manufacturer'] != null
         ? new Manufacturer.fromJson(json['manufacturer'])
         : null;
@@ -117,24 +116,39 @@ class Skus {
   String? title;
   bool? available;
   int? price;
+  int? upgradePrice;
   String? body;
   bool? unlimitedStock;
   int? availableStock;
 
   Skus(
       {this.id,
-        this.title,
-        this.available,
-        this.price,
-        this.body,
-        this.unlimitedStock,
-        this.availableStock});
+      this.title,
+      this.available,
+      this.price,
+      this.upgradePrice,
+      this.body,
+      this.unlimitedStock,
+      this.availableStock});
+
+  bool get isWarbond => (title ?? '').toLowerCase().contains('warbond');
+
+  bool get canPurchase =>
+      available == true &&
+      (unlimitedStock == true || (availableStock ?? 0) > 0);
+
+  String get versionName {
+    if (isWarbond) return '战争债券';
+    if ((title ?? '').trim().toLowerCase() == 'standard edition') return '标准版';
+    return title?.trim().isNotEmpty == true ? title!.trim() : '标准版';
+  }
 
   Skus.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     title = json['title'];
     available = json['available'];
     price = json['price'];
+    upgradePrice = json['upgradePrice'];
     body = json['body'];
     unlimitedStock = json['unlimitedStock'];
     availableStock = json['availableStock'];
@@ -146,6 +160,7 @@ class Skus {
     data['title'] = this.title;
     data['available'] = this.available;
     data['price'] = this.price;
+    data['upgradePrice'] = this.upgradePrice;
     data['body'] = this.body;
     data['unlimitedStock'] = this.unlimitedStock;
     data['availableStock'] = this.availableStock;

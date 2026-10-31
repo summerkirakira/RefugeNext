@@ -81,7 +81,7 @@ class FromShips {
 }
 
 class To {
-  String? featured;
+  List<dynamic>? featured;
   List<Ships>? ships;
 
   To({this.featured, this.ships});
