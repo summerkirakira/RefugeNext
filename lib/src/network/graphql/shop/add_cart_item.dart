@@ -1,9 +1,9 @@
-import 'package:refuge_next/src/network/graphql/shop/clear_cart.dart';
-
 import '../../api_service.dart' show RsiApiClient;
+import 'cart_operation_error.dart';
 
 class AddCartItem {
-  final query = r"""mutation AddCartItemMutation($skuId: ID!, $qty: Int!, $identifier: String, $extra: TyAddToCartMetadataInput) {
+  final query =
+      r"""mutation AddCartItemMutation($skuId: ID!, $qty: Int!, $identifier: String, $extra: TyAddToCartMetadataInput) {
   store(name: "pledge") {
     cart {
       mutations {
@@ -20,7 +20,8 @@ class AddCartItem {
   final int qty;
   final String? identifier;
 
-  AddCartItem({required this.skuId, required this.qty, required this.identifier});
+  AddCartItem(
+      {required this.skuId, required this.qty, required this.identifier});
 
   Future<void> execute() async {
     final data = {
@@ -33,13 +34,14 @@ class AddCartItem {
     };
 
     final response = await RsiApiClient().graphql(data: data);
-    if (response.data!["errors"] != null) {
-      if (response.data!["errors"][0]["message"] == "Invalid cart") {
-        await ClearCart().execute();
-        throw Exception("库存错误，已清空购物车，请重试");
-      }
-      throw Exception(response.data!["errors"]);
+    final body = response.data;
+    final errors = body is Map ? body['errors'] : null;
+    if (errors is List && errors.isNotEmpty) {
+      throw CartOperationException.fromErrors(errors);
+    }
+    if (body is! Map ||
+        body['data']?['store']?['cart']?['mutations']?['add'] != true) {
+      throw CartOperationException('未收到加入购物车的成功确认，请检查购物车后重试');
     }
   }
-
 }

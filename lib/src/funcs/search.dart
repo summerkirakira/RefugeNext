@@ -6,6 +6,7 @@ import '../datasource/models/searchProperty.dart';
 import '../datasource/models/hangar.dart';
 import '../datasource/models/shop_search_property.dart';
 import '../datasource/models/shop/catalog_property.dart';
+import 'shop/catalog_price.dart';
 
 
 bool isSearchedType(HangarItem item, List<String> searchType) {
@@ -403,7 +404,7 @@ bool isShopPriceRange(CatalogProperty item, List<String> priceRange) {
     return true;
   }
 
-  final price = item.price.amount;
+  final price = CatalogPrice.forItem(item).current;
 
   for (var range in priceRange) {
     if (range == 'all') {
@@ -518,9 +519,9 @@ List<CatalogProperty> processShopSearch(List<CatalogProperty> items, ShopSearchP
 
 List<CatalogProperty> sortShopByPrice(List<CatalogProperty> items, bool priceOrder) {
   if (priceOrder) {
-    items.sort((a, b) => a.price.amount.compareTo(b.price.amount));
+    items.sort((a, b) => CatalogPrice.forItem(a).current.compareTo(CatalogPrice.forItem(b).current));
   } else {
-    items.sort((a, b) => b.price.amount.compareTo(a.price.amount));
+    items.sort((a, b) => CatalogPrice.forItem(b).current.compareTo(CatalogPrice.forItem(a).current));
   }
   return items;
 }

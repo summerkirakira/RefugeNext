@@ -239,18 +239,7 @@ fragment TyBundleProductFragment on TyProduct {
       final cache = ShopCatalogCache();
       for (final r in resources) {
         if (r is! Map) continue;
-        final id = r['id']?.toString();
-        if (id == null) continue;
-
-        final discounted = (r['nativePrice'] as Map?)?['discounted'] as num?;
-        cache.putDiscounted(id, discounted?.toInt());
-
-        final tags = <String>[];
-        for (final t in (r['tags'] as List?) ?? const []) {
-          final name = (t is Map) ? t['name']?.toString() : null;
-          if (name != null && name.isNotEmpty) tags.add(name);
-        }
-        cache.putTags(id, tags);
+        cache.readItem(r);
       }
     } catch (_) {
       // 附加信息,解析失败时忽略

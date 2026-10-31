@@ -13,6 +13,7 @@ import 'package:refuge_next/src/network/graphql/shop/credit_query.dart';
 import 'package:refuge_next/src/datasource/models/shop/credit_query_property.dart'
     show CreditQueryProperty;
 import 'package:refuge_next/src/funcs/shop/cart.dart';
+import '../../../funcs/shop/catalog_price.dart';
 import 'package:refuge_next/src/funcs/shop/alipay.dart';
 import 'package:refuge_next/src/funcs/validation.dart';
 
@@ -101,7 +102,7 @@ Widget getUpgradeCartWidget(BuildContext context, LineItem item) {
             const Spacer(),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text("\$${item.unitPriceWithTax.amount / 100}",
+              child: Text(catalogMoney(cartItemUnitPrice(item)),
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.right),
             )
@@ -179,7 +180,7 @@ Widget getCatalogCartWidget(BuildContext context, LineItem item) {
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text("\$${item.unitPriceWithTax.amount / 100}",
+                child: Text(catalogMoney(cartItemUnitPrice(item)),
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.right),
               )
@@ -206,10 +207,14 @@ Widget getListItem(BuildContext context, LineItem item) {
   }
 }
 
+int cartItemUnitPrice(LineItem item) => CatalogPrice(
+    original: item.unitPriceWithTax.amount,
+    discounted: item.unitPriceWithTax.discounted).current;
+
 int getCartTotalPrice(StoreData step1query, CreditQueryProperty credit) {
   int total = 0;
   for (var item in step1query.store.cart.lineItems) {
-    total += item.unitPriceWithTax.amount * item.qty;
+    total += cartItemUnitPrice(item) * item.qty;
   }
   total -= credit.store.cart.totals.credits.amount;
   return total;
@@ -308,14 +313,23 @@ Widget getEmptyCartWidget(BuildContext context) {
 }
 
 Future<void> showCartBottomSheet(BuildContext context, {bool isBuyback = false}) async {
+  final open = await prepareCartBottomSheet(context, isBuyback: isBuyback);
+  open();
+}
+
+/// Load first so a caller can retain its success state if cart loading fails.
+Future<VoidCallback> prepareCartBottomSheet(BuildContext context, {bool isBuyback = false}) async {
   final step1query = await Step1Query().execute();
   final creditQuery = await CreditQuery().execute();
 
-  WoltModalSheet.show<void>(
+  return () {
+    if (!context.mounted) return;
+    WoltModalSheet.show<void>(
       context: context,
       pageListBuilder: (modalSheetContext) {
         return [getCartBottomSheet(modalSheetContext, step1query, creditQuery, isBuyback)];
       });
+  };
 }
 
 WoltModalSheetPage getCartBottomSheet(BuildContext context,
