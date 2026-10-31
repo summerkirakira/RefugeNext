@@ -61,6 +61,7 @@ Future<bool> runDesktopBrowserWindow() async {
           if (result?['expired'] == true) throw RsiSessionExpired();
           throw RsiSessionSyncFailed();
         }
+        return result?['restored'] == true;
       },
       onClose: (success) async {
         try {

@@ -30,6 +30,9 @@ import 'package:dio/dio.dart';
 import '../network/parsers/hangar_parser.dart';
 import '../funcs/toast.dart';
 import '../funcs/login.dart';
+import '../funcs/rsi_web_session.dart';
+import '../services/rsi_session_service.dart';
+import '../services/rsi_web_session.dart';
 import '../funcs/game_log_parser.dart';
 import '../services/game_log_service.dart';
 import '../datasource/models/shop/upgrade_ship_info.dart';
@@ -2044,26 +2047,37 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> updateHangarItems() async {
     try {
+      final attempt = RsiWebSessionAttempt();
+      // A stale WebView session otherwise rejects the hangar GET in Dio's
+      // request interceptor, before the HTML parser can trigger login recovery.
+      await rsiWebSession.ensure(attempt);
       final cirnoAuth = await CirnoAuth.getInstance();
       if (!cirnoAuth.isInitialized) {
         await startup();
         await initShipUpgrade();
         await filterShipUpgrade(null, null);
       }
-      await _updateHangarItems();
-    } on ParserError catch (e) {
-      showAlert(message: "登录失效, 正在重新登陆");
-      final result = await reLogin();
-      if (result) {
-        showToast(message: "重新登录成功");
-        _updateHangarItems();
-      } else {
-        showToast(message: "自动登录失败, 请手动登录");
+      try {
+        await _updateHangarItems();
+      } on ParserError {
+        if (attempt.didRelogin) rethrow;
+        showAlert(message: '登录失效，正在重新登录');
+        if (!await reLogin()) throw RsiSessionExpired();
+        // Keep RefreshIndicator active until the retry really completes.
+        await _updateHangarItems();
       }
-      return;
+    } on RsiSessionExpired {
+      showAlert(message: '自动登录未能恢复机库，请在 App 中重新登录');
+    } on RsiSessionChanged {
+      showAlert(message: '账号已切换，请重新刷新机库');
+    } on ParserError {
+      showAlert(message: '机库页面解析失败，已保留原有数据');
     } on DioException catch (e) {
-      showAlert(message: "网络错误: ${e.message}");
-      return;
+      showAlert(message: e.error is RsiSessionExpired
+          ? '登录已失效，请重新登录后刷新机库'
+          : '机库刷新失败，请检查网络；已保留原有数据');
+    } catch (_) {
+      showAlert(message: '机库刷新失败，已保留原有数据');
     }
   }
 
@@ -2091,16 +2105,8 @@ class MainDataModel extends ChangeNotifier {
 
 
   Future<void> _updateHangarItems() async {
-    List<HangarItem> items = [];
-    try {
-      items = await hangarRepo.refreshHangarItems();
-    } on ParserError {
-      rethrow;
-    } catch (e) {
-      // 刷新失败时读取已保存的部分数据
-      items = await hangarRepo.readHangarItems();
-      if (items.isEmpty) rethrow;
-    }
+    // Propagate refresh failures; the current in-memory list stays visible.
+    final items = await hangarRepo.refreshHangarItems();
 
 
     final filteredItems = filterHangarItemsByType(this, items);

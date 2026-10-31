@@ -68,6 +68,9 @@ class RsiSessionService extends ChangeNotifier {
   void setValue(String name, String value) {
     if (!cookieNames.contains(name)) return;
     _cookies[name] = Cookie(name, value)
+      // RSI rotates these cookies on the parent domain. A host-only seed
+      // otherwise survives beside the rotated cookie with a conflicting value.
+      ..domain = origin.host
       ..path = '/'
       ..secure = true
       ..httpOnly = true;

@@ -1,3 +1,4 @@
+import 'cart_operation_error.dart';
 import '../../api_service.dart' show RsiApiClient;
 
 
@@ -444,8 +445,15 @@ fragment TyBundleProductFragment on TyProduct {
     };
 
     final response = await RsiApiClient().graphql(data: data);
-    if (response.data!["errors"] != null) {
-      throw Exception(response.data!["errors"]);
+    final errors = response.data is Map ? response.data['errors'] : null;
+    if (errors is List && errors.isNotEmpty) {
+      throw CartOperationException.fromErrors(errors);
+    }
+    final result = response.data is Map
+        ? (response.data['data']?['store']?['cart']?['mutations']?['update'])
+        : null;
+    if (result == null || result == false) {
+      throw CartOperationException('官网未确认购物车更新，请刷新检查');
     }
   }
 

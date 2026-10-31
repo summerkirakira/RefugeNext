@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../funcs/rsi_web_session.dart';
 import '../../services/rsi_session_service.dart';
+import '../../services/rsi_web_session.dart';
 import '../../services/windows_webview_environment.dart';
 import 'browser_controller.dart';
 
@@ -19,12 +20,14 @@ class FullScreenWebView extends StatefulWidget {
       required this.url,
       this.authenticated = true,
       this.synchronize,
+      this.sessionAttempt,
       this.onClose,
       this.sessionValid});
 
   final String url;
   final bool authenticated;
-  final Future<void> Function()? synchronize;
+  final Future<bool> Function()? synchronize;
+  final RsiWebSessionAttempt? sessionAttempt;
   final Future<void> Function(bool success)? onClose;
   final ValueListenable<bool>? sessionValid;
 
@@ -35,7 +38,8 @@ class FullScreenWebView extends StatefulWidget {
 class _FullScreenWebViewState extends State<FullScreenWebView>
     with WidgetsBindingObserver, WindowListener {
   final _session = RsiSessionService.instance;
-  late final int _generation;
+  late int _generation;
+  late final RsiWebSessionAttempt _attempt;
   BrowserController? _controller;
   windows.WebViewEnvironment? _windowsEnvironment;
   Future<bool>? _syncing;
@@ -58,6 +62,8 @@ class _FullScreenWebViewState extends State<FullScreenWebView>
   void initState() {
     super.initState();
     _generation = _session.generation;
+    _attempt = widget.sessionAttempt ?? RsiWebSessionAttempt();
+    _attempt.account ??= _session.account;
     _currentUrl = widget.url;
     WidgetsBinding.instance.addObserver(this);
     if (widget.authenticated) _session.addListener(_accountChanged);
@@ -88,7 +94,13 @@ class _FullScreenWebViewState extends State<FullScreenWebView>
   void onWindowClose() => unawaited(_close());
 
   void _accountChanged() {
-    if (!mounted) return;
+    if (!mounted || _closing) return;
+    // Automatic login resets credentials for the same account. A real switch
+    // still invalidates the page immediately; recovery is checked again below.
+    if (_attempt.recovering &&
+        (_session.account == null || _session.account == _attempt.account)) {
+      return;
+    }
     if (widget.sessionValid != null
         ? widget.sessionValid!.value
         : _session.generation == _generation) {
@@ -286,14 +298,29 @@ class _FullScreenWebViewState extends State<FullScreenWebView>
 
   Future<bool> _synchronize() async {
     try {
+      bool restored;
       if (widget.synchronize != null) {
-        await widget.synchronize!();
+        restored = await widget.synchronize!();
         if (widget.sessionValid?.value == false) return false;
       } else {
-        await synchronizeRsiWebSession(verifyIdentity: true);
+        restored = await synchronizeAndRecoverRsiWebSession(_attempt);
+      }
+      if (widget.authenticated) {
+        if (restored) {
+          if (_session.account != _attempt.account) throw RsiSessionChanged();
+          _generation = _session.generation;
+        }
         _session.assertGeneration(_generation);
       }
       if (mounted) setState(() => _sessionError = null);
+      if (restored && mounted && !_closing && !_closeRequested) {
+        final uri = Uri.tryParse(_currentUrl);
+        // Load a GET after recovery, never replay a payment form's POST.
+        await _controller?.loadRequest(
+            uri?.host == RsiSessionService.origin.host
+                ? uri!
+                : Uri.parse(widget.url));
+      }
       return true;
     } catch (error) {
       if (mounted) {
@@ -301,6 +328,7 @@ class _FullScreenWebViewState extends State<FullScreenWebView>
             ? '网页登录已失效，请关闭后重试；需要验证码时请在 App 中登录'
             : '登录状态同步失败，请关闭后重试');
       }
+      if (widget.authenticated) _accountChanged();
       return false;
     }
   }

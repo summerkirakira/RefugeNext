@@ -29,3 +29,7 @@ Future<void> synchronizeRsiWebSession({bool verifyIdentity = false}) =>
       (cookies) => RsiApiClient().sessionIdentity(cookies: cookies),
       verifyIdentity: verifyIdentity,
     );
+
+Future<bool> synchronizeAndRecoverRsiWebSession(RsiWebSessionAttempt attempt) =>
+    rsiWebSession.synchronizeWeb(attempt,
+        verify: () => synchronizeRsiWebSession(verifyIdentity: true));

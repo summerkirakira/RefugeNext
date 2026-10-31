@@ -35,6 +35,26 @@ class MemoryCookies implements RsiCookieStore {
   }
 }
 
+// Model the browser distinction between host-only and Domain cookies.
+class DomainCookies implements RsiCookieStore {
+  final jar = <String, Cookie>{};
+  @override
+  Future<void> clear() async => jar.clear();
+  @override
+  Future<void> write(Uri url, List<String> cookies) async {
+    for (final raw in cookies) {
+      final cookie = Cookie.fromSetCookieValue(raw);
+      final domain = cookie.domain?.replaceFirst(RegExp(r'^\.'), '');
+      jar['${domain ?? "host:${url.host}"}|${cookie.path ?? "/"}|${cookie.name}'] =
+          cookie;
+    }
+  }
+
+  @override
+  Future<String> read(Uri url) async =>
+      jar.values.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
+}
+
 void main() {
   late MemoryCookies store;
   late RsiSessionService session;
@@ -104,6 +124,23 @@ void main() {
     expect(store.clears, 1);
     expect(session.value('Rsi-Token'), 'web-rotated==');
     expect(saved.last[1], 'web-rotated==');
+  });
+
+  test('website token rotation replaces the App seed without duplicate cookies',
+      () async {
+    final browser = DomainCookies();
+    final credentials = RsiSessionService(store: browser);
+    await credentials.reset(handle: 'Alice', token: 'old', device: 'device');
+    await credentials.prepareStore();
+    // Actual RSI response uses a domain cookie, not a host-only cookie.
+    await browser.write(RsiSessionService.origin,
+        ['Rsi-Token=web-rotated; Domain=.robertsspaceindustries.com; Path=/']);
+    await credentials.synchronizeFromWeb((header) async {
+      expect(header, contains('Rsi-Token=web-rotated'));
+      expect(header, isNot(contains('Rsi-Token=old')));
+      return 'Alice';
+    }, verifyIdentity: true);
+    expect(credentials.value('Rsi-Token'), 'web-rotated');
   });
 
   test('Switch clears cookies and rejects late previous-account response',
@@ -225,6 +262,109 @@ void main() {
             identity = 'Alice';
             return true;
           });
+    });
+    test('anonymous browser uses existing login and restores cookies once',
+        () async {
+      final attempt = RsiWebSessionAttempt();
+      identity = null;
+      store.values['Rsi-Token'] = 'expired-web';
+      final restored = await coordinator.synchronizeWeb(attempt,
+          verify: () async => throw RsiSessionExpired());
+      expect(restored, isTrue);
+      expect(logins, 1);
+      expect(authorizations, 1);
+      expect(attempt.didRelogin, isTrue);
+      expect(attempt.recovering, isFalse);
+      expect(store.values['Rsi-Token'], 'initial');
+      identity = null;
+      await expectLater(
+          coordinator.synchronizeWeb(attempt,
+              verify: () async => throw RsiSessionExpired()),
+          throwsA(isA<RsiSessionExpired>()));
+      expect(logins, 1);
+      expect(attempt.recovering, isFalse);
+    });
+    test(
+        'native refresh recovers expired web cookies before its request interceptor',
+        () async {
+      await session.prepareStore();
+      store.values['Rsi-Token'] = 'expired-web';
+      Future<void> intercept() => session.synchronizeFromWeb((_) async => null);
+      await expectLater(intercept(), throwsA(isA<RsiSessionExpired>()));
+      coordinator = RsiWebSessionCoordinator(
+          session: session,
+          synchronize: intercept,
+          identify: () async => 'Alice',
+          refreshCsrf: () async {},
+          authorize: () async {
+            authorizations++;
+          },
+          relogin: () async {
+            logins++;
+            await session.reset(
+                handle: 'Alice', token: 'fresh-app', device: 'device-a');
+            return true;
+          });
+      await coordinator.ensure(RsiWebSessionAttempt());
+      // The same interceptor no longer rejects the hangar GET; stale website
+      // credentials were cleared by login and are not copied into the App.
+      await intercept();
+      expect(session.value('Rsi-Token'), 'fresh-app');
+      expect(logins, 1);
+      expect(authorizations, 1);
+      expect(store.values, isEmpty);
+    });
+    test('browser network failure never triggers automatic login', () async {
+      await expectLater(
+          coordinator.synchronizeWeb(RsiWebSessionAttempt(),
+              verify: () async => throw const SocketException('offline')),
+          throwsA(isA<SocketException>()));
+      expect(logins, 0);
+      expect(authorizations, 0);
+      expect(store.clears, 0);
+    });
+    test('valid browser sync does not authorize again or reset cookies',
+        () async {
+      expect(
+          await coordinator.synchronizeWeb(RsiWebSessionAttempt(),
+              verify: () async {}),
+          isFalse);
+      expect(logins, 0);
+      expect(authorizations, 0);
+      expect(store.clears, 0);
+    });
+    test('cart opened during login shares the pending account recovery',
+        () async {
+      final started = Completer<void>();
+      final finish = Completer<void>();
+      coordinator = RsiWebSessionCoordinator(
+          session: session,
+          synchronize: () async {},
+          identify: () async => identity,
+          refreshCsrf: () async {},
+          authorize: () async {
+            authorizations++;
+          },
+          relogin: () async {
+            logins++;
+            await session.reset();
+            started.complete();
+            await finish.future;
+            session.bindAccount('Alice');
+            identity = 'Alice';
+            return true;
+          });
+      identity = null;
+      final first = coordinator.ensure(RsiWebSessionAttempt());
+      await started.future;
+      final nextAttempt = RsiWebSessionAttempt();
+      final next = coordinator.ensure(nextAttempt);
+      finish.complete();
+      await Future.wait([first, next]);
+      expect(logins, 1);
+      expect(authorizations, 1);
+      expect(nextAttempt.account, 'Alice');
+      expect(nextAttempt.didRelogin, isTrue);
     });
     test('valid session does not sign in again', () async {
       await coordinator.ensure(RsiWebSessionAttempt());

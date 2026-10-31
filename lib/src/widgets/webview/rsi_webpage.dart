@@ -41,6 +41,7 @@ Future<bool> openRsiWebview({
         url: url,
         authenticated: authenticated,
         dark: Theme.of(context).brightness == Brightness.dark,
+        attempt: operation,
       );
       // 桌面不替换主窗口路由；窗口显示后允许继续从主界面打开网页。
       _openingRsiPage = false;
@@ -49,7 +50,8 @@ Future<bool> openRsiWebview({
     }
     final navigator = Navigator.of(context);
     final route = CupertinoPageRoute<bool>(
-      builder: (_) => FullScreenWebView(url: url, authenticated: authenticated),
+      builder: (_) => FullScreenWebView(
+          url: url, authenticated: authenticated, sessionAttempt: operation),
     );
     final result = replace
         ? await navigator.pushReplacement<bool, void>(route)

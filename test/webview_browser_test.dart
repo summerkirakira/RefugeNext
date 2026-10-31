@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 import 'package:refuge_next/src/widgets/webview/full_screen_webview.dart';
+import 'package:refuge_next/src/services/rsi_session_service.dart';
+import 'package:refuge_next/src/services/rsi_web_session.dart';
 
 const _url = 'https://robertsspaceindustries.com/account/pledges';
 
@@ -293,7 +295,7 @@ void main() {
   });
 
   testWidgets('独立窗口关闭等待同步且只回调一次，不退出主路由', (tester) async {
-    final syncing = Completer<void>();
+    final syncing = Completer<bool>();
     final results = <bool>[];
     await tester.pumpWidget(MaterialApp(
       home: FullScreenWebView(
@@ -307,7 +309,7 @@ void main() {
     await tester.tap(find.byTooltip('关闭网页'));
     await tester.pump();
     expect(results, isEmpty);
-    syncing.complete();
+    syncing.complete(false);
     await tester.pump();
     expect(results, [true]);
     expect(find.byType(FullScreenWebView), findsOneWidget);
@@ -318,7 +320,7 @@ void main() {
 
   testWidgets('切换账号清空旧窗口，迟到的同步不能返回成功', (tester) async {
     final valid = ValueNotifier(true);
-    final syncing = Completer<void>();
+    final syncing = Completer<bool>();
     final results = <bool>[];
     await tester.pumpWidget(MaterialApp(
       home: FullScreenWebView(
@@ -335,11 +337,76 @@ void main() {
     await tester.pump();
     expect(platform.controller.html, ['<html></html>']);
     expect(results, [false]);
-    syncing.complete();
+    syncing.complete(false);
     await tester.pump();
     expect(results, [false]);
     await tester.pumpWidget(const SizedBox());
     valid.dispose();
+  });
+
+  testWidgets('同账号自动登录后保留窗口并通过 GET 重新打开页面', (tester) async {
+    final session = RsiSessionService.instance;
+    await session.reset(handle: 'Alice', token: 'old');
+    final attempt = RsiWebSessionAttempt()..account = 'Alice';
+    final results = <bool>[];
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: FullScreenWebView(
+        url: _url,
+        sessionAttempt: attempt,
+        synchronize: () async {
+          calls++;
+          if (calls > 1) return false;
+          attempt.recovering = true;
+          await session.reset();
+          session.bindAccount('Alice');
+          attempt.recovering = false;
+          return true;
+        },
+        onClose: (success) async => results.add(success),
+      ),
+    ));
+    await tester.pump();
+    platform.delegate.finished(_url);
+    await tester.pumpAndSettle();
+    expect(results, isEmpty);
+    expect(platform.controller.requests, [Uri.parse(_url), Uri.parse(_url)]);
+    expect(platform.controller.reloads, 0);
+    expect(platform.controller.html, isEmpty);
+    platform.delegate.finished(_url);
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+    expect(platform.controller.requests.length, 2);
+    await tester.pumpWidget(const SizedBox());
+    await session.reset();
+  });
+
+  testWidgets('自动登录期间切换到其他账号仍然关闭旧网页', (tester) async {
+    final session = RsiSessionService.instance;
+    await session.reset(handle: 'Alice');
+    final attempt = RsiWebSessionAttempt()..account = 'Alice';
+    final results = <bool>[];
+    await tester.pumpWidget(MaterialApp(
+      home: FullScreenWebView(
+        url: _url,
+        sessionAttempt: attempt,
+        synchronize: () async {
+          attempt.recovering = true;
+          await session.reset(handle: 'Bob');
+          attempt.recovering = false;
+          return true;
+        },
+        onClose: (success) async => results.add(success),
+      ),
+    ));
+    await tester.pump();
+    platform.delegate.finished(_url);
+    await tester.pumpAndSettle();
+    expect(results, [false]);
+    expect(platform.controller.html, ['<html></html>']);
+    expect(platform.controller.requests.length, 1);
+    await tester.pumpWidget(const SizedBox());
+    await session.reset();
   });
 
   testWidgets('独立窗口同步失败仍可关闭并返回失败', (tester) async {

@@ -2,6 +2,7 @@ import 'rsi_session_service.dart';
 
 class RsiWebSessionAttempt {
   bool didRelogin = false;
+  bool recovering = false;
   String? account;
 }
 
@@ -25,19 +26,45 @@ class RsiWebSessionCoordinator {
   Future<void>? _pending;
   RsiWebSessionAttempt? _pendingAttempt;
 
-  Future<void> ensure(RsiWebSessionAttempt attempt) async {
+  /// Only a confirmed expired/anonymous session starts automatic login.
+  /// Returns true when the browser must load its page with restored cookies.
+  Future<bool> synchronizeWeb(RsiWebSessionAttempt attempt,
+      {required Future<void> Function() verify}) async {
     attempt.account ??= session.account;
     if (attempt.account != session.account) throw RsiSessionChanged();
+    try {
+      await verify();
+      return false;
+    } on RsiSessionExpired {
+      attempt.recovering = true;
+      try {
+        await ensure(attempt);
+        await session.prepareStore();
+        return true;
+      } finally {
+        attempt.recovering = false;
+      }
+    }
+  }
+
+  Future<void> ensure(RsiWebSessionAttempt attempt) async {
+    attempt.account ??= session.account ?? _pendingAttempt?.account;
     final pending = _pending;
     if (pending != null) {
       final activeAttempt = _pendingAttempt!;
+      if (attempt.account != activeAttempt.account ||
+          (session.account != null && session.account != attempt.account)) {
+        throw RsiSessionChanged();
+      }
       try {
         await pending;
+        if (session.account != attempt.account) throw RsiSessionChanged();
       } finally {
         attempt.didRelogin |= activeAttempt.didRelogin;
       }
       return;
     }
+    if (attempt.account != session.account) throw RsiSessionChanged();
     _pendingAttempt = attempt;
     final operation = _ensure(attempt);
     _pending = operation;

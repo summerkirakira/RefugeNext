@@ -1,7 +1,6 @@
 import '../../api_service.dart' show RsiApiClient;
 import 'package:refuge_next/src/datasource/models/shop/store_model.dart';
 
-
 class Step1Query {
   final String query = r"""query Step1Query($storeFront: String) {
   store(name: $storeFront) {
@@ -24,7 +23,10 @@ class Step1Query {
     __typename
   }
 }
+""" +
+      lineItemFragments;
 
+  static const lineItemFragments = r"""
 fragment TyCartLineItemFragment on TyCartLineItem {
   id
   skuId

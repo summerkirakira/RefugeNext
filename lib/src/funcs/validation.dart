@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:local_auth/local_auth.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 
@@ -11,6 +12,8 @@ Future<bool> isBiometricsAvailable() async {
 
 
 Future<bool> authenticateWithBiometrics({required String reason}) async {
+  // Compile-time build mode; the in-app developer setting cannot bypass this.
+  if (kDebugMode) return true;
 
   final localAuth = LocalAuthentication();
   try {

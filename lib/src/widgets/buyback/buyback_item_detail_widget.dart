@@ -261,7 +261,7 @@ WoltModalSheetPage getBuybackConfirmSheet(
           }
           Navigator.of(modalSheetContext).pop();
           showToast(message: '成功添加回购到购物车');
-          showCartBottomSheet(rootContext);
+          showCartBottomSheet(rootContext, isBuyback: true);
         },
         child: const Text('确认回购', style: TextStyle(fontSize: 16)),
       ),

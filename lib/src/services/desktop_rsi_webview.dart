@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../funcs/rsi_web_session.dart';
 import 'rsi_session_service.dart';
+import 'rsi_web_session.dart';
 
 class DesktopBrowserHandle {
   DesktopBrowserHandle(this.closed);
@@ -27,12 +28,14 @@ class DesktopRsiWebview {
   Future<DesktopBrowserHandle> open(
       {required String url,
       required bool authenticated,
+      RsiWebSessionAttempt? attempt,
       bool dark = false}) async {
     final id = '${DateTime.now().microsecondsSinceEpoch}-${_nextId++}';
     final channel = WindowMethodChannel('refuge/rsi_browser/$id',
         mode: ChannelMode.unidirectional);
-    final browser =
-        _BrowserSession(_session.generation, authenticated, channel);
+    final browser = _BrowserSession(_session.generation, authenticated, channel,
+        attempt ?? RsiWebSessionAttempt());
+    browser.attempt.account ??= _session.account;
     _windows[id] = browser;
     try {
       await channel
@@ -67,6 +70,11 @@ class DesktopRsiWebview {
 
   void _accountChanged() {
     for (final entry in _windows.entries.toList()) {
+      final attempt = entry.value.attempt;
+      if (attempt.recovering &&
+          (_session.account == null || _session.account == attempt.account)) {
+        continue;
+      }
       if (!_valid(entry.key, entry.value)) {
         unawaited(_invalidate(entry.value));
         _complete(entry.key, entry.value, false);
@@ -83,11 +91,18 @@ class DesktopRsiWebview {
   }
 
   Future<bool> _sync(String id, _BrowserSession browser) async {
+    if (browser.syncing != null) return browser.syncing!;
     if (!_valid(id, browser)) return false;
     if (!browser.authenticated) return true;
-    if (browser.syncing != null) return browser.syncing!;
     final future = () async {
-      await synchronizeRsiWebSession(verifyIdentity: true);
+      browser.restored =
+          await synchronizeAndRecoverRsiWebSession(browser.attempt);
+      if (browser.restored) {
+        if (_session.account != browser.attempt.account) {
+          throw RsiSessionChanged();
+        }
+        browser.generation = _session.generation;
+      }
       return _valid(id, browser);
     }();
     browser.syncing = future;
@@ -95,6 +110,7 @@ class DesktopRsiWebview {
       return await future;
     } finally {
       browser.syncing = null;
+      _accountChanged();
     }
   }
 
@@ -106,7 +122,8 @@ class DesktopRsiWebview {
         return _valid(id, browser);
       case 'sync':
         try {
-          return {'success': await _sync(id, browser)};
+          final success = await _sync(id, browser);
+          return {'success': success, if (browser.restored) 'restored': true};
         } catch (error) {
           return {'success': false, 'expired': error is RsiSessionExpired};
         }
@@ -144,8 +161,11 @@ class DesktopRsiWebview {
 }
 
 class _BrowserSession {
-  _BrowserSession(this.generation, this.authenticated, this.channel);
-  final int generation;
+  _BrowserSession(
+      this.generation, this.authenticated, this.channel, this.attempt);
+  int generation;
+  final RsiWebSessionAttempt attempt;
+  bool restored = false;
   final bool authenticated;
   final WindowMethodChannel channel;
   final closed = Completer<bool>();

@@ -26,6 +26,22 @@ class ShopTopBar extends StatefulWidget {
 }
 
 class _ShopTopBarState extends State<ShopTopBar> {
+  bool _openingCart = false;
+
+  Future<void> _openCart() async {
+    if (_openingCart) return;
+    setState(() => _openingCart = true);
+    try {
+      await onPressCart(context);
+    } catch (e) {
+      if (mounted) {
+        showAlert(message: '购物车暂时无法加载，请稍后再打开');
+      }
+    } finally {
+      if (mounted) setState(() => _openingCart = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDevMode = Provider.of<MainDataModel>(context, listen: false).isDevMode;
@@ -96,7 +112,10 @@ class _ShopTopBarState extends State<ShopTopBar> {
                 ),
               ),
               SizedBox(width: 5,),
-              IconButton(onPressed: () async { await onPressCart(context); }, icon: Icon(Icons.shopping_cart_outlined)),
+              IconButton(tooltip: '打开购物车', onPressed: _openingCart ? null : _openCart,
+                icon: _openingCart ? const SizedBox(width: 22, height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.shopping_cart_outlined)),
               IconButton(
                   onPressed: () {
                     WoltModalSheet.show<void>(
