@@ -97,7 +97,10 @@ bool isPriceRange(HangarItem item, List<String> rangees) {
     if (range == 'all') {
       return true;
     }
-    if (range == 'non_zero' && item.price > 0) {
+    if (range == 'zero' && item.price == 0) {
+      return true;
+    }
+    if (range == 'non_zero' && item.price != 0) {
       return true;
     }
     if (range == '0-100' && item.price > 0 && item.currentPrice <= 10000) {

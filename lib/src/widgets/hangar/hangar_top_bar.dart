@@ -72,14 +72,9 @@ class _HangarTopBarState extends State<HangarTopBar> {
                         ),
                       IconButton(
                           onPressed: () {
-                            WoltModalSheet.show<void>(
-                                context: context,
-                                pageListBuilder: (modalSheetContext) {
-                                  return [
-                                    getSearchBottomSheet(context)
-                                  ];
-                                });
+                            showHangarSearch(context);
                           },
+                          tooltip: '搜索与筛选',
                           icon: const Icon(Icons.search)),
                       IconButton(onPressed: () {
                         WoltModalSheet.show<void>(

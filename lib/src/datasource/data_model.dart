@@ -637,6 +637,32 @@ class MainDataModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  @protected
+  Future<List<UpgradeStep>> loadHangarFilterSteps(int slot) =>
+      getStepsFromStorage(slot, rethrowErrors: true);
+
+  /// Commit conditions and their dependent CCU data together. A newer request,
+  /// clear, account switch, or dismissed editor invalidates an in-flight apply.
+  Future<bool> applyHangarSearch(SearchProperty? property,
+      {bool Function()? isCurrent}) async {
+    final request = ++_upgradeStepsRequest;
+    final session = RsiApiClient().session;
+    final generation = session.generation;
+    final handle = _currentUser?.handle;
+    final candidate = property?.normalized();
+    final next = candidate?.hasConditions == true ? candidate : null;
+    final steps = await Future.wait(
+        (next?.selectedCCUSlots ?? <int>[]).map(loadHangarFilterSteps));
+    if (request != _upgradeStepsRequest || session.generation != generation ||
+        _currentUser?.handle != handle || !(isCurrent?.call() ?? true)) {
+      return false;
+    }
+    _searchProperty = next;
+    _upgradeSteps = steps;
+    notifyListeners();
+    return true;
+  }
+
   // 可上传的日志类型白名单（排除包含 Flow 的类型）
   static const List<String> _uploadableLogTypes = [
     'Game Version',
@@ -696,6 +722,7 @@ class MainDataModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    ++_upgradeStepsRequest;
     ThemeManager().removeListener(notifyListeners);
     super.dispose();
   }
@@ -804,6 +831,7 @@ class MainDataModel extends ChangeNotifier {
 
 
   void clearSearch() {
+    ++_upgradeStepsRequest;
     _searchProperty = null;
     _upgradeSteps = [];
     notifyListeners();
@@ -2106,7 +2134,10 @@ class MainDataModel extends ChangeNotifier {
   }
 
   void updateSearchProperty(SearchProperty? newProperty) {
-    _searchProperty = newProperty;
+    ++_upgradeStepsRequest;
+    final value = newProperty?.normalized();
+    _searchProperty = value?.hasConditions == true ? value : null;
+    if (_searchProperty == null) _upgradeSteps = [];
     notifyListeners();
   }
 

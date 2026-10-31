@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../repo/hangar.dart';
 import 'hangar_item_widget.dart';
 import 'hangar_top_bar.dart';
+import 'hangar_filter_bar.dart';
+import 'hangar_search_bottomsheet.dart';
 
 import 'hangar_item_detail_widget.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -108,46 +110,15 @@ class _HangarPageState extends State<HangarPage> {
                   await Provider.of<MainDataModel>(context, listen: false).updateHangarItems();
                 },
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (Provider.of<MainDataModel>(context).isSearched)
-                      SizedBox(
-                        height: 25,
-                        width: double.infinity,
-                        child: Container(
-                          width: double.infinity,
-                          color: Colors.red,
-                          child: Stack(
-                              children: [
-                                const Center(
-                                  child: Text(
-                                    '机库筛选中',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                    right: 5,
-                                    top: 3,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Provider.of<MainDataModel>(context, listen: false).clearSearch();
-                                      },
-                                      child: const Text('取消',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    )
-                                ),
-                              ]
-                          ),
-                        ),
+                    if (model.searchProperty case final property?)
+                      HangarFilterBar(
+                        property: property,
+                        items: model.rawHangarItems,
+                        onApply: (value) => model.applyHangarSearch(value),
+                        onClear: model.clearSearch,
+                        onEdit: () => showHangarSearch(context),
                       ),
                     Expanded(
                       child: ListView.builder(
@@ -158,12 +129,19 @@ class _HangarPageState extends State<HangarPage> {
                           itemBuilder: (context, index) {
 
                             if (items.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.all(10),
+                              return Padding(
+                                padding: const EdgeInsets.all(20),
                                 child: Center(
-                                  child: Text('下拉刷新机库数据~',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
+                                  child: model.isSearched
+                                    ? Column(children: [
+                                        const Text('没有符合条件的物品'),
+                                        const SizedBox(height: 8),
+                                        Wrap(spacing: 8, children: [
+                                          TextButton(onPressed: () => showHangarSearch(context), child: const Text('修改筛选')),
+                                          TextButton(onPressed: model.clearSearch, child: const Text('清除筛选')),
+                                        ]),
+                                      ])
+                                    : const Text('下拉刷新机库数据~', style: TextStyle(color: Colors.grey)),
                                 ),
                               );
                             }

@@ -16,7 +16,7 @@ class UpgradeStep {
   final int? itemId;
 }
 
-Future<List<UpgradeStep>> getStepsFromStorage(int num) async {
+Future<List<UpgradeStep>> getStepsFromStorage(int num, {bool rethrowErrors = false}) async {
   try {
     final saved = await CcuPlanStorage()
         .load(RsiSessionService.instance.account ?? '', num);
@@ -38,6 +38,7 @@ Future<List<UpgradeStep>> getStepsFromStorage(int num) async {
               itemId: step.isOwned ? step.itemId : null)
     ];
   } catch (_) {
+    if (rethrowErrors) rethrow;
     return [];
   }
 }
