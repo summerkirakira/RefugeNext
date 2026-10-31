@@ -86,7 +86,9 @@ Future<List<HangarItem>> getHangarItems({required String content, required int p
       String timeString = dateCol.split("Created:\n")[1].replaceAll("\n", "").trim();
       String pledgeDate = convertDate(timeString);
       // String pledgeContains = pledge.querySelector(".items-col")!.text.replaceAll("Contains:", "");
-      bool canGift = pledge.querySelector(".shadow-button.js-gift") != null;
+      bool canGift = pledge.querySelector(
+        ".shadow-button.js-gift, .shadow-button.js-gift-v2",
+      ) != null;
       bool canExchange = pledge.querySelector(".shadow-button.js-reclaim") != null;
       bool canUpgrade = pledge.querySelector(".shadow-button.js-apply-upgrade") != null;
 
