@@ -4,11 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
 
-/// wiki 图片下载失败时的回退链接：对**完整 URL 字符串**取 SHA-256（UTF-8）后加 `.webp` →
+/// 兼容已有镜像：对完整 URL 字符串取 SHA-256（UTF-8）后加 `.webp` →
 /// `https://image.biaoju.site/starcitizen/wiki/images/<sha256>.webp`
 ///
-/// 与服务端镜像 pipeline 一致：`sha256(url.encode("utf-8")).hexdigest()`。
-/// 整串 url 原样（不取 basename、不解码、不去前缀）。提为顶层纯函数便于单测。
+/// 整串 URL 原样保留，不解码或重新编码路径。
 /// url 为空时返回 null。
 String? wikiImageFallbackUrl(String? url) {
   if (url == null || url.isEmpty) return null;
@@ -16,8 +15,18 @@ String? wikiImageFallbackUrl(String? url) {
   return 'https://image.biaoju.site/starcitizen/wiki/images/$hash.webp';
 }
 
-/// 供各图片站点的 errorWidget 复用：wiki 图加载失败后，先尝试 md5 回退图，
-/// 回退图也失败 / 无回退 URL 时返回最终占位 [onFail]。
+/// 优先兼容完整地址的镜像，再尝试不含查询参数和片段的镜像。
+/// Wiki 题图地址可能带有 `?htmpc` 这样的参数，而镜像文件按无参数地址命名。
+/// 直接截取原字符串，保留路径中的百分号编码；相同候选只请求一次。
+List<String> wikiImageFallbackUrls(String? url) {
+  final original = wikiImageFallbackUrl(url);
+  if (original == null) return const [];
+  final normalized = wikiImageFallbackUrl(url!.split(RegExp(r'[?#]')).first);
+  return {original, if (normalized != null) normalized}.toList();
+}
+
+/// 供各图片站点的 errorWidget 复用：依次尝试 SHA-256 镜像候选，
+/// 全部失败或没有候选时返回最终占位 [onFail]。
 /// [imageBuilder] 传入与 primary 相同的圆角 builder（列表卡片用）；详情页传 null 走 [fit]。
 Widget wikiImageFallback(
   String url, {
@@ -25,12 +34,17 @@ Widget wikiImageFallback(
   Widget Function(BuildContext, ImageProvider)? imageBuilder,
   BoxFit fit = BoxFit.cover,
 }) {
-  final fb = wikiImageFallbackUrl(url);
-  if (fb == null) return onFail;
-  return CachedNetworkImage(
-    imageUrl: fb,
-    fit: imageBuilder == null ? fit : null,
-    imageBuilder: imageBuilder,
-    errorWidget: (_, __, ___) => onFail,
-  );
+  final candidates = wikiImageFallbackUrls(url);
+  Widget attempt(int index) {
+    if (index >= candidates.length) return onFail;
+    return CachedNetworkImage(
+      key: ValueKey(candidates[index]),
+      imageUrl: candidates[index],
+      fit: imageBuilder == null ? fit : null,
+      imageBuilder: imageBuilder,
+      errorWidget: (_, __, ___) => attempt(index + 1),
+    );
+  }
+
+  return attempt(0);
 }

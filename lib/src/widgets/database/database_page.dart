@@ -33,6 +33,7 @@ import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_info_card.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart'
     show kVehicleCareerCn, kShieldFaceTypeCn;
 import 'database_top_bar.dart';
+import '../common/terminal_localization_state.dart';
 
 /// 版本号简写:去掉尾部的构建号(最后一个 `.` 之后的纯数字),
 /// 如 `4.8.2-LIVE.12030094` → `4.8.2-LIVE`;null/空 → `最新`。
@@ -247,7 +248,7 @@ class _SortField<T> {
 }
 
 class _VehicleDbListState extends State<_VehicleDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_VehicleDbList> {
   List<GameVehicle> _vehicles = const [];
   bool _loading = true;
   Object? _error;
@@ -281,8 +282,7 @@ class _VehicleDbListState extends State<_VehicleDbList>
 
   /// 仅保留 uuid 存在于 ship_alias 中的舰船(剔除变体/NPC/测试条目)。
   /// 别名缓存为空(极端:未下载)时回退展示全量,避免列表空白。
-  Future<List<GameVehicle>> _onlyAliasShips(List<GameVehicle> list) async {
-    await ShipAliasRepo().getShipAliases();
+  List<GameVehicle> _onlyAliasShips(List<GameVehicle> list) {
     final uuids = <String>{
       for (final a in ShipAliasRepo().getShipAliasesSync())
         if (a.uuid != null && a.uuid!.isNotEmpty) a.uuid!,
@@ -295,12 +295,13 @@ class _VehicleDbListState extends State<_VehicleDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await GameVehicleRepo().getVehicles();
       if (list.isEmpty) {
         await GameVehicleRepo().refresh(version: GameVersionManager().version);
         list = await GameVehicleRepo().getVehicles();
       }
-      list = await _onlyAliasShips(list);
       if (!mounted) return;
       setState(() {
         _vehicles = list;
@@ -321,7 +322,6 @@ class _VehicleDbListState extends State<_VehicleDbList>
     try {
       await GameVehicleRepo().refresh(version: GameVersionManager().version);
       var list = await GameVehicleRepo().getVehicles();
-      list = await _onlyAliasShips(list);
       if (!mounted) return;
       setState(() => _vehicles = list);
     } catch (_) {
@@ -363,7 +363,7 @@ class _VehicleDbListState extends State<_VehicleDbList>
 
   /// 当前筛选 + 排序后的可见列表。
   List<GameVehicle> get _visible {
-    var list = _vehicles.where((v) {
+    var list = _onlyAliasShips(_vehicles).where((v) {
       if (_fManufacturers.isNotEmpty &&
           !_fManufacturers.contains(v.manufacturer?.name)) {
         return false;
@@ -735,7 +735,7 @@ class _VehicleWeaponDbList extends StatefulWidget {
 }
 
 class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_VehicleWeaponDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -752,6 +752,8 @@ class _VehicleWeaponDbListState extends State<_VehicleWeaponDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await VehicleWeaponRepo().getVehicleWeapons();
       if (list.isEmpty) {
         await VehicleWeaponRepo().refresh(version: GameVersionManager().version);
@@ -1161,7 +1163,7 @@ class _PersonalWeaponDbList extends StatefulWidget {
 }
 
 class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_PersonalWeaponDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -1178,6 +1180,8 @@ class _PersonalWeaponDbListState extends State<_PersonalWeaponDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await PersonalWeaponRepo().getPersonalWeapons();
       if (list.isEmpty) {
         await PersonalWeaponRepo().refresh(version: GameVersionManager().version);
@@ -1593,7 +1597,7 @@ class _AttachmentDbList extends StatefulWidget {
 }
 
 class _AttachmentDbListState extends State<_AttachmentDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_AttachmentDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -1610,6 +1614,8 @@ class _AttachmentDbListState extends State<_AttachmentDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await WeaponAttachmentRepo().getWeaponAttachments();
       if (list.isEmpty) {
         await WeaponAttachmentRepo().refresh(version: GameVersionManager().version);
@@ -2003,7 +2009,7 @@ class _ShieldDbList extends StatefulWidget {
 }
 
 class _ShieldDbListState extends State<_ShieldDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_ShieldDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -2020,6 +2026,8 @@ class _ShieldDbListState extends State<_ShieldDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await ShieldRepo().getShields();
       if (list.isEmpty) {
         await ShieldRepo().refresh(version: GameVersionManager().version);
@@ -2428,7 +2436,7 @@ class _CoolerDbList extends StatefulWidget {
 }
 
 class _CoolerDbListState extends State<_CoolerDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_CoolerDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -2445,6 +2453,8 @@ class _CoolerDbListState extends State<_CoolerDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await CoolerRepo().getCoolers();
       if (list.isEmpty) {
         await CoolerRepo().refresh(version: GameVersionManager().version);
@@ -2852,7 +2862,7 @@ class _PowerPlantDbList extends StatefulWidget {
 }
 
 class _PowerPlantDbListState extends State<_PowerPlantDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_PowerPlantDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -2869,6 +2879,8 @@ class _PowerPlantDbListState extends State<_PowerPlantDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await PowerPlantRepo().getPowerPlants();
       if (list.isEmpty) {
         await PowerPlantRepo().refresh(version: GameVersionManager().version);
@@ -3276,7 +3288,7 @@ class _QuantumDriveDbList extends StatefulWidget {
 }
 
 class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TerminalLocalizationState<_QuantumDriveDbList> {
   List<GameItem> _items = const [];
   bool _loading = true;
   Object? _error;
@@ -3293,6 +3305,8 @@ class _QuantumDriveDbListState extends State<_QuantumDriveDbList>
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      await localizationReady;
+      if (!mounted) return;
       var list = await QuantumDriveRepo().getQuantumDrives();
       if (list.isEmpty) {
         await QuantumDriveRepo().refresh(version: GameVersionManager().version);

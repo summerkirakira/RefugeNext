@@ -2,10 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/repo/location.dart';
-import 'package:refuge_next/src/repo/translation.dart';
 // 复用通用卡片/格式化 helper(顶层纯函数,非继承页)
 import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart'
     show itemCard, itemRows, itemRow, itemGroupHeader;
+import '../common/terminal_localization_state.dart';
 
 /// 独立的地点详情测试页(不继承 GameItemDetailPage)。
 ///
@@ -28,7 +28,8 @@ class LocationDetailPage extends StatefulWidget {
   State<LocationDetailPage> createState() => _LocationDetailPageState();
 }
 
-class _LocationDetailPageState extends State<LocationDetailPage> {
+class _LocationDetailPageState extends State<LocationDetailPage>
+    with TerminalLocalizationState<LocationDetailPage> {
   List<GameStarmapLocation> _all = [];
   GameStarmapLocation? _selected;
   bool _loading = true;
@@ -38,7 +39,7 @@ class _LocationDetailPageState extends State<LocationDetailPage> {
     super.initState();
     Future.wait([
       LocationRepo().getLocations(),
-      TranslationRepo().getTranslations(),
+      localizationReady,
     ]).then((results) {
       if (!mounted) return;
       final locations = results[0] as List<GameStarmapLocation>;

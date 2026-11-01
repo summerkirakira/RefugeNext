@@ -1,4 +1,5 @@
-import '../datasource/models/user.dart';
+import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,19 +7,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../network/cirno/cirno_api.dart';
 import '../utils/storage_path.dart';
 
-
-class TranslationRepo {
-
+class TranslationRepo extends ChangeNotifier {
   static final TranslationRepo _instance = TranslationRepo._internal();
-  TranslationRepo._internal();
+  TranslationRepo._internal() : _directoryPath = StoragePath.getAppDataPath;
+
+  @visibleForTesting
+  TranslationRepo.forTesting({required Future<String> Function() directoryPath})
+      : _directoryPath = directoryPath;
+
+  final Future<String> Function() _directoryPath;
+  final Lock _storageLock = Lock();
+  Future<Map<String, String>>? _pendingRead;
+  Future<void>? _settingLoad;
+  int _settingRevision = 0;
 
   factory TranslationRepo() => _instance;
 
   Map<String, String> _translation = {};
 
-  List<String> _notTranslated = [];
+  final List<String> _notTranslated = [];
 
-  int _postedLength = 0;
+  final int _postedLength = 0;
 
   bool _translationEnabled = true;
 
@@ -32,12 +41,28 @@ class TranslationRepo {
   bool get translationEnabled => _translationEnabled;
 
   void setTranslationEnabled(bool enabled) {
+    _settingRevision++;
+    if (_translationEnabled == enabled) return;
     _translationEnabled = enabled;
+    notifyListeners();
   }
 
-  Future<String> get _localPath async {
-    return await StoragePath.getAppDataPath();
+  Future<void> loadTranslationSetting() => _settingLoad ??= _loadSetting();
+
+  Future<void> _loadSetting() async {
+    final revision = _settingRevision;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (revision == _settingRevision) {
+        setTranslationEnabled(
+            prefs.getBool('app.settings.enableHangarTranslation') ?? true);
+      }
+    } catch (_) {
+      // 本地设置不可读时保留当前开关，不能阻塞终端。
+    }
   }
+
+  Future<String> get _localPath => _directoryPath();
 
   Future<File> get _localFile async {
     final path = await _localPath;
@@ -69,7 +94,6 @@ class TranslationRepo {
     return newShipName;
   }
 
-
   List<String> getFullUpgradeName(String upgradeTitle) {
     List<String> nameList = [];
     for (String shipName in upgradeTitle
@@ -81,27 +105,37 @@ class TranslationRepo {
     return nameList;
   }
 
-
-
-  Future<Map<String, String>> readTranslation() async {
-    try {
-      final file = await _localFile;
-      final contents = await file.readAsString();
-      final Map<String, dynamic> json = jsonDecode(contents);
-      _translation = json.map((key, value) => MapEntry(key, value.toString()));
-      return _translation;
-    } catch (e) {
-      return {};
-    }
+  void _publish(Map<String, String> value) {
+    if (mapEquals(_translation, value)) return;
+    _translation = Map.unmodifiable(value);
+    notifyListeners();
   }
 
-  Future<File> writeTranslation(Map<String, String> translation, int version) async {
-    final file = await _localFile;
+  Future<Map<String, String>> readTranslation() =>
+      _pendingRead ??= _storageLock.synchronized(() async {
+        try {
+          final file = await _localFile;
+          final Map<String, dynamic> json =
+              jsonDecode(await file.readAsString());
+          _publish(json.map((key, value) => MapEntry(key, value.toString())));
+        } catch (_) {
+          // 读取失败保留已有译文；后续显式读取仍可重试。
+        }
+        return _translation;
+      }).whenComplete(() => _pendingRead = null);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('vip.kirakira.translation.version', version);
-    _translation = translation;
-    return file.writeAsString(jsonEncode(translation));
+  Future<File> writeTranslation(Map<String, String> translation, int version) {
+    final next = Map<String, String>.unmodifiable(translation);
+    return _storageLock.synchronized(() async {
+      final file = await _localFile;
+      final temporary = File('${file.path}.tmp');
+      await temporary.writeAsString(jsonEncode(next), flush: true);
+      await temporary.rename(file.path);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('vip.kirakira.translation.version', version);
+      _publish(next);
+      return file;
+    });
   }
 
   Future<int> getTranslationVersion() async {
@@ -113,8 +147,7 @@ class TranslationRepo {
     if (_translation.isNotEmpty) {
       return _translation;
     }
-    _translation = await readTranslation();
-    return _translation;
+    return readTranslation();
   }
 
   Future<String> getTranslation(String key) async {
@@ -122,12 +155,23 @@ class TranslationRepo {
       return key;
     }
 
-    final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
+    final finalKey = key
+        .replaceAll("\n", "")
+        .replaceAll("*", "")
+        .replaceAll("‘", "'")
+        .replaceAll("’", "'")
+        .replaceAll("“", "\"")
+        .replaceAll("”", "\"")
+        .trim();
 
-    if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
+    if (_translation[key] == null &&
+        _translation.isNotEmpty &&
+        !key.contains(" - ") &&
+        !key.contains("...") &&
+        !key.contains(" to ")) {
       if (!_notTranslated.contains(key) && key.isNotEmpty) {
         _notTranslated.add(key);
-        print("Missing translation for $key");
+        debugPrint("Missing translation for $key");
       }
     }
 
@@ -135,7 +179,10 @@ class TranslationRepo {
   }
 
   String translateUpgradeName(String upgradeName) {
-    String shipName = upgradeName.replaceAll("Standard Edition", "").replaceAll("Warbond Edition", "").trim();
+    String shipName = upgradeName
+        .replaceAll("Standard Edition", "")
+        .replaceAll("Warbond Edition", "")
+        .trim();
     shipName = _translation[shipName] ?? shipName;
     if (upgradeName.contains("Standard Edition")) {
       return "$shipName 标准版";
@@ -151,7 +198,14 @@ class TranslationRepo {
       return key;
     }
 
-    final finalKey = key.replaceAll("\n", "").replaceAll("*", "").replaceAll("‘", "'").replaceAll("’", "'").replaceAll("“", "\"").replaceAll("”", "\"").trim();
+    final finalKey = key
+        .replaceAll("\n", "")
+        .replaceAll("*", "")
+        .replaceAll("‘", "'")
+        .replaceAll("’", "'")
+        .replaceAll("“", "\"")
+        .replaceAll("”", "\"")
+        .trim();
     final keyList = finalKey.split(" - ");
     List<String> translationList = [];
     for (var key in keyList) {
@@ -166,10 +220,14 @@ class TranslationRepo {
       }
 
       translationList.add(_translation[key] ?? key);
-      if (_translation[key] == null && _translation.isNotEmpty && !key.contains(" - ") && !key.contains("...") && !key.contains(" to ")) {
+      if (_translation[key] == null &&
+          _translation.isNotEmpty &&
+          !key.contains(" - ") &&
+          !key.contains("...") &&
+          !key.contains(" to ")) {
         if (!_notTranslated.contains(key) && key.isNotEmpty) {
           _notTranslated.add(key);
-          print("Missing translation for $key");
+          debugPrint("Missing translation for $key");
         }
       }
     }
@@ -272,5 +330,4 @@ class TranslationRepo {
 
     return '$mainName $translatedTags';
   }
-
 }

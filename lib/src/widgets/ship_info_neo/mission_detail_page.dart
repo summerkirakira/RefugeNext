@@ -7,7 +7,6 @@ import 'package:refuge_next/src/repo/mission.dart';
 import 'package:refuge_next/src/repo/power_plant.dart';
 import 'package:refuge_next/src/repo/quantum_drive.dart';
 import 'package:refuge_next/src/repo/shield.dart';
-import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/repo/vehicle_weapon.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/cooler_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/power_plant_detail_page.dart';
@@ -26,6 +25,7 @@ import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart
         itemRangeText,
         fmtNum,
         fmtDurationCn;
+import '../common/terminal_localization_state.dart';
 
 /// 独立的任务详情测试页(不继承 GameItemDetailPage)。
 ///
@@ -49,7 +49,8 @@ class MissionDetailPage extends StatefulWidget {
   State<MissionDetailPage> createState() => _MissionDetailPageState();
 }
 
-class _MissionDetailPageState extends State<MissionDetailPage> {
+class _MissionDetailPageState extends State<MissionDetailPage>
+    with TerminalLocalizationState<MissionDetailPage> {
   List<MissionIndex> _all = [];
   MissionIndex? _selected;
   bool _loading = true;
@@ -63,7 +64,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
     super.initState();
     Future.wait([
       MissionRepo().getMissions(),
-      TranslationRepo().getTranslations(),
+      localizationReady,
     ]).then((results) {
       if (!mounted) return;
       final missions = results[0] as List<MissionIndex>;

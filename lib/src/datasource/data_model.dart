@@ -24,6 +24,7 @@ import './models/shop_search_property.dart';
 import '../repo/buyback.dart';
 import '../repo/ship_upgrade.dart';
 import '../repo/translation.dart';
+import '../repo/terminal_localization.dart';
 import '../repo/ship_alias.dart';
 import '../repo/game_log.dart';
 import 'package:dio/dio.dart';
@@ -469,17 +470,25 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> setEnableHangarTranslation(bool enabled) async {
     _enableHangarTranslation = enabled;
+    TranslationRepo().setTranslationEnabled(enabled);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('app.settings.enableHangarTranslation', enabled);
-    TranslationRepo().setTranslationEnabled(enabled);
     readHangarItems();
     notifyListeners();
   }
 
   Future<void> loadEnableHangarTranslationSetting() async {
-    final prefs = await SharedPreferences.getInstance();
-    _enableHangarTranslation = prefs.getBool('app.settings.enableHangarTranslation') ?? true;
-    TranslationRepo().setTranslationEnabled(_enableHangarTranslation);
+    await TranslationRepo().loadTranslationSetting();
+    _enableHangarTranslation = TranslationRepo().translationEnabled;
+  }
+
+  Future<void>? _localizationReady;
+  Future<void> get localizationReady =>
+      _localizationReady ??= _loadLocalization();
+
+  Future<void> _loadLocalization() async {
+    await loadTerminalLocalization();
+    _enableHangarTranslation = TranslationRepo().translationEnabled;
   }
 
   bool _enableRealtimeLogSync = false;
@@ -732,14 +741,12 @@ class MainDataModel extends ChangeNotifier {
 
   Future<void> initialize() async {
     await initUser();
+    await localizationReady;
     await loadShowRefreshButtonSetting();
     await loadPreferHangarShipImageSetting();
-    await loadEnableHangarTranslationSetting();
     await loadGameDirectory();
     await loadEnableRealtimeLogSyncSetting();
     await loadEnableLaunchAtStartupSetting();
-    await translationRepo.readTranslation();
-    await shipAliasRepo.getShipAliases();
     readHangarItems();
     readBuybackItems();
     readCatalogs();

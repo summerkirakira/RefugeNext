@@ -20,13 +20,17 @@ import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart'
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_info_card.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_weapon_info_card.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/weapon_attachment_info_card.dart';
+import '../common/terminal_localization_state.dart';
 
 /// 一条可搜索条目:中文名 + 英文名(预存小写用于匹配)+ 卡片构建器。
 class _Entry {
-  _Entry(String cn, String en, this.cardBuilder)
-      : cnLower = cn.toLowerCase(),
-        enLower = en.toLowerCase();
-  final String cnLower;
+  _Entry(this.localizedName, String en, this.cardBuilder)
+      : enLower = en.toLowerCase() {
+    refreshTranslation();
+  }
+  final String Function() localizedName;
+  late String cnLower;
+  void refreshTranslation() => cnLower = localizedName().toLowerCase();
   final String enLower;
   final WidgetBuilder cardBuilder;
 
@@ -41,7 +45,8 @@ class DatabaseSearchPage extends StatefulWidget {
   State<DatabaseSearchPage> createState() => _DatabaseSearchPageState();
 }
 
-class _DatabaseSearchPageState extends State<DatabaseSearchPage> {
+class _DatabaseSearchPageState extends State<DatabaseSearchPage>
+    with TerminalLocalizationState<DatabaseSearchPage> {
   final TextEditingController _controller = TextEditingController();
   List<_Entry> _entries = const [];
   bool _loading = true;
@@ -59,8 +64,18 @@ class _DatabaseSearchPageState extends State<DatabaseSearchPage> {
     super.dispose();
   }
 
+  @override
+  void onLocalizationChanged() {
+    for (final entry in _entries) {
+      entry.refreshTranslation();
+    }
+    super.onLocalizationChanged();
+  }
+
   Future<void> _load() async {
     try {
+      await localizationReady;
+      if (!mounted) return;
       final results = await Future.wait([
         GameVehicleRepo().getVehicles(),
         VehicleWeaponRepo().getVehicleWeapons(),
@@ -75,14 +90,14 @@ class _DatabaseSearchPageState extends State<DatabaseSearchPage> {
 
       // 载具(GameVehicle)
       for (final v in results[0] as List<GameVehicle>) {
-        entries.add(_Entry(vehicleDisplayName(v), v.name ?? '',
+        entries.add(_Entry(() => vehicleDisplayName(v), v.name ?? '',
             (_) => VehicleInfoCard(vehicle: v)));
       }
       // 其余各类别(GameItem)→ 对应卡片
       void addItems(List<GameItem> items, Widget Function(GameItem) card) {
         for (final it in items) {
           entries.add(_Entry(
-              gameItemDisplayName(it), it.name ?? '', (_) => card(it)));
+              () => gameItemDisplayName(it), it.name ?? '', (_) => card(it)));
         }
       }
 
@@ -96,8 +111,8 @@ class _DatabaseSearchPageState extends State<DatabaseSearchPage> {
       addItems(results[5] as List<GameItem>, (it) => CoolerInfoCard(item: it));
       addItems(
           results[6] as List<GameItem>, (it) => PowerPlantInfoCard(item: it));
-      addItems(results[7] as List<GameItem>,
-          (it) => QuantumDriveInfoCard(item: it));
+      addItems(
+          results[7] as List<GameItem>, (it) => QuantumDriveInfoCard(item: it));
 
       if (!mounted) return;
       setState(() {
@@ -169,7 +184,8 @@ class _DatabaseSearchPageState extends State<DatabaseSearchPage> {
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             itemCount: results.length,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) => results[index].cardBuilder(context),
+            itemBuilder: (context, index) =>
+                results[index].cardBuilder(context),
           ),
         ),
       ],

@@ -11,6 +11,7 @@ import 'package:refuge_next/src/widgets/ship_info_neo/mission_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_menu.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
+import '../common/terminal_localization_state.dart';
 
 // 通用样式常量(仿 vehicle_detail_page)。
 const kItemValueStyle = TextStyle(fontSize: 13);
@@ -94,7 +95,8 @@ class GameItemDetailPage extends StatefulWidget {
   State<GameItemDetailPage> createState() => _GameItemDetailPageState();
 }
 
-class _GameItemDetailPageState extends State<GameItemDetailPage> {
+class _GameItemDetailPageState extends State<GameItemDetailPage>
+    with TerminalLocalizationState<GameItemDetailPage> {
   List<GameItem> _all = [];
   GameItem? _selected;
   bool _loading = true;
@@ -112,7 +114,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage> {
     super.initState();
     Future.wait([
       widget.loadItems(),
-      TranslationRepo().getTranslations(),
+      localizationReady,
       // 预载蓝图缓存(读本地,供「蓝图」页签按 outputItemUuid 关联;未下载则空)
       BlueprintRepo().getBlueprints(),
     ]).then((results) {

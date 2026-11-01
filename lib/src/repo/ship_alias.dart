@@ -1,14 +1,22 @@
-import '../datasource/models/user.dart';
+import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/cirno/property/property.dart';
 import '../utils/storage_path.dart';
 
-
-class ShipAliasRepo {
+class ShipAliasRepo extends ChangeNotifier {
   static final ShipAliasRepo _instance = ShipAliasRepo._internal();
-  ShipAliasRepo._internal();
+  ShipAliasRepo._internal() : _directoryPath = StoragePath.getAppDataPath;
+
+  @visibleForTesting
+  ShipAliasRepo.forTesting({required Future<String> Function() directoryPath})
+      : _directoryPath = directoryPath;
+
+  final Future<String> Function() _directoryPath;
+  final Lock _storageLock = Lock();
+  Future<List<ShipAlias>>? _pendingRead;
 
   factory ShipAliasRepo() => _instance;
 
@@ -25,35 +33,45 @@ class ShipAliasRepo {
     }
   }
 
-  Future<String> get _localPath async {
-    return await StoragePath.getAppDataPath();
-  }
+  Future<String> get _localPath => _directoryPath();
 
   Future<File> get _localFile async {
     final path = await _localPath;
     return File('$path/ship_aliases.json');
   }
 
-  Future<List<ShipAlias>> readShipAliases() async {
-    try {
-      final file = await _localFile;
-      final contents = await file.readAsString();
-      final List<dynamic> json = jsonDecode(contents);
-      return json.map((e) => ShipAlias.fromJson(e)).toList();
-    } catch (e) {
-      return [];
-    }
+  void _publish(List<ShipAlias> items) {
+    if (jsonEncode(_shipAliases) == jsonEncode(items)) return;
+    _shipAliases = List.unmodifiable(items);
+    _rebuildUuidIndex();
+    notifyListeners();
   }
 
-  Future<File> writeShipAliases(List<ShipAlias> items, int version) async {
-    final file = await _localFile;
+  Future<List<ShipAlias>> readShipAliases() =>
+      _pendingRead ??= _storageLock.synchronized(() async {
+        try {
+          final file = await _localFile;
+          final List<dynamic> json = jsonDecode(await file.readAsString());
+          _publish(json.map((e) => ShipAlias.fromJson(e)).toList());
+        } catch (_) {
+          // 损坏或缺失时保留当前缓存，后续读取可重试。
+        }
+        return _shipAliases;
+      }).whenComplete(() => _pendingRead = null);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('vip.kirakira.ship_aliases.version', version);
-    _shipAliases = items;
-    _rebuildUuidIndex();
-
-    return file.writeAsString(jsonEncode(items));
+  Future<File> writeShipAliases(List<ShipAlias> items, int version) {
+    final next =
+        items.map((item) => ShipAlias.fromJson(item.toJson())).toList();
+    return _storageLock.synchronized(() async {
+      final file = await _localFile;
+      final temporary = File('${file.path}.tmp');
+      await temporary.writeAsString(jsonEncode(next), flush: true);
+      await temporary.rename(file.path);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('vip.kirakira.ship_aliases.version', version);
+      _publish(next);
+      return file;
+    });
   }
 
   Future<int> getShipAliasesVersion() async {
@@ -65,9 +83,7 @@ class ShipAliasRepo {
     if (_shipAliases.isNotEmpty) {
       return _shipAliases;
     }
-    _shipAliases = await readShipAliases();
-    _rebuildUuidIndex();
-    return _shipAliases;
+    return readShipAliases();
   }
 
   Future<ShipAlias?> getShipAlias(String key) async {
@@ -133,5 +149,4 @@ class ShipAliasRepo {
   List<ShipAlias> getShipAliasesSync() {
     return _shipAliases;
   }
-
 }

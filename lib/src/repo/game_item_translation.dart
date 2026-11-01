@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 /// 游戏内物品名翻译(打包资产 `assets/data/item_names.json`)。
 ///
 /// 资产是扁平 map,key 形如 `item_Name{className}` 或 `item_Name_{className}`
 /// (两种前缀混用),value 为中文名。查表大小写不敏感。
-class GameItemTranslationRepo {
+class GameItemTranslationRepo extends ChangeNotifier {
   static final GameItemTranslationRepo _instance =
       GameItemTranslationRepo._internal();
   GameItemTranslationRepo._internal();
@@ -14,18 +15,27 @@ class GameItemTranslationRepo {
   /// 全小写 key → 中文名。
   final Map<String, String> _index = {};
   bool _loaded = false;
+  Future<void>? _loading;
 
   /// 应用启动时调用:读取资产、建立大小写不敏感索引(只加载一次)。
-  Future<void> load() async {
-    if (_loaded) return;
+  Future<void> load() {
+    if (_loaded) return Future.value();
+    return _loading ??= _load().whenComplete(() => _loading = null);
+  }
+
+  Future<void> _load() async {
     try {
       final raw = await rootBundle.loadString('assets/data/item_names.json');
       final map = jsonDecode(raw) as Map<String, dynamic>;
-      _index.clear();
+      final next = <String, String>{};
       map.forEach((k, v) {
-        if (v is String && v.isNotEmpty) _index[k.toLowerCase()] = v;
+        if (v is String && v.isNotEmpty) next[k.toLowerCase()] = v;
       });
+      _index
+        ..clear()
+        ..addAll(next);
       _loaded = true;
+      notifyListeners();
     } catch (_) {
       // 资产缺失/解析失败:留空,getSync 回退英文原名
     }

@@ -14,6 +14,7 @@ import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_thumbnail.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import '../common/terminal_localization_state.dart';
 
 /// 护盾朝向类型(face_type)中文映射;未命中保留原文。
 const kShieldFaceTypeCn = {'Bubble': '气泡', 'Quadrant': '象限'};
@@ -95,7 +96,7 @@ String vehicleDisplayName(GameVehicle v) {
     final alias = ShipAliasRepo().getShipAliasByUuidSync(uuid);
     if (alias != null) return TranslationRepo().getTranslationSync(alias.name);
   }
-  return v.name ?? '未知';
+  return TranslationRepo().getTranslationSync(v.name ?? '未知');
 }
 
 /// career 中文化;空/null 返回 null,未命中保留原文。
@@ -141,7 +142,8 @@ class VehicleDetailPage extends StatefulWidget {
   State<VehicleDetailPage> createState() => _VehicleDetailPageState();
 }
 
-class _VehicleDetailPageState extends State<VehicleDetailPage> {
+class _VehicleDetailPageState extends State<VehicleDetailPage>
+    with TerminalLocalizationState<VehicleDetailPage> {
   List<GameVehicle> _all = [];
   GameVehicle? _selected;
   bool _loading = true;
@@ -167,6 +169,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
       GameVehicleRepo().getVehicles(),
       // 确保现有船库已加载(用于缩略图名称匹配)
       ShipInfoRepo().getShips(),
+      localizationReady,
     ]).then((results) {
       if (!mounted) return;
       final vehicles = results[0] as List<GameVehicle>;
