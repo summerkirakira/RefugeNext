@@ -2148,7 +2148,8 @@ class MainDataModel extends ChangeNotifier {
   }
 
   void updateShopSearchProperty(ShopSearchProperty? newProperty) {
-    _shopSearchProperty = newProperty;
+    final value = newProperty?.normalized();
+    _shopSearchProperty = value?.hasConditions == true ? value : null;
     notifyListeners();
   }
 

@@ -1,181 +1,216 @@
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';
 import '../../datasource/data_model.dart';
 import '../../datasource/models/shop_search_property.dart';
+import 'shop_filter_options.dart';
 
-WoltModalSheetPage getShopSearchBottomSheet(BuildContext context) {
+class ShopSearchDraft extends ChangeNotifier {
+  ShopSearchDraft(ShopSearchProperty? initial)
+      : value = (initial ?? ShopSearchProperty.empty()).normalized(),
+        text = TextEditingController(text: initial?.searchText ?? '');
 
-  final ShopSearchProperty searchKey = ShopSearchProperty(
-      searchType: ["all"],
-      priceRange: ["all"],
-      stockStatus: ["all"],
-      itemFlags: ["all"],
-      searchText: null,
-      orderSelected: false,
-      priceOrder: false
+  ShopSearchProperty value;
+  final TextEditingController text;
+  bool applied = false;
+
+  void change(VoidCallback edit) {
+    if (applied) return;
+    edit();
+    notifyListeners();
+  }
+
+  void reset() => change(() {
+        value = ShopSearchProperty.empty();
+        text.clear();
+      });
+
+  ShopSearchProperty snapshot() =>
+      (value.copy()..searchText = text.text).normalized();
+
+  @override
+  void dispose() {
+    text.dispose();
+    super.dispose();
+  }
+}
+
+Future<void> showShopSearch(BuildContext context) {
+  final model = context.read<MainDataModel>();
+  return WoltModalSheet.show<void>(
+    context: context,
+    pageListBuilder: (sheetContext) => [
+      getShopSearchBottomSheet(sheetContext, model),
+    ],
   );
+}
 
-  final tagSuffix = MultiSelectSuffix(
-      selectedSuffix: const Padding(
-        padding: EdgeInsets.only(left: 5),
-        child: Icon(
-          Icons.check,
-          color: Colors.white,
-          size: 14,
-        ),
-      ),
-      disabledSuffix: const Padding(
-        padding: EdgeInsets.only(left: 5),
-        child: Icon(
-          Icons.do_disturb_alt_sharp,
-          size: 14,
-        ),
-      ));
-  final searchController = TextEditingController();
-  final itemOrderController = MultiSelectController();
+WoltModalSheetPage getShopSearchBottomSheet(
+    BuildContext context, MainDataModel model) {
+  final draft = ShopSearchDraft(model.shopSearchProperty);
+  void apply() {
+    if (draft.applied || !context.mounted) return;
+    draft.applied = true;
+    model.updateShopSearchProperty(draft.snapshot());
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).pop();
+  }
 
   return WoltModalSheetPage(
-      navBarHeight: 50,
-      pageTitle: const Padding(
-          padding: EdgeInsets.only(left: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('商店搜索',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))
-            ],
-          )),
-      trailingNavBarWidget: Container(
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.2),
-          shape: BoxShape.circle,
-        ),
-        child: IconButton(
-          padding: const EdgeInsets.all(5),
-          icon: const Icon(Icons.close, size: 22),
-          onPressed: Navigator.of(context).pop,
+    navBarHeight: 50,
+    pageTitle: const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Text('商店搜索',
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+    ),
+    trailingNavBarWidget: IconButton(
+      tooltip: '关闭并放弃修改',
+      icon: const Icon(Icons.close),
+      onPressed: () => Navigator.of(context).pop(),
+    ),
+    child: ShopSearchFields(draft: draft, onApply: apply),
+    stickyActionBar: Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: Row(children: [
+            TextButton(onPressed: draft.reset, child: const Text('重置')),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                key: const ValueKey('shop-search-apply'),
+                onPressed: apply,
+                child: const Text('应用筛选'),
+              ),
+            ),
+          ]),
         ),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: '物品名称',
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text("价格排序",
-                style: TextStyle(
-                  fontSize: 15,
-                )),
-            const SizedBox(height: 10),
-            MultiSelectContainer(
-              controller: itemOrderController,
-              itemsDecoration: MultiSelectDecorations(
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              suffix: tagSuffix,
-              items: [
-                MultiSelectCard(value: "price_desc", label: "倒序"),
-                MultiSelectCard(value: "price_asc", label: "正序"),
-              ], onChange: (List<dynamic> selectedItems, selectedItem) {
-                if (selectedItem == "price_desc") {
-                  searchKey.priceOrder = false;
-                  searchKey.orderSelected = true;
-                } else if (selectedItem == "price_asc") {
-                  searchKey.priceOrder = true;
-                  searchKey.orderSelected = true;
-                }
-            },
-            ),
+    ),
+  );
+}
 
-            const SizedBox(height: 10),
-            const Text("价格",
-                style: TextStyle(
-                  fontSize: 15,
-                )),
-            const SizedBox(height: 10),
-            MultiSelectContainer(
-                itemsDecoration: MultiSelectDecorations(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+class ShopSearchFields extends StatefulWidget {
+  const ShopSearchFields(
+      {super.key, required this.draft, required this.onApply});
+  final ShopSearchDraft draft;
+  final VoidCallback onApply;
+
+  @override
+  State<ShopSearchFields> createState() => _ShopSearchFieldsState();
+}
+
+class _ShopSearchFieldsState extends State<ShopSearchFields> {
+  @override
+  void dispose() {
+    widget.draft.dispose();
+    super.dispose();
+  }
+
+  Widget _chip(String key, String label, bool selected, VoidCallback select) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    return ChoiceChip(
+      key: ValueKey(key),
+      label: Text(label,
+          style: theme.textTheme.labelMedium?.copyWith(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
+              color: selected ? colors.primary : colors.onSurfaceVariant)),
+      selected: selected,
+      showCheckmark: true,
+      backgroundColor: colors.surface,
+      selectedColor: Color.alphaBlend(
+          colors.primary.withValues(alpha: dark ? .14 : .08), colors.surface),
+      checkmarkColor: colors.primary,
+      side: BorderSide(
+          color: selected
+              ? colors.primary.withValues(alpha: dark ? .30 : .20)
+              : colors.outlineVariant),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+      onSelected: (_) => widget.draft.change(select),
+    );
+  }
+
+  Widget _section(String title, List<Widget> children) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Wrap(spacing: 6, runSpacing: 2, children: children),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: widget.draft,
+        builder: (context, _) {
+          final draft = widget.draft;
+          final value = draft.value;
+          final sort = value.orderSelected ? (value.priceOrder ? 1 : 2) : 0;
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: draft.text,
+                builder: (context, text, _) => TextField(
+                  key: const ValueKey('shop-search-text'),
+                  controller: draft.text,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => widget.onApply(),
+                  decoration: InputDecoration(
+                    hintText: '搜索中英文名称',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: text.text.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: '清空名称',
+                            icon: const Icon(Icons.close),
+                            onPressed: draft.text.clear),
                   ),
                 ),
-                suffix: tagSuffix,
-                items: [
-                  MultiSelectCard(value: "all", label: "全部"),
-                  MultiSelectCard(value: "0-100", label: "0-100"),
-                  MultiSelectCard(value: "100-500", label: "100-500"),
-                  MultiSelectCard(value: "500+", label: "500+")
+              ),
+              _section('价格区间', [
+                for (final option in shopPriceLabels.entries)
+                  _chip(
+                      'shop-price-${option.key}',
+                      option.value,
+                      value.priceRange.contains(option.key),
+                      () => value.priceRange = [option.key]),
+              ]),
+              _section('商品版本', [
+                for (final option
+                    in const {'all': '不限', 'warbond': '战争债券'}.entries)
+                  _chip(
+                      'shop-version-${option.key}',
+                      option.value,
+                      value.itemFlags.contains(option.key),
+                      () => value.itemFlags = [option.key]),
+              ]),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<int>(
+                key: ValueKey('shop-sort-$sort'),
+                initialValue: sort,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '排序'),
+                items: const [
+                  DropdownMenuItem(value: 0, child: Text('默认顺序')),
+                  DropdownMenuItem(value: 1, child: Text('价格从低到高')),
+                  DropdownMenuItem(value: 2, child: Text('价格从高到低')),
                 ],
-                onChange: (allSelectedItems, selectedItem) {
-                  searchKey.priceRange = [];
-                  for (var item in allSelectedItems) {
-                    searchKey.priceRange.add(item);
-                  }
+                onChanged: (sort) => draft.change(() {
+                  value.orderSelected = sort != 0;
+                  value.priceOrder = sort == 1;
                 }),
-            const SizedBox(height: 10),
-            const Text("特殊标签",
-                style: TextStyle(
-                  fontSize: 15,
-                )),
-            const SizedBox(height: 10),
-            MultiSelectContainer(
-                itemsDecoration: MultiSelectDecorations(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                suffix: tagSuffix,
-                items: [
-                  MultiSelectCard(value: "all", label: "全部"),
-                  MultiSelectCard(value: "warbond", label: "战争债券"),
-                ],
-                onChange: (allSelectedItems, selectedItem) {
-                  searchKey.itemFlags = [];
-                  for (var item in allSelectedItems) {
-                    searchKey.itemFlags.add(item);
-                  }
-                }
-            ),
-            const SizedBox(
-              height: 100,
-            ),
-          ],
-        ),
-      ),
-      stickyActionBar: Container(
-        height: 80,
-        width: double.infinity,
-        padding:
-            const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
-        child: SizedBox(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-            ),
-            onPressed: () async {
-              searchKey.searchText = searchController.text;
-              Provider.of<MainDataModel>(context, listen: false).updateShopSearchProperty(searchKey);
-              Navigator.of(context).pop();
-            },
-            child: const Text('确认',
-                style: TextStyle(
-                  fontSize: 16,
-                )),
-          ),
-        ),
-      ));
+              ),
+            ]),
+          );
+        },
+      );
 }

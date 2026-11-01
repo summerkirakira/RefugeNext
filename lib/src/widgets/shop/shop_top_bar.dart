@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:refuge_next/src/funcs/toast.dart';
 import 'package:refuge_next/src/widgets/shop/upgrade_shop/upgrade_checkout_bottomsheet.dart';
 import 'package:refuge_next/src/widgets/webview/rsi_webpage.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../funcs/validation.dart';
 import '../user_info/user_login_page.dart';
 import 'shop_search_bottomsheet.dart';
@@ -28,6 +27,7 @@ class ShopTopBar extends StatefulWidget {
 class _ShopTopBarState extends State<ShopTopBar> {
   bool _openingCart = false;
   bool _openingUpgrade = false;
+  bool _openingSearch = false;
 
   Future<void> _openCart() async {
     if (_openingCart) return;
@@ -121,14 +121,11 @@ class _ShopTopBarState extends State<ShopTopBar> {
                   child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.shopping_cart_outlined)),
               IconButton(
-                  onPressed: () {
-                    WoltModalSheet.show<void>(
-                        context: context,
-                        pageListBuilder: (modalSheetContext) {
-                          return [
-                            getShopSearchBottomSheet(context)
-                          ];
-                        });
+                  tooltip: '搜索与筛选',
+                  onPressed: _openingSearch ? null : () async {
+                    setState(() => _openingSearch = true);
+                    try { await showShopSearch(context); }
+                    finally { if (mounted) setState(() => _openingSearch = false); }
                   },
                   icon: const Icon(Icons.search)),
             ],
