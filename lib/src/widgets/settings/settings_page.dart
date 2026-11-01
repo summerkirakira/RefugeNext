@@ -1,3 +1,5 @@
+import '../../services/update/app_update_controller.dart';
+import '../update/app_update_sheet.dart';
 import 'dart:io';
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
@@ -36,6 +38,16 @@ class SettingsPage extends StatefulWidget {
 
 
 class _SettingsPageState extends State<SettingsPage> {
+
+  @override
+  void dispose() {
+    if (AppUpdateController.supported) AppUpdateController.instance.removeListener(_updateChanged);
+    super.dispose();
+  }
+
+  void _updateChanged() {
+    if (mounted) setState(() {});
+  }
 
   String version = "loading...";
   DateTime? _lastTapTime;
@@ -340,6 +352,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    if (AppUpdateController.supported) AppUpdateController.instance.addListener(_updateChanged);
     getVersion();
     _loadRefugeAccountInfo();
   }
@@ -745,11 +758,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SettingsItem(
                     onTap: () {
-                      launchUrl(Uri.parse("https://github.com/summerkirakira/RefugeNext/releases"), mode: LaunchMode.externalApplication);
+                      if (AppUpdateController.supported) {
+                        showAppUpdateSheet(context);
+                      } else {
+                        launchUrl(Uri.parse("https://github.com/summerkirakira/RefugeNext/releases"), mode: LaunchMode.externalApplication);
+                      }
                     },
                     icons: Icons.download_outlined,
-                    title: "最新版本",
-                    subtitle: "https://github.com/summerkirakira/RefugeNext/releases",
+                    title: AppUpdateController.supported ? "检查更新" : "最新版本",
+                    subtitle: AppUpdateController.supported
+                        ? updateSettingsSubtitle(AppUpdateController.instance)
+                        : "https://github.com/summerkirakira/RefugeNext/releases",
                   ),
                   SettingsItem(
                     onTap: () {

@@ -4,12 +4,14 @@ import WebKit
 import desktop_multi_window
 
 class MainFlutterWindow: NSWindow {
+  private var updateBridge: AppUpdateBridge?
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
 
+    updateBridge = AppUpdateBridge(messenger: flutterViewController.engine.binaryMessenger)
     RegisterGeneratedPlugins(registry: flutterViewController)
     FlutterMultiWindowPlugin.setOnWindowCreatedCallback { controller in
       RegisterGeneratedPlugins(registry: controller)

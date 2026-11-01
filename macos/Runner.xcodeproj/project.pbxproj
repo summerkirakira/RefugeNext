@@ -29,6 +29,9 @@
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		8496825BA213E58DA0A8D586 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A6ED4AC0AF0481BFC13393 /* Pods_RunnerTests.framework */; };
 		F1EABE6D434CBE0711EB8C00 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 040D79F48F489ED14526AA8B /* Pods_Runner.framework */; };
+		ABCD44310000000000000000 /* MacUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD44300000000000000000; };
+		ABCD44310000000000000001 /* AppUpdateBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD44300000000000000001; };
+		ABCD44310000000000000002 /* LegacyDataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD44300000000000000002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +91,9 @@
 		AC4F32EC80B1B1B2CBDAAAAB /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		BCB07EB4B88BCD13834F8EB8 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		F3B0289BBD5A45479AB36276 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		ABCD44300000000000000000 /* MacUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Packages/RefugeAppUpdate/Sources/RefugeAppUpdate/MacUpdate.swift"; sourceTree = SOURCE_ROOT; };
+		ABCD44300000000000000001 /* AppUpdateBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Runner/AppUpdateBridge.swift"; sourceTree = SOURCE_ROOT; };
+		ABCD44300000000000000002 /* LegacyDataMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Packages/RefugeAppUpdate/Sources/RefugeAppUpdate/LegacyDataMigration.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +182,9 @@
 			isa = PBXGroup;
 			children = (
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
+				ABCD44300000000000000002 /* LegacyDataMigration.swift */,
+				ABCD44300000000000000001 /* AppUpdateBridge.swift */,
+				ABCD44300000000000000000 /* MacUpdate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
@@ -437,6 +446,9 @@
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
+				ABCD44310000000000000002 /* LegacyDataMigration.swift in Sources */,
+				ABCD44310000000000000001 /* AppUpdateBridge.swift in Sources */,
+				ABCD44310000000000000000 /* MacUpdate.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -555,7 +567,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -644,7 +656,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -694,7 +706,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;

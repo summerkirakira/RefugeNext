@@ -1,3 +1,4 @@
+import 'src/services/update/desktop_update_backend.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +14,6 @@ import 'src/widgets/shop/shop_page.dart';
 import 'src/widgets/database/database_page.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:refuge_next/src/widgets/empty_page/empty_page.dart' show EmptyPage;
-import 'package:refuge_next/src/funcs/cirno_auth.dart';
 import 'package:refuge_next/src/funcs/app_update.dart';
 import 'package:toastification/toastification.dart';
 import 'package:window_manager/window_manager.dart';
@@ -51,6 +51,15 @@ void main(List<String> args) async {
     );
   }
 
+  if (Platform.isMacOS) {
+    try {
+      await desktopUpdateChannel.invokeMethod<void>('prepareStorage');
+    } catch (error) {
+      runApp(MaterialApp(home: Scaffold(body: Center(child: Text(
+          '旧版数据迁移失败，请检查文件访问权限后重新打开应用。\n$error')))));
+      return;
+    }
+  }
   await mustStartup();
 
   // 初始化window manager和tray manager（仅桌面平台）
@@ -93,6 +102,11 @@ void main(List<String> args) async {
     await TrayManagerService().initialize();
   }
 
+  if (Platform.isMacOS) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await desktopUpdateChannel.invokeMethod<void>('startupReady');
+    });
+  }
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider<MainDataModel>(
@@ -150,9 +164,11 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       windowManager.addListener(this);
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkUpdate();
-      showStarDialog(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final hasUpdate = await checkForAppUpdate(context);
+      if (mounted && !hasUpdate && (ModalRoute.of(context)?.isCurrent ?? true)) {
+        await showStarDialog(context);
+      }
     });
   }
 
@@ -236,9 +252,5 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     }
   }
 
-  Future<void> checkUpdate() async {
-    final auth = await CirnoAuth.getInstance();
-    auth.addAfterInit(() => showUpdateDialog(context, auth.property!));
-  }
 
 }

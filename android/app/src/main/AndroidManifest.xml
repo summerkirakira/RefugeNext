@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
@@ -34,8 +36,8 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <provider
-                android:name="sk.fourq.otaupdate.OtaUpdateFileProvider"
-                android:authorities="${applicationId}.ota_update_provider"
+                android:name="vip.kirakira.starcitizenlite.UpdateFileProvider"
+                android:authorities="${applicationId}.app_update_provider"
                 android:exported="false"
                 android:grantUriPermissions="true">
             <meta-data

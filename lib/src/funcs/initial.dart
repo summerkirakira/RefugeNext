@@ -121,15 +121,21 @@ Future<void> setVip() async {
 Future<void> startup() async {
   final rsiApiClient = RsiApiClient();
   final cirnoAuth = await CirnoAuth.getInstance();
+  final rsiStartup = () async {
+    try {
+      await rsiApiClient.refreshCsrfToken();
+      await setCurrency();
+    } catch (e) {
+      print('Error during RSI startup: $e');
+    }
+  }();
   try {
-    await rsiApiClient.refreshCsrfToken();
     await cirnoAuth.initialize();
 
     await updateShipAlias(cirnoAuth.property!);
     await updateTranslation(cirnoAuth.property!);
     await updateShipInfo(cirnoAuth.property!);
 
-    await setCurrency();
     await setVip();
 
 
@@ -143,5 +149,6 @@ Future<void> startup() async {
   } catch (e) {
     print('Error during startup: $e');
   }
+  await rsiStartup;
 
 }

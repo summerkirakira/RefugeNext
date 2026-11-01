@@ -9,6 +9,7 @@ import '../utils/storage_path.dart';
 
 class UserRepo {
   static final Lock _lock = Lock();
+  Future<void> flushPendingWrites() => _lock.synchronized(() async {});
   Future<String> get _localPath async {
     return await StoragePath.getAppDataPath();
   }

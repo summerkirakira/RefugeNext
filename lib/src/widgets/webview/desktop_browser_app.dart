@@ -27,6 +27,8 @@ Future<bool> runDesktopBrowserWindow() async {
         await windowManager.focus();
       case 'window_hide':
         await windowManager.hide();
+      case 'closeForUpdate':
+        await _closeBrowserWindow();
       case 'invalidate':
         valid.value = false;
         if (!started) await _closeBrowserWindow();

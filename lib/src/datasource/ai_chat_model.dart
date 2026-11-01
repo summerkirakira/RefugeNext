@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../repo/ai_chat.dart';
+import '../services/update/update_shutdown.dart';
 import 'models/ai/ai_message.dart';
 import 'models/ai/ai_stream_event.dart';
 import 'models/ai/ai_usage.dart';
@@ -37,7 +38,20 @@ class AiChatModel extends ChangeNotifier {
     this.scene = 'qa',
     AiRepo? repo,
   })  : _sessionId = sessionId,
-        _repo = repo ?? AiRepo();
+        _repo = repo ?? AiRepo() {
+    UpdateShutdown.register(_finishForUpdate);
+  }
+
+  Future<void> _finishForUpdate() async {
+    if (!_isGenerating) return;
+    stop();
+    // The existing cancellation path persists the generated portion before
+    // clearing _isGenerating. The caller owns a bounded shutdown timeout.
+    while (_isGenerating) {
+      await Future<void>.delayed(const Duration(milliseconds: 25));
+    }
+    await _repo.saveHistory(_sessionId, _messages);
+  }
 
   /// 当前会话 id。
   String get currentSessionId => _sessionId;
@@ -310,6 +324,7 @@ class AiChatModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    UpdateShutdown.unregister(_finishForUpdate);
     _cancelToken?.cancel('disposed');
     super.dispose();
   }

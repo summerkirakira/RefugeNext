@@ -11,6 +11,9 @@ class MainActivity: FlutterFragmentActivity() {
     private val CHANNEL = "vip.kirakira.refuge_next/get_uuid"
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val updater = AppUpdateBridge(this)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
+            "vip.kirakira.refuge_next/app_update").setMethodCallHandler(updater::handle)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
             "vip.kirakira.refuge_next/rsi_cookies").setMethodCallHandler { call, result ->
             val manager = CookieManager.getInstance()

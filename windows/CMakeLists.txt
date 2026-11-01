@@ -111,3 +111,8 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# Detached desktop updater; no Flutter runtime dependency.
+enable_testing()
+add_subdirectory("native")
+add_dependencies(${BINARY_NAME} refuge_updater)

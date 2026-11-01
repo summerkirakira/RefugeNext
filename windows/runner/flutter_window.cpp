@@ -1,6 +1,7 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
@@ -31,6 +32,14 @@ bool FlutterWindow::OnCreate() {
         reinterpret_cast<flutter::FlutterViewController*>(controller);
     RegisterPlugins(view_controller->engine());
   });
+  update_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "vip.kirakira.refuge_next/app_update",
+      &flutter::StandardMethodCodec::GetInstance());
+  update_channel_->SetMethodCallHandler([this](const auto& call, auto result) {
+    if (call.method_name() != "exitForUpdate") { result->NotImplemented(); return; }
+    result->Success();
+    PostMessageW(GetHandle(), WM_APP + 321, 0, 0);
+  });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -46,6 +55,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  update_channel_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -57,6 +67,11 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (message == WM_APP + 321) {
+    // Bypass window_manager's close-to-tray interception after update commit.
+    PostQuitMessage(0);
+    return 0;
+  }
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

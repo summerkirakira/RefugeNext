@@ -13,6 +13,7 @@ void main() {
   const codec = StandardMethodCodec();
   final browserArgs = <Map<String, dynamic>>[];
   final invalidated = <String>[];
+  final closedForUpdate = <String>[];
   final registered = <String>{};
   var failCreation = false;
 
@@ -34,6 +35,7 @@ void main() {
   setUp(() {
     browserArgs.clear();
     invalidated.clear();
+    closedForUpdate.clear();
     registered.clear();
     failCreation = false;
     binding.defaultBinaryMessenger.setMockMethodCallHandler(channels,
@@ -45,6 +47,9 @@ void main() {
         case 'unregisterMethodHandler':
           registered.remove(args['channel']);
         case 'invokeMethod':
+          if (args['method'] == 'closeForUpdate') {
+            closedForUpdate.add(args['channel'] as String);
+          }
           if (args['method'] == 'invalidate') {
             invalidated.add(args['channel'] as String);
           }
@@ -94,6 +99,21 @@ void main() {
     expect(await first.closed, false);
     expect(await public.closed, false);
     expect(invalidated.length, 2);
+    await Future<void>.delayed(Duration.zero);
+    expect(registered, isEmpty);
+  });
+
+  test('重启更新关闭全部官网窗口并保留账号会话', () async {
+    final generation = RsiSessionService.instance.generation;
+    final first = await DesktopRsiWebview.instance
+        .open(url: 'https://example.com/one', authenticated: false);
+    final second = await DesktopRsiWebview.instance
+        .open(url: 'https://example.com/two', authenticated: false);
+    await DesktopRsiWebview.instance.closeForUpdate();
+    expect(closedForUpdate.length, 2);
+    expect(await first.closed, false);
+    expect(await second.closed, false);
+    expect(RsiSessionService.instance.generation, generation);
     await Future<void>.delayed(Duration.zero);
     expect(registered, isEmpty);
   });

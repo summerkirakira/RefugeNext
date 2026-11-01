@@ -110,8 +110,15 @@ class CirnoApiClient {
       'androidVersion': androidVersion,
       'systemModel': systemModel,
     };
-    final response = await basicPost(endpoint: 'v2/version', data: data);
-    return RefugeVersionProperty.fromJson(response.data);
+    final cancel = CancelToken();
+    try {
+      final response = await _dio.post('${baseUrl}v2/version', data: data,
+          cancelToken: cancel).timeout(const Duration(seconds: 15));
+      return RefugeVersionProperty.fromJson(response.data);
+    } on TimeoutException {
+      cancel.cancel('Version check timed out');
+      rethrow;
+    }
   }
 
 

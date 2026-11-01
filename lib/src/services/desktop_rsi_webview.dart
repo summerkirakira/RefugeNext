@@ -68,6 +68,15 @@ class DesktopRsiWebview {
     } catch (_) {}
   }
 
+  Future<void> closeForUpdate() async {
+    for (final entry in _windows.entries.toList()) {
+      final browser = entry.value;
+      if (browser.syncing != null) await browser.syncing;
+      await browser.controller?.invokeMethod('closeForUpdate');
+      _complete(entry.key, browser, false);
+    }
+  }
+
   void _accountChanged() {
     for (final entry in _windows.entries.toList()) {
       final attempt = entry.value.attempt;

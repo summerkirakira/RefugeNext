@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 import 'package:refuge_next/src/services/android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,6 @@ import 'package:refuge_next/src/datasource/models/cirno/property.dart';
 import 'package:refuge_next/src/network/cirno/cirno_api.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-
 
 Future<String> getCirnoUUID() async {
   final prefs = await SharedPreferences.getInstance();
@@ -43,7 +43,7 @@ Future<String> getDeviceModel() async {
       model = iosInfo.utsname.machine;
     }
   } catch (e) {
-    print('Error getting device info: $e');
+    debugPrint('Error getting device info: $e');
   }
 
   return model;
@@ -59,21 +59,34 @@ Future<DeviceInfo> getDeviceInfo() async {
 }
 
 class CirnoAuth {
-  CirnoAuth._();
+  CirnoAuth._() : _loadProperty = null;
+
+  @visibleForTesting
+  CirnoAuth.forTesting(Future<RefugeVersionProperty> Function() loadProperty)
+      : _loadProperty = loadProperty;
+
+  final Future<RefugeVersionProperty> Function()? _loadProperty;
 
   static CirnoAuth? _instance;
   late String _uuid;
   RefugeVersionProperty? _property;
   bool _initialized = false;
-  List<Function> _afterInit = [];
+  final List<Function> _afterInit = [];
+  Future<void>? _request;
+  static Future<CirnoAuth>? _instanceLoading;
 
+  static Future<CirnoAuth> getInstance() =>
+      _instanceLoading ??= _createInstance();
 
-  static Future<CirnoAuth> getInstance() async {
-    if (_instance == null) {
-      _instance = CirnoAuth._();
-      await _instance!._initialize();
+  static Future<CirnoAuth> _createInstance() async {
+    final auth = _instance ??= CirnoAuth._();
+    try {
+      await auth._initialize();
+      return auth;
+    } catch (_) {
+      _instanceLoading = null;
+      rethrow;
     }
-    return _instance!;
   }
 
   static CirnoAuth? get instance => _instance;
@@ -82,13 +95,8 @@ class CirnoAuth {
     _uuid = await getCirnoUUID();
   }
 
-  Future<void> initialize() async {
-    await getRefugeVersion();
-    _initialized = true;
-    for (var func in _afterInit) {
-      func();
-    }
-  }
+  Future<void> initialize() =>
+      _initialized ? Future.value() : getRefugeVersion();
 
   void addAfterInit(Function func) {
     if (_initialized) {
@@ -98,10 +106,23 @@ class CirnoAuth {
     }
   }
 
-  Future<void> getRefugeVersion() async {
-    final deviceInfo = await getDeviceInfo();
-    final property = await CirnoApiClient().getRefugeVersion(deviceInfo.version, deviceInfo.androidVersion, deviceInfo.systemModel);
-    _property = property;
+  Future<void> getRefugeVersion() =>
+      _request ??= _fetchProperty().whenComplete(() => _request = null);
+
+  Future<void> _fetchProperty() async {
+    if (_loadProperty != null) {
+      _property = await _loadProperty();
+    } else {
+      final deviceInfo = await getDeviceInfo();
+      _property = await CirnoApiClient().getRefugeVersion(deviceInfo.version,
+          deviceInfo.androidVersion, deviceInfo.systemModel);
+    }
+    _initialized = true;
+    final callbacks = List<Function>.of(_afterInit);
+    _afterInit.clear();
+    for (final callback in callbacks) {
+      callback();
+    }
   }
 
   /// 刷新订阅状态和配置信息
@@ -114,5 +135,4 @@ class CirnoAuth {
   RefugeVersionProperty? get property => _property;
 
   bool get isInitialized => _initialized;
-
 }

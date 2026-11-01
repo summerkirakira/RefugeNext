@@ -30,7 +30,8 @@ Future<void> showStarDialog(BuildContext context, {double probability = 0.2}) as
     // 更新显示时间
     await preferences.setInt('last_star_dialog_time', now);
 
-    QuickAlert.show(
+    if (!context.mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    await QuickAlert.show(
         context: context,
         type: QuickAlertType.confirm,
         title: "给星河避难所一个Star OwO",
