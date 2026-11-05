@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +19,7 @@ import 'package:refuge_next/src/repo/game_item_translation.dart';
 import 'package:refuge_next/src/repo/ship_alias.dart';
 import 'package:refuge_next/src/repo/translation.dart';
 import 'package:refuge_next/src/repo/wiki_data_sync.dart';
+import 'package:refuge_next/src/widgets/common/wiki_image_fallback.dart';
 import 'package:refuge_next/src/widgets/database/database_page.dart';
 import 'package:refuge_next/src/widgets/database/database_search_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart';
@@ -32,6 +35,9 @@ class _Model extends MainDataModel {
   Future<void>? readiness;
   @override
   Future<void> get localizationReady => readiness ?? super.localizationReady;
+  bool loaded = false;
+  @override
+  bool get localizationLoaded => loaded;
   @override
   Future<void> initUser() async {}
   @override
@@ -51,6 +57,36 @@ class _Network implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+const _thumbUrl = 'https://example.test/thumb.jpg';
+const _originalUrl = 'https://example.test/original.jpg';
+
+GameVehicle _vehicleWithImage() => GameVehicle(
+      uuid: 'eclipse',
+      name: 'Eclipse',
+      images: [
+        GameVehicleImagesInner(
+          thumbnailUrl: _thumbUrl,
+          originalUrl: _originalUrl,
+        ),
+      ],
+    );
+
+/// 图片缓存替身:[failing] 中的地址立即失败,其余地址一直处于加载中。
+class _ImageCache implements BaseCacheManager {
+  _ImageCache([this.failing = const {}]);
+  final Set<String> failing;
+
+  @override
+  Stream<FileResponse> getFileStream(String url,
+      {String? key, Map<String, String>? headers, bool withProgress = false}) {
+    if (failing.contains(url)) return Stream.error(Exception('failed: $url'));
+    return StreamController<FileResponse>().stream;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Future<void> _mount(WidgetTester tester, _Model model, Widget page) async {
@@ -90,6 +126,7 @@ void main() {
     await GameItemTranslationRepo().load();
   });
   setUp(() async {
+    CachedNetworkImageProvider.defaultCacheManager = _ImageCache();
     network = _Network();
     WikiApiClient().api.dio.httpClientAdapter = network;
     WikiDataSync().datasets = [];
@@ -241,6 +278,114 @@ void main() {
     expect(network.requests, 0);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('vehicle details from a loaded list skip the loading frame',
+      (tester) async {
+    final model = _Model()
+      ..readiness = Future.value()
+      ..loaded = true;
+    addTearDown(model.dispose);
+    await tester.pumpWidget(ChangeNotifierProvider<MainDataModel>.value(
+      value: model,
+      child: MaterialApp(
+        home: VehicleDetailPage(
+            initialVehicle: _vehicleWithImage(), allowSwitch: false),
+      ),
+    ));
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Eclipse'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('vehicle details wait when no thumbnail can be resolved yet',
+      (tester) async {
+    final model = _Model()
+      ..readiness = Completer<void>().future
+      ..loaded = true;
+    addTearDown(model.dispose);
+    await tester.pumpWidget(ChangeNotifierProvider<MainDataModel>.value(
+      value: model,
+      child: MaterialApp(
+        home: VehicleDetailPage(
+            initialVehicle: vehicles.first, allowSwitch: false),
+      ),
+    ));
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  group('vehicle header image', () {
+    Future<Iterable<String>> pumpHeader(
+        WidgetTester tester, Set<String> failing) async {
+      CachedNetworkImageProvider.defaultCacheManager = _ImageCache(failing);
+      // 图片缓存按地址复用请求,不清空会沿用上个测试中未完成的请求。
+      imageCache
+        ..clear()
+        ..clearLiveImages();
+      final model = _Model()
+        ..readiness = Future.value()
+        ..loaded = true;
+      addTearDown(model.dispose);
+      await tester.pumpWidget(ChangeNotifierProvider<MainDataModel>.value(
+        value: model,
+        child: MaterialApp(
+          home: VehicleDetailPage(
+              initialVehicle: _vehicleWithImage(), allowSwitch: false),
+        ),
+      ));
+      // 图片错误经真实事件循环传递,需要交替等待才能走完回退链。
+      for (var i = 0; i < 8; i++) {
+        await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 10)));
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      return tester
+          .widgetList<CachedNetworkImage>(find.byType(CachedNetworkImage))
+          .map((image) => image.imageUrl);
+    }
+
+    testWidgets('previews the thumbnail while the original loads',
+        (tester) async {
+      final urls = await pumpHeader(tester, {});
+      expect(urls, containsAll([_originalUrl, _thumbUrl]));
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('swaps the thumbnail for the original without fading',
+        (tester) async {
+      await pumpHeader(tester, {});
+      final images = tester
+          .widgetList<CachedNetworkImage>(find.byType(CachedNetworkImage));
+      expect(images, hasLength(2));
+      for (final image in images) {
+        expect(image.fadeInDuration, Duration.zero);
+        expect(image.fadeOutDuration, Duration.zero);
+      }
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('falls back to the thumbnail mirror', (tester) async {
+      final urls = await pumpHeader(tester, {_thumbUrl});
+      expect(urls, contains(wikiImageFallbackUrls(_thumbUrl).first));
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('keeps the thumbnail after the original fails', (tester) async {
+      final urls = await pumpHeader(tester, {
+        _originalUrl,
+        ...wikiImageFallbackUrls(_originalUrl),
+      });
+      // 回退链逐层嵌套:能找到原图镜像说明走完了回退,缩略图仍在其中显示。
+      expect(urls, contains(wikiImageFallbackUrls(_originalUrl).first));
+      expect(urls, contains(_thumbUrl));
+      await tester.pumpWidget(const SizedBox());
+    });
   });
 
   testWidgets('closing during local loading detaches all listeners',

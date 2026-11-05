@@ -28,11 +28,15 @@ List<String> wikiImageFallbackUrls(String? url) {
 /// 供各图片站点的 errorWidget 复用：依次尝试 SHA-256 镜像候选，
 /// 全部失败或没有候选时返回最终占位 [onFail]。
 /// [imageBuilder] 传入与 primary 相同的圆角 builder（列表卡片用）；详情页传 null 走 [fit]。
+/// [placeholder] 在镜像加载期间显示，不传时为空白。
 Widget wikiImageFallback(
   String url, {
   required Widget onFail,
   Widget Function(BuildContext, ImageProvider)? imageBuilder,
   BoxFit fit = BoxFit.cover,
+  Widget? placeholder,
+  Duration fadeInDuration = const Duration(milliseconds: 500),
+  Duration fadeOutDuration = const Duration(milliseconds: 1000),
 }) {
   final candidates = wikiImageFallbackUrls(url);
   Widget attempt(int index) {
@@ -42,6 +46,9 @@ Widget wikiImageFallback(
       imageUrl: candidates[index],
       fit: imageBuilder == null ? fit : null,
       imageBuilder: imageBuilder,
+      placeholder: placeholder == null ? null : (_, __) => placeholder,
+      fadeInDuration: fadeInDuration,
+      fadeOutDuration: fadeOutDuration,
       errorWidget: (_, __, ___) => attempt(index + 1),
     );
   }

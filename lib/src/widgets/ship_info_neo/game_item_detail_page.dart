@@ -12,6 +12,7 @@ import 'package:refuge_next/src/widgets/ship_info/ship_info_menu.dart';
 import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
 import '../common/terminal_localization_state.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 // 通用样式常量(仿 vehicle_detail_page)。
 const kItemValueStyle = TextStyle(fontSize: 13);
@@ -101,6 +102,9 @@ class _GameItemDetailPageState extends State<GameItemDetailPage>
   GameItem? _selected;
   bool _loading = true;
 
+  /// 蓝图本地缓存是否已读完;读完前不能判定「未找到蓝图」。
+  bool _blueprintsLoaded = false;
+
   /// 蓝图详情缓存(按蓝图 uuid):列表端点不含 unlockingMissions,
   /// 按需补拉详情后缓存,供「蓝图」页签展示解锁任务。
   final Map<String, Blueprint> _bpDetailCache = {};
@@ -112,6 +116,11 @@ class _GameItemDetailPageState extends State<GameItemDetailPage>
   @override
   void initState() {
     super.initState();
+    // 从列表进入时数据已传入,直接显示;全量列表和蓝图仍在后台加载。
+    if (widget.initialItem != null && localizationLoaded) {
+      _selected = widget.initialItem;
+      _loading = false;
+    }
     Future.wait([
       widget.loadItems(),
       localizationReady,
@@ -125,6 +134,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage>
         _selected = widget.initialItem ??
             (items.isNotEmpty ? items.first : null);
         _loading = false;
+        _blueprintsLoaded = true;
       });
       _enrichSelectedBlueprint();
       _enrichSelectedItem();
@@ -176,6 +186,7 @@ class _GameItemDetailPageState extends State<GameItemDetailPage>
     final base =
         uuid == null ? null : BlueprintRepo().findByOutputItemUuidSync(uuid);
     if (base == null) {
+      if (!_blueprintsLoaded) return const [];
       return const [
         Padding(
           padding: EdgeInsets.only(top: 24),
@@ -976,7 +987,7 @@ Widget _blueprintMissionsCard(List<BlueprintUnlockingMission> missions,
   return itemCard('解锁任务(${missions.length})', [
     for (final m in missions)
       if (onTapMission != null)
-        InkWell(onTap: () => onTapMission(m), child: rowBody(m))
+        InkWell(borderRadius: hoverBorderRadius, onTap: () => onTapMission(m), child: rowBody(m))
       else
         rowBody(m),
   ]);

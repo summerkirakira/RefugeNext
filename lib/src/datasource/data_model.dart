@@ -486,9 +486,14 @@ class MainDataModel extends ChangeNotifier {
   Future<void> get localizationReady =>
       _localizationReady ??= _loadLocalization();
 
+  /// 翻译是否已加载完成,页面据此判断能否跳过首帧等待。
+  bool _localizationLoaded = false;
+  bool get localizationLoaded => _localizationLoaded;
+
   Future<void> _loadLocalization() async {
     await loadTerminalLocalization();
     _enableHangarTranslation = TranslationRepo().translationEnabled;
+    _localizationLoaded = true;
   }
 
   bool _enableRealtimeLogSync = false;

@@ -10,6 +10,10 @@ mixin TerminalLocalizationState<T extends StatefulWidget> on State<T> {
       context.read<MainDataModel?>()?.localizationReady ??
           loadTerminalLocalization();
 
+  /// 翻译已就绪时为 true,此时页面可以直接显示已有数据,不必等待首帧。
+  bool get localizationLoaded =>
+      context.read<MainDataModel?>()?.localizationLoaded ?? false;
+
   @override
   void initState() {
     super.initState();
