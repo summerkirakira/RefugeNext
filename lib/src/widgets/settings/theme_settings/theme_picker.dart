@@ -3,6 +3,7 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 
 class ThemePicker extends StatelessWidget {
@@ -62,7 +63,8 @@ class ThemePicker extends StatelessWidget {
       itemBuilder: (context, index) {
         final color = colors[index];
         final isSelected = color == selectedColor;
-        return GestureDetector(
+        return HoverGestureDetector(
+          borderRadius: hoverCircleBorderRadius,
           onTap: () => {
             onThemeChanged(FlexScheme.values[index])
           },

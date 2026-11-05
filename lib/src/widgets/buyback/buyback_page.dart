@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../datasource/data_model.dart';
 import 'buyback_item.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 class BuybackPage extends StatefulWidget {
   final Key? refreshKey;
@@ -75,7 +76,7 @@ class _BuybackPageState extends State<BuybackPage> {
                           Positioned(
                               right: 5,
                               top: 3,
-                              child: GestureDetector(
+                              child: HoverGestureDetector(
                                 onTap: () {
                                   Provider.of<MainDataModel>(context, listen: false).clearSearch();
                                 },

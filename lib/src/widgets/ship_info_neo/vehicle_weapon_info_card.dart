@@ -7,6 +7,7 @@ import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart'
     show kItemTypeValueCn, gameItemDisplayName;
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_weapon_detail_page.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// 载具武器(机炮)信息小卡片,样式仿 AI 舰船卡 [VehicleInfoCard]:
 /// 左侧 wiki 题图,右侧 名称 + 厂商 + 类型/尺寸标签 + aUEC 价格。
@@ -70,7 +71,8 @@ class VehicleWeaponInfoCard extends StatelessWidget {
     ];
     final cs = Theme.of(context).colorScheme;
 
-    return GestureDetector(
+    return HoverGestureDetector(
+      overlayMargin: hoverCardMargin,
       onTap: onTap ?? () => _defaultTap(context),
       child: SizedBox(
         height: 118,

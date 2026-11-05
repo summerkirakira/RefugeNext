@@ -9,6 +9,7 @@ import '../../../datasource/models/spectrum/friend_request.dart';
 import '../../../datasource/models/friend.dart';
 import '../../../network/api_service.dart';
 import '../../../funcs/toast.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 String _formatTime(int? timestamp) {
   if (timestamp == null) return '';
@@ -258,7 +259,7 @@ class _FriendRequestContentState extends State<FriendRequestContent> {
                       style: TextStyle(fontSize: 11, color: Colors.orange[700], fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 5),
-                GestureDetector(
+                HoverGestureDetector(
                   onTap: () => _cancel(request.id),
                   child: Text('取消', style: TextStyle(fontSize: 11, color: Colors.grey[600], decoration: TextDecoration.underline)),
                 ),

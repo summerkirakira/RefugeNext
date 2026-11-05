@@ -6,6 +6,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_detail_page.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/vehicle_thumbnail.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// 舰船信息小卡片(AI `show_item_card` 的渲染单元)。
 ///
@@ -80,7 +81,8 @@ class VehicleInfoCard extends StatelessWidget {
     final auec = _auec();
     final cs = Theme.of(context).colorScheme;
 
-    return GestureDetector(
+    return HoverGestureDetector(
+      overlayMargin: hoverCardMargin,
       onTap: onTap ?? () => _defaultTap(context),
       child: SizedBox(
         height: 118,

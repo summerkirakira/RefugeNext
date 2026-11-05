@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/data_model.dart';
 import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 import 'package:refuge_next/src/funcs/ship_info/load_ship_widgets.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 class SubBlock {
   final double height;
@@ -101,13 +102,9 @@ class AdaptiveBlocks extends StatelessWidget {
       );
 
       if (subBlock.onTap != null) {
-        container = Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: subBlock.onTap,
-            borderRadius: BorderRadius.circular(2),
-            child: container,
-          ),
+        container = HoverGestureDetector(
+          onTap: subBlock.onTap,
+          child: container,
         );
       }
 

@@ -20,6 +20,7 @@ import '../../funcs/images.dart';
 import '../ship_info/ship_full_page.dart';
 import 'ccu_optimizor/hangar_util.dart';
 import 'hangar_cover_image.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 
 String priceString(int price) {
@@ -88,7 +89,7 @@ Widget getUpgradeFromWiget(BuildContext context, ShipAlias? ship, bool isFromShi
       Text(title, style: const TextStyle(
           fontSize: 14,
       )),
-      GestureDetector(
+      HoverGestureDetector(
         onTap: () async {
           await jumpToShipInfoPage(context, ship);
         },
@@ -167,7 +168,7 @@ Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
 
   final ship = ShipAliasRepo().getShipAliasSync(item.title);
 
-  return GestureDetector(
+  return HoverGestureDetector(
     child: Row(
       children: [
         Container(
@@ -225,11 +226,11 @@ Widget SubHangarItemWidget(BuildContext context, HangarSubItem item) {
         ),
       ],
     ),
-    onTap: () async {
-      if (ship != null) {
-        await jumpToShipInfoPage(context, ship);
-      }
-    },
+    onTap: ship == null
+        ? null
+        : () async {
+            await jumpToShipInfoPage(context, ship);
+          },
   );
 }
 
@@ -301,7 +302,7 @@ Widget getReclaimButton(BuildContext context, HangarItem hangarItem) {
   if (hangarItem.canReclaim) {
     return Column(
       children: [
-        GestureDetector(
+        HoverGestureDetector(
           onTap: () {
             WoltModalSheet.of(context).showAtIndex(1);
           },
@@ -339,7 +340,7 @@ Widget getGiftButton(BuildContext context, HangarItem hangarItem) {
   if (hangarItem.status == "Gifted") {
     return Column(
       children: [
-        GestureDetector(
+        HoverGestureDetector(
           onTap: () {
             WoltModalSheet.of(context).showAtIndex(3);
           },
@@ -357,7 +358,7 @@ Widget getGiftButton(BuildContext context, HangarItem hangarItem) {
   if (hangarItem.canGit) {
     return Column(
       children: [
-        GestureDetector(
+        HoverGestureDetector(
           onTap: () {
             WoltModalSheet.of(context).showAtIndex(2);
           },
@@ -409,7 +410,7 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
         Spacer(),
         Column(
           children: [
-            GestureDetector(
+            HoverGestureDetector(
               onTap: () {
                 openRsiHangarWebview(context: context, page: hangarItem.page);
               },
@@ -426,7 +427,7 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
         if(hangarItem.isUpgrade)
           Column(
             children: [
-              GestureDetector(
+              HoverGestureDetector(
                 onTap: () async {
                   final upgradePage = await getChooseTargetBottomSheet(context, hangarItem);
                   if (upgradePage == null) {
@@ -479,7 +480,7 @@ Widget getActionIconList({ required BuildContext context, required HangarItem ha
         // Spacer(),
         Column(
           children: [
-            GestureDetector(
+            HoverGestureDetector(
               onTap: () {
                 final hangarLogPage = getHangarLogBottomSheet(context, item: hangarItem);
                 WoltModalSheet.of(context).addPage(hangarLogPage);

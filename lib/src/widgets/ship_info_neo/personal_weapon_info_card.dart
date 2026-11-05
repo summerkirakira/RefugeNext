@@ -7,6 +7,7 @@ import 'package:refuge_next/src/network/wiki/wiki_api.dart';
 import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart'
     show kItemTypeValueCn, gameItemDisplayName;
 import 'package:refuge_next/src/widgets/ship_info_neo/personal_weapon_detail_page.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// FPS 武器信息小卡片,样式仿 [VehicleWeaponInfoCard]:
 /// 左侧 wiki 题图,右侧 名称 + 厂商 + 类型标签 + 尺寸/aUEC 价格。
@@ -70,7 +71,8 @@ class PersonalWeaponInfoCard extends StatelessWidget {
     ];
     final cs = Theme.of(context).colorScheme;
 
-    return GestureDetector(
+    return HoverGestureDetector(
+      overlayMargin: hoverCardMargin,
       onTap: onTap ?? () => _defaultTap(context),
       child: SizedBox(
         height: 118,

@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import '../../funcs/shop/buyback.dart';
 import '../hangar/hangar_item_detail_widget.dart' show priceString;
 import 'buyback_item_detail_widget.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 String formatTimestamp(int timestamp, {String format = 'yyyy年MM月dd日'}) {
   // 创建 DateTime 对象
@@ -146,7 +147,7 @@ class BuybackItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return HoverGestureDetector(
       onTap: () {
         WoltModalSheet.show<void>(
           context: context,

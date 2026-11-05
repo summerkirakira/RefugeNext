@@ -27,6 +27,7 @@ import '../../repo/refuge_account.dart';
 import '../../datasource/models/cirno/account.dart';
 import '../../funcs/launch_at_startup_service.dart';
 import './custom_big_user_card.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -256,7 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
           backgroundColor: backgroundColor,
           userName: userName,
           imageFit: BoxFit.cover,
-          userMoreInfo: GestureDetector(
+          userMoreInfo: HoverGestureDetector(
             onTap: () async {
               final isLoggedIn = await RefugeAccountRepo().isLoggedIn();
               if (isLoggedIn) {

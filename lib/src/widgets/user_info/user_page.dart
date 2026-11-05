@@ -14,6 +14,7 @@ import 'package:refuge_next/src/network/parsers/user_parser.dart' show parseNewU
 import 'package:refuge_next/src/network/api_service.dart';
 import 'package:refuge_next/src/widgets/settings/settings_page.dart';
 import 'package:refuge_next/src/widgets/user_info/referral_list_modal.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 
 class TopBar extends StatefulWidget {
@@ -51,7 +52,7 @@ class _TopBarState extends State<TopBar> {
                     Text(Provider.of<MainDataModel>(context).currentUser!.name,
                         style: const TextStyle(fontSize: 18)),
 
-                    GestureDetector(
+                    HoverGestureDetector(
                       onTap: () {
 
                         Provider.of<MainDataModel>(context, listen: false).userRepo.readUsers().then((users) {
@@ -251,7 +252,7 @@ class DetailInfoItem extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
+      return HoverGestureDetector(
         onTap: onTap,
         child: content,
       );
