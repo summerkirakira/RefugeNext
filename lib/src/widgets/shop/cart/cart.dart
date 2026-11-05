@@ -11,6 +11,7 @@ import '../../../services/rsi_web_session.dart';
 import '../../../repo/translation.dart';
 import '../../webview/rsi_webpage.dart';
 import 'cart_controller.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 Future<void> showCartBottomSheet(BuildContext context,
     {bool isBuyback = false}) async {
@@ -520,6 +521,7 @@ class _CartError extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (compact)
           InkWell(
+            borderRadius: hoverBorderRadius,
             onTap: () => showDialog<void>(
                 context: context,
                 builder: (context) => AlertDialog(

@@ -6,6 +6,7 @@ import '../../../datasource/data_model.dart';
 import '../../../datasource/models/spectrum/private_lobby.dart';
 import '../../../datasource/models/friend.dart';
 import '../widgets/chat_detail_page.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 class FriendsMessagesPage extends StatelessWidget {
   final GlobalKey<RefreshIndicatorState>? refreshKey;
@@ -101,6 +102,7 @@ class _LobbyCard extends StatelessWidget {
     final unread = lobby.newMessages;
 
     return InkWell(
+      borderRadius: hoverBorderRadius,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

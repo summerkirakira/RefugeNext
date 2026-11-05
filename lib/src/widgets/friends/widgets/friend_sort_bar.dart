@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refuge_next/src/datasource/data_model.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 class FriendSortBar extends StatelessWidget {
   final int count;
@@ -17,6 +18,7 @@ class FriendSortBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               InkWell(
+                borderRadius: hoverBorderRadius,
                 onTap: () {
                   // Toggle sort type
                   final newType = dataModel.friendSortType == FriendSortType.byName
@@ -24,7 +26,6 @@ class FriendSortBar extends StatelessWidget {
                       : FriendSortType.byName;
                   dataModel.setFriendSortType(newType);
                 },
-                borderRadius: BorderRadius.circular(4),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                   child: Column(

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FlexSchemeHelper {
@@ -152,26 +153,35 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
 
   static ThemeData getTheme(BuildContext context) {
     if (!_instance.isInitialized) {
-      return FlexColorScheme.light(
+      return _withHoverShape(FlexColorScheme.light(
         scheme: FlexScheme.material,
         useMaterial3: false,
         fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
-      ).toTheme;
+      ).toTheme);
     }
 
     if (_instance.isDark) {
-      return FlexColorScheme.dark(
+      return _withHoverShape(FlexColorScheme.dark(
         scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme),
         useMaterial3: false,
         fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
-      ).toTheme;
+      ).toTheme);
     } else {
-      return FlexColorScheme.light(
+      return _withHoverShape(FlexColorScheme.light(
         scheme: FlexSchemeHelper.getSchemeFromString(_instance.theme),
         useMaterial3: false,
         fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
-      ).toTheme;
+      ).toTheme);
     }
+  }
+
+  /// 让 ListTile 的悬停和波纹使用统一圆角。
+  static ThemeData _withHoverShape(ThemeData theme) {
+    return theme.copyWith(
+      listTileTheme: theme.listTileTheme.copyWith(
+        shape: const RoundedRectangleBorder(borderRadius: hoverBorderRadius),
+      ),
+    );
   }
 
   static Future<void> setTheme(bool? isDark, String? theme) async {
