@@ -258,7 +258,7 @@ class RsiApiClient {
 
   Future<BasicResponseBody> giftItem({required String pledge, required String password, required String email, String name = "避难所App用户"}) async {
     final giftPledgeRequestBody = GiftPledgeRequestBody(pledgeId: pledge, currentPassword: password, email: email, name: name);
-    final response = await basicPost(endpoint: "api/account/giftPledge", data: giftPledgeRequestBody.toJson());
+    final response = await basicPost(endpoint: "api/account/giftPledgeV2", data: giftPledgeRequestBody.toJson());
     return BasicResponseBody.fromJson(response.data);
   }
 
