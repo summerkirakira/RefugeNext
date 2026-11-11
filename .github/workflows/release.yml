@@ -6,25 +6,39 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  build-and-release:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
+            artifact: android
             output_path: build/app/outputs/flutter-apk/refuge-android.apk
-            asset_name: app-release.apk
           - os: windows-latest
-            output_path: build/windows/x64/runner/refuge-windows.zip
-            asset_name: refuge-windows.zip
+            artifact: windows
+            output_path: build/desktop-dist/refuge-windows.zip
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify release tag
+        shell: bash
+        run: |
+          test "$GITHUB_REF_TYPE" = tag
+          version=$(sed -n 's/^version: *\([^+]*\)+.*/\1/p' pubspec.yaml)
+          test "$GITHUB_REF_NAME" = "v$version"
+
       - name: Setup Java
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.artifact == 'android'
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -40,63 +54,112 @@ jobs:
         run: flutter pub get
 
       - name: Build Android
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.artifact == 'android'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          # 创建 key.properties 文件
-          echo "storeFile=keystore.jks" > android/key.properties
-          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" >> android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-
-          # 解码并保存 keystore 文件
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
-
-          # 构建发布版 APK（仅 arm64-v8a，去掉 armeabi-v7a/x86_64 以减小体积）
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
+          printf 'storeFile=keystore.jks\nstorePassword=%s\nkeyPassword=%s\nkeyAlias=%s\n' \
+            "$KEY_STORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+          # Keep the unsplit version code while restricting every native library to arm64.
+          mkdir -p "$HOME/.gradle/init.d"
+          cat > "$HOME/.gradle/init.d/refuge-arm64.gradle" <<'GRADLE'
+          gradle.beforeProject { project ->
+              if (project.path == ':app') {
+                  project.afterEvaluate {
+                      def android = project.extensions.findByName('android')
+                      if (android != null) {
+                          android.defaultConfig.ndk.abiFilters.clear()
+                          android.defaultConfig.ndk.abiFilters.add('arm64-v8a')
+                      }
+                  }
+              }
+          }
+          GRADLE
           flutter build apk --release --target-platform android-arm64
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/refuge-android.apk
 
+      - name: Verify Android package
+        if: matrix.artifact == 'android'
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re, subprocess, zipfile
+          apk = 'build/app/outputs/flutter-apk/refuge-android.apk'
+          version, code = re.search(r'^version:\s*([^+]+)\+(\d+)', pathlib.Path('pubspec.yaml').read_text(), re.M).groups()
+          build_tools = pathlib.Path(os.environ['ANDROID_HOME']) / 'build-tools'
+          sdk = sorted(build_tools.glob('*/aapt'), key=lambda p: tuple(int(n) for n in re.findall(r'\d+', p.parent.name)))[-1].parent
+          badging = subprocess.check_output([str(sdk / 'aapt'), 'dump', 'badging', apk], text=True)
+          assert "package: name='vip.kirakira.starcitizenlite'" in badging
+          assert f"versionCode='{code}'" in badging and f"versionName='{version}'" in badging
+          assert 'application-debuggable' not in badging
+          assert 'android.permission.INTERNET' in badging
+          with zipfile.ZipFile(apk) as archive:
+              assert {p.split('/')[1] for p in archive.namelist() if p.startswith('lib/') and p.endswith('.so')} == {'arm64-v8a'}
+          signature = subprocess.check_output([str(sdk / 'apksigner'), 'verify', '--print-certs', apk], text=True)
+          assert '661e6c741dfe76a9122b5405a7c9c22a4eb4e35ec8e16eb635e67f589d9330bc' in signature
+          print(f'Verified Android {version}+{code}, arm64, official signing certificate')
+          PY
+
+      - name: Remove signing material
+        if: always() && matrix.artifact == 'android'
+        run: rm -f android/key.properties android/app/keystore.jks
+
       - name: Setup NuGet for WebView2
-        if: matrix.os == 'windows-latest'
+        if: matrix.artifact == 'windows'
         uses: NuGet/setup-nuget@v2
 
       - name: Build Windows
-        if: matrix.os == 'windows-latest'
+        if: matrix.artifact == 'windows'
+        shell: pwsh
         run: |
-          flutter config --enable-windows-desktop
-          flutter build windows --release
-          powershell Compress-Archive build/windows/x64/runner/Release build/windows/x64/runner/refuge-windows.zip
+          ./scripts/build_windows_release.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $packages = @(Get-ChildItem build/desktop-dist/*-windows-x64.zip)
+          if ($packages.Count -ne 1) { throw 'Expected one Windows release package' }
+          Move-Item $packages[0].FullName build/desktop-dist/refuge-windows.zip
 
-      - name: Get Changelog
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          CHANGELOG=$(awk '/## [${{ github.ref_name }}]/,/## [0-9]/' CHANGELOG.md)
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Upload Release Asset
-        if: matrix.os == 'windows-latest'
+      - name: Upload verified package
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset_name }}
+          name: ${{ matrix.artifact }}
           path: ${{ matrix.output_path }}
+          if-no-files-found: error
 
-      - name: Download All Artifacts
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/download-artifact@v4
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: dist
+          merge-multiple: true
 
-      - name: Create Release
-        if: matrix.os == 'ubuntu-latest'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            build/app/outputs/flutter-apk/refuge-android.apk
-            artifacts/**/*
-          body: ${{ env.CHANGELOG }}
-          name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+      - name: Prepare release notes and checksums
+        run: |
+          test -s dist/refuge-android.apk
+          test -s dist/refuge-windows.zip
+          python3 - <<'PY'
+          import os, pathlib, re
+          text = pathlib.Path('CHANGELOG.md').read_text()
+          tag = re.escape(os.environ['GITHUB_REF_NAME'])
+          match = re.search(r'^## \[' + tag + r'\][^\n]*\n(.*?)(?=^## |\Z)', text, re.M | re.S)
+          if not match or not match.group(1).strip():
+              raise SystemExit('Missing release notes for this tag')
+          pathlib.Path('release-notes.md').write_text(match.group(1).strip() + '\n')
+          PY
+          cd dist
+          sha256sum refuge-android.apk refuge-windows.zip > SHA256SUMS.txt
+
+      - name: Publish GitHub release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/refuge-android.apk dist/refuge-windows.zip dist/SHA256SUMS.txt \
+            --verify-tag --title "Release $GITHUB_REF_NAME" --notes-file release-notes.md
