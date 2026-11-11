@@ -6,6 +6,7 @@ import 'package:refuge_next/src/datasource/models/ship_info/ship.dart';
 import 'package:refuge_next/src/repo/ship_info.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../datasource/data_model.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 class PaintInfoPage extends StatefulWidget {
   const PaintInfoPage({Key? key}) : super(key: key);
@@ -187,7 +188,8 @@ class _PaintInfoPageState extends State<PaintInfoPage> {
     final shipInfoRepo = ShipInfoRepo();
     final manufacturer = shipInfoRepo.getManufacturerByReferenceSync(paint.manufacturer!);
     final imageUrl = manufacturer != null ? "https://image.biaoju.site/starcitizen/refuge_next/ship_info/manufacturers/${manufacturer.logo.logo}" : "";
-    return InkWell(
+    return HoverGestureDetector(
+      overlayMargin: hoverCardMargin,
       onTap: () {
         _showPaintDetails(context, paint);
       },

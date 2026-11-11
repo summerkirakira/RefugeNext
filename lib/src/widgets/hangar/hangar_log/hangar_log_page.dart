@@ -6,6 +6,7 @@ import '../../../datasource/data_model.dart';
 import '../../../datasource/models/hangar.dart';
 import '../../../repo/translation.dart';
 import 'hangar_log_entry.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// 直接参与弹窗的 Sliver 滚动，避免嵌套列表一次构建所有日志。
 class HangarLogPage extends StatefulWidget {
@@ -200,7 +201,7 @@ class _TimelineEntry extends StatelessWidget {
                       button: true,
                       expanded: expanded,
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: hoverBorderRadius,
                         onTap: onToggle,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),

@@ -8,6 +8,7 @@ import '../../datasource/models/cirno/account.dart';
 import '../../funcs/toast.dart';
 import '../../funcs/cirno_auth.dart';
 import '../../datasource/data_model.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// 避难所账户详情页面
 class RefugeAccountDetailPage extends StatefulWidget {
@@ -364,7 +365,8 @@ Future<void> _unbindDevice(String deviceUuid) async {
         children: [
           // 头像显示区域
           Center(
-            child: GestureDetector(
+            child: HoverGestureDetector(
+              borderRadius: hoverCircleBorderRadius,
               onTap: _accountDetail != null ? _showAvatarOptions : null,
               child: _accountDetail == null
                   ? CircleAvatar(

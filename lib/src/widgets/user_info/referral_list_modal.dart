@@ -8,6 +8,7 @@ import '../../network/graphql/account/referral_list_query.dart';
 import '../../funcs/toast.dart';
 import '../../network/parsers/player_info_parser.dart';
 import '../utility/player_search_bottomsheet.dart' show DetailInfoItem, OrganizationInfo;
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 String _formatTime(String timeString) {
   try {
@@ -389,7 +390,7 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
   }
 
   Widget _buildUserCard(ReferralRecruitListData user) {
-    return GestureDetector(
+    return HoverGestureDetector(
       onTap: () async {
         // 使用displayName作为handle查询玩家信息
         final playerInfo = await getPlayerSearchResult(user.displayName);
@@ -509,7 +510,7 @@ class _ReferralListWidgetState extends State<ReferralListWidget> {
       return Container(
         padding: EdgeInsets.all(20),
         child: Center(
-          child: GestureDetector(
+          child: HoverGestureDetector(
             onTap: _loadMoreData,
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),

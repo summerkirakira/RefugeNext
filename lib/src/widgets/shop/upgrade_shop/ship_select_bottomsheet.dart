@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../datasource/models/shop/cart_snapshot.dart' show cartMoney;
 import '../../../datasource/models/shop/upgrade_ship_info.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 String upgradeShipName(UpgradeShipInfo ship) =>
     ship.chineseName.isNotEmpty ? ship.chineseName : (ship.name ?? '未知舰船');
@@ -213,6 +214,7 @@ class _UpgradeShipPickerState extends State<UpgradeShipPicker> {
                                   ? colors.primary.withValues(alpha: .07)
                                   : colors.surface,
                               child: InkWell(
+                                  borderRadius: hoverBorderRadius,
                                   onTap: () => Navigator.pop(context, ship),
                                   child: Padding(
                                       padding: const EdgeInsets.all(12),

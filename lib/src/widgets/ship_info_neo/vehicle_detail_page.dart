@@ -15,6 +15,7 @@ import 'package:refuge_next/src/widgets/ship_info/ship_info_title.dart'
     show ShipPriceDisplay;
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../common/terminal_localization_state.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// 护盾朝向类型(face_type)中文映射;未命中保留原文。
 const kShieldFaceTypeCn = {'Bubble': '气泡', 'Quadrant': '象限'};
@@ -165,6 +166,15 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
   @override
   void initState() {
     super.initState();
+    // 从列表进入时数据已传入,直接显示;全量列表仍在后台加载,供换船使用。
+    // 没有题图的载具要靠船库匹配缩略图,船库未加载时仍需等待,避免头图晚出现。
+    final initial = widget.initialVehicle;
+    final canResolveThumbnail = (initial?.images?.isNotEmpty ?? false) ||
+        ShipInfoRepo().getShipsSync().isNotEmpty;
+    if (initial != null && localizationLoaded && canResolveThumbnail) {
+      _selected = initial;
+      _loading = false;
+    }
     Future.wait([
       GameVehicleRepo().getVehicles(),
       // 确保现有船库已加载(用于缩略图名称匹配)
@@ -296,6 +306,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
 
   Widget _buildTitle(GameVehicle v) {
     final thumbUrl = _thumbUrlFor(v);
+    final previewUrl = vehicleThumbnailUrl(v, small: true);
     final tags = <String>[
       if (vehicleCareerCn(v.career) case final c?) c,
       if (vehicleRoleCn(v.role) case final r?) r,
@@ -346,7 +357,9 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
                   children: [
                     if (thumbUrl != null) ...[
                       _titleImage(thumbUrl,
-                          aspectRatio: 16 / 9, showBack: true),
+                          aspectRatio: 16 / 9,
+                          previewUrl: previewUrl,
+                          showBack: true),
                       const SizedBox(height: 12),
                     ],
                     _titleInfo(v, tags, usdCents, auec, desc),
@@ -361,7 +374,9 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
                     Expanded(
                       flex: 9,
                       child: _titleImage(thumbUrl,
-                          aspectRatio: 3 / 2, showBack: true),
+                          aspectRatio: 3 / 2,
+                          previewUrl: previewUrl,
+                          showBack: true),
                     ),
                     const SizedBox(width: 12),
                   ],
@@ -396,8 +411,31 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
     );
   }
 
+  /// 原图加载前的占位:优先显示列表已缓存的缩略图,避免首次进入时转圈。
+  Widget _titleImagePlaceholder(String? previewUrl) {
+    final fallback = Container(color: Colors.grey.withValues(alpha: 0.1));
+    if (previewUrl == null) {
+      return fallback;
+    }
+    return CachedNetworkImage(
+      imageUrl: previewUrl,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
+      placeholder: (context, _) => fallback,
+      errorWidget: (context, _, __) => wikiImageFallback(
+        previewUrl,
+        placeholder: fallback,
+        onFail: fallback,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
+      ),
+    );
+  }
+
   Widget _titleImage(String url,
-      {required double aspectRatio, bool showBack = false}) {
+      {required double aspectRatio, String? previewUrl, bool showBack = false}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: AspectRatio(
@@ -409,12 +447,17 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
               imageUrl: url,
               width: double.infinity,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: Colors.grey.withValues(alpha: 0.1),
-                child: const Center(child: CircularProgressIndicator()),
+              // 原图加载完直接替换缩略图,不做淡入淡出。
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder: (context, _) => _titleImagePlaceholder(previewUrl),
+              errorWidget: (context, url, error) => wikiImageFallback(
+                url,
+                placeholder: _titleImagePlaceholder(previewUrl),
+                onFail: _titleImagePlaceholder(previewUrl),
+                fadeInDuration: Duration.zero,
+                fadeOutDuration: Duration.zero,
               ),
-              errorWidget: (context, url, error) =>
-                  wikiImageFallback(url, onFail: const SizedBox.shrink()),
             ),
             if (showBack)
               Positioned(top: 8, left: 8, child: _backButton()),
@@ -603,6 +646,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage>
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: InkWell(
+                              borderRadius: hoverBorderRadius,
                               onTap: () {
                                 setState(() => _selected = vehicle);
                                 Navigator.pop(context);
@@ -1815,6 +1859,7 @@ class _CollapsibleCardState extends State<_CollapsibleCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             InkWell(
+              borderRadius: hoverBorderRadius,
               onTap: () => setState(() => _expanded = !_expanded),
               child: Padding(
                 padding:

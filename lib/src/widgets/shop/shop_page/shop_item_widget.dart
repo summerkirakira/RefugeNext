@@ -5,6 +5,7 @@ import 'package:refuge_next/src/datasource/models/shop/catalog_property.dart';
 import 'package:refuge_next/src/datasource/models/shop/catalog_types.dart';
 import 'catalog_detail_bottomsheet.dart' show showCatalogItemDetail;
 import 'catalog_price_widgets.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// Each SKU remains its own card, including Standard and Warbond versions.
 class ShopItemWidget extends StatelessWidget {
@@ -23,7 +24,8 @@ class ShopItemWidget extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) => HoverGestureDetector(
+        overlayMargin: hoverCardMargin,
         onTap: () => showCatalogItemDetail(context, catalogProperty),
         child: Card(
           elevation: 0,

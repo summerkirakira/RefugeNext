@@ -26,6 +26,7 @@ import 'package:refuge_next/src/widgets/ship_info_neo/game_item_detail_page.dart
         fmtNum,
         fmtDurationCn;
 import '../common/terminal_localization_state.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 /// 独立的任务详情测试页(不继承 GameItemDetailPage)。
 ///
@@ -273,6 +274,7 @@ class _MissionDetailPageState extends State<MissionDetailPage>
   /// 可获得蓝图的一行:只显示名称 + 箭头,点击跳到产物物品详情页。
   Widget _blueprintRow(MissionIndexBlueprint b) {
     return InkWell(
+      borderRadius: hoverBorderRadius,
       onTap: () => _openBlueprintOutput(b),
       child: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 10),

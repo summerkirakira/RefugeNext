@@ -8,6 +8,7 @@ import 'package:refuge_next/src/repo/ship_info.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../../datasource/models/ship_info/ship.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 
 class ShipPriceDisplay extends StatelessWidget {
@@ -211,6 +212,7 @@ void showShipSelector(BuildContext context) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: InkWell(
+                            borderRadius: hoverBorderRadius,
                             onTap: () {
                               dataModel.setCurrentShipInfo(ship);
                               Navigator.pop(context);

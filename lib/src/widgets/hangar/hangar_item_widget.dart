@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import '../../datasource/models/hangar.dart';
 import 'package:flutter/material.dart';
 import 'hangar_cover_image.dart';
+import 'package:refuge_next/src/widgets/common/hover_gesture_detector.dart';
 
 
 String priceString(int price) {
@@ -255,7 +256,8 @@ class HangarItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return HoverGestureDetector(
+      overlayMargin: hoverCardMargin,
       onTap: () => onTap(hangarItem, context),
       child: Container(
         height: 108,
